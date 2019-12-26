@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>res/main.qml</file>
+        <file>res/ConnectBle.qml</file>
+        <file>qtquickcontrols2.conf</file>
+        <file>res/ConnectUsb.qml</file>
+        <file>res/PageConnection.qml</file>
+    </qresource>
+</RCC>
