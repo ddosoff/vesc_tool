@@ -28,7 +28,6 @@ import Vedder.vesc.commands 1.0
 Item {
     id: topItem
 
-    property BleUart mBle: VescIf.bleDevice()
     property Commands mCommands: VescIf.commands()
     property alias disconnectButton: disconnectButton
     property bool isHorizontal: width > height
@@ -46,18 +45,9 @@ Item {
             columnSpacing: 5
             rowSpacing: 10
 
-            Image {
-                id: image
-                Layout.columnSpan: isHorizontal ? 2 : 1
-                Layout.preferredWidth: Math.min(topItem.width, topItem.height)
-                Layout.preferredHeight: (sourceSize.height * Layout.preferredWidth) / sourceSize.width
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
-                source: "qrc:/res/logo_white.png"
-            }
-
             GroupBox {
                 id: bleConnBox
-                title: qsTr("BLE Connection")
+                title: qsTr("USB Connection")
                 Layout.fillWidth: true
                 Layout.columnSpan: 1
 
