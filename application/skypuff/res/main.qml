@@ -40,8 +40,9 @@ ApplicationWindow {
 
         }
 
-        /*Page {
+        Page {
             ColumnLayout {
+                anchors.fill: parent
                 Text {
                     id: valText
                     text: VescIf.getConnectedPortName()
@@ -52,7 +53,7 @@ ApplicationWindow {
                     Layout.margins: 10
                 }
             }
-        }*/
+        }
 
         /*
         RowLayout {

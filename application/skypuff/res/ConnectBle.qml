@@ -25,8 +25,8 @@ import Vedder.vesc.vescinterface 1.0
 import Vedder.vesc.bleuart 1.0
 import Vedder.vesc.commands 1.0
 
-Item {
-    id: topItem
+GroupBox {
+    id: bleConnBox
 
     property BleUart mBle: VescIf.bleDevice()
     property Commands mCommands: VescIf.commands()
@@ -34,151 +34,109 @@ Item {
     property bool isHorizontal: width > height
     signal requestOpenControls()
 
+
+    title: qsTr("BLE Connection") + " " + width + "x" + height
+    //Layout.fillWidth: true
+    //Layout.columnSpan: 1
+    //anchors.fill: parent
+
     GridLayout {
-        id: grid
+        anchors.topMargin: -5
+        anchors.bottomMargin: -5
         anchors.fill: parent
-        columns: isHorizontal ? 2 : 1
+
+        clip: false
+        visible: true
+        rowSpacing: -10
         columnSpacing: 5
-        rowSpacing: 10
+        rows: 5
+        columns: 6
 
-        GroupBox {
-            id: bleConnBox
-            title: qsTr("BLE Connection")
+        Button {
+            id: setNameButton
+            text: qsTr("Name")
+            Layout.columnSpan: 2
+            //Layout.preferredWidth: 500
             Layout.fillWidth: true
-            Layout.columnSpan: 1
+            enabled: bleBox.count > 0
 
-            GridLayout {
-                anchors.topMargin: -5
-                anchors.bottomMargin: -5
-                anchors.fill: parent
-
-                clip: false
-                visible: true
-                rowSpacing: -10
-                columnSpacing: 5
-                rows: 5
-                columns: 6
-
-                Button {
-                    id: setNameButton
-                    text: qsTr("Name")
-                    Layout.columnSpan: 2
-                    Layout.preferredWidth: 500
-                    Layout.fillWidth: true
-                    enabled: bleBox.count > 0
-
-                    onClicked: {
-                        if (bleItems.rowCount() > 0) {
-                            bleNameDialog.open()
-                        } else {
-                            VescIf.emitMessageDialog("Set BLE Device Name",
-                                                     "No device selected.",
-                                                     false, false);
-                        }
-                    }
+            onClicked: {
+                if (bleItems.rowCount() > 0) {
+                    bleNameDialog.open()
+                } else {
+                    VescIf.emitMessageDialog("Set BLE Device Name",
+                                             "No device selected.",
+                                             false, false);
                 }
+            }
+        }
 
-                Button {
-                    text: "Pair"
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 500
-                    Layout.columnSpan: 2
+        Button {
+            text: "Pair"
+            Layout.fillWidth: true
+            //Layout.preferredWidth: 500
+            Layout.columnSpan: 2
 
-                    onClicked: {
-                        pairDialog.openDialog()
-                    }
-                }
+            onClicked: {
+                pairDialog.openDialog()
+            }
+        }
 
-                Button {
-                    id: scanButton
-                    text: qsTr("Scan")
-                    Layout.columnSpan: 2
-                    Layout.preferredWidth: 500
-                    Layout.fillWidth: true
+        Button {
+            id: scanButton
+            text: qsTr("Scan")
+            Layout.columnSpan: 2
+            //Layout.preferredWidth: 500
+            Layout.fillWidth: true
 
-                    onClicked: {
-                        scanButton.enabled = false
-                        mBle.startScan()
-                    }
-                }
+            onClicked: {
+                scanButton.enabled = false
+                mBle.startScan()
+            }
+        }
 
-                ComboBox {
-                    id: bleBox
-                    Layout.columnSpan: 6
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                    transformOrigin: Item.Center
+        ComboBox {
+            id: bleBox
+            Layout.columnSpan: 6
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+            transformOrigin: Item.Center
 
-                    textRole: "key"
-                    model: ListModel {
-                        id: bleItems
-                    }
-                }
+            textRole: "key"
+            model: ListModel {
+                id: bleItems
+            }
+        }
 
-                Button {
-                    id: disconnectButton
-                    text: qsTr("Disconnect")
-                    enabled: false
-                    Layout.preferredWidth: 500
-                    Layout.fillWidth: true
-                    Layout.columnSpan: 3
+        Button {
+            id: disconnectButton
+            text: qsTr("Disconnect")
+            enabled: false
+            //Layout.preferredWidth: 500
+            Layout.fillWidth: true
+            Layout.columnSpan: 3
 
-                    onClicked: {
-                        VescIf.disconnectPort()
-                    }
-                }
+            onClicked: {
+                VescIf.disconnectPort()
+            }
+        }
 
-                Button {
-                    id: connectButton
-                    text: qsTr("Connect")
-                    enabled: false
-                    Layout.preferredWidth: 500
-                    Layout.fillWidth: true
-                    Layout.columnSpan: 3
+        Button {
+            id: connectButton
+            text: qsTr("Connect")
+            enabled: false
+            //Layout.preferredWidth: 500
+            Layout.fillWidth: true
+            Layout.columnSpan: 3
 
-                    onClicked: {
-                        if (bleItems.rowCount() > 0) {
-                            connectButton.enabled = false
-                            VescIf.connectBle(bleItems.get(bleBox.currentIndex).value)
-                        }
-                    }
+            onClicked: {
+                if (bleItems.rowCount() > 0) {
+                    connectButton.enabled = false
+                    VescIf.connectBle(bleItems.get(bleBox.currentIndex).value)
                 }
             }
         }
     }
-
-    /*
-    Timer {
-        interval: 500
-        running: !scanButton.enabled
-        repeat: true
-
-        property int dots: 0
-        onTriggered: {
-            var text = "S"
-            for (var i = 0;i < dots;i++) {
-                text = "-" + text + "-"
-            }
-
-            dots++;
-            if (dots > 3) {
-                dots = 0;
-            }
-
-            scanButton.text = text
-        }
-    }
-
-    Timer {
-        interval: 100
-        running: true
-        repeat: true
-
-        onTriggered: {
-            connectButton.enabled = (bleItems.rowCount() > 0) && !VescIf.isPortConnected() && !mBle.isConnecting()
-            disconnectButton.enabled = VescIf.isPortConnected()
-        }
-    }*/
 
     Connections {
         target: mBle
@@ -282,4 +240,39 @@ Item {
             }
         }
     }
+
 }
+
+/*
+    Timer {
+        interval: 500
+        running: !scanButton.enabled
+        repeat: true
+
+        property int dots: 0
+        onTriggered: {
+            var text = "S"
+            for (var i = 0;i < dots;i++) {
+                text = "-" + text + "-"
+            }
+
+            dots++;
+            if (dots > 3) {
+                dots = 0;
+            }
+
+            scanButton.text = text
+        }
+    }
+
+    Timer {
+        interval: 100
+        running: true
+        repeat: true
+
+        onTriggered: {
+            connectButton.enabled = (bleItems.rowCount() > 0) && !VescIf.isPortConnected() && !mBle.isConnecting()
+            disconnectButton.enabled = VescIf.isPortConnected()
+        }
+    }*/
+
