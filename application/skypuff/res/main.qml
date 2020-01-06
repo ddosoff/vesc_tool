@@ -23,6 +23,7 @@ import Vedder.vesc.vescinterface 1.0
 import Vedder.vesc.commands 1.0
 import Vedder.vesc.configparams 1.0
 import Vedder.vesc.utility 1.0
+import Skypuff.vesc.winch 1.0
 
 ApplicationWindow {
     visible: true

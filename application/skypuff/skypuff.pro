@@ -30,9 +30,11 @@ contains(DEFINES, HAS_BLUETOOTH) {
 
 INCLUDEPATH += ../..
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    skypuff.cpp
 
-HEADERS += 
+HEADERS += \ 
+    skypuff.h
     
 contains(DEFINES, HAS_BLUETOOTH) {
     SOURCES += ../../bleuart.cpp
