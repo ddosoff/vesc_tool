@@ -10,76 +10,69 @@ Page {
     property BleUart mBle: VescIf.bleDevice()
     property Commands mCommands: VescIf.commands()
     property alias disconnectButton: disconnectButton
-    property bool isHorizontal: width > height
+
+    function setConnectButtonsEnabled(e)
+    {
+        usbConnectButton.enabled = e
+        bleConnectButton.enabled = e && (bleItems.rowCount() > 0)
+    }
+
+    PairingDialog {
+        id: pairDialog
+    }
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 10
 
         GroupBox {
-            id: bleConnBox
-
-            title: qsTr("BLE Connection")
+            title: qsTr("Bluetooth")
             Layout.fillWidth: true
 
-            GridLayout {
-                //anchors.topMargin: -5
-                //anchors.bottomMargin: -5
+            ColumnLayout {
                 anchors.fill: parent
 
-                //clip: false
-                //visible: true
-                rowSpacing: 5
-                columnSpacing: 5
-                rows: 5
-                columns: 6
-
-                Button {
-                    text: qsTr("Name")
-                    Layout.columnSpan: 2
+                GridLayout {
                     Layout.fillWidth: true
-                    enabled: bleBox.count > 0
 
-                    onClicked: {
-                        if (bleItems.rowCount() > 0) {
-                            bleNameDialog.open()
-                        } else {
-                            VescIf.emitMessageDialog("Set BLE Device Name",
-                                                     "No device selected.",
-                                                     false, false);
+                    Button {
+                        text: qsTr("Name")
+                        enabled: bleBox.count > 0
+
+                        onClicked: {
+                            if (bleItems.rowCount() > 0) {
+                                bleNameDialog.open()
+                            } else {
+                                VescIf.emitMessageDialog("Set BLE Device Name",
+                                                         "No device selected.",
+                                                         false, false);
+                            }
                         }
                     }
-                }
 
-                Button {
-                    text: qsTr("Pair")
-                    Layout.columnSpan: 2
-                    Layout.fillWidth: true
+                    Button {
+                        text: qsTr("Pair")
 
-                    onClicked: {
-                        pairDialog.openDialog()
+                        onClicked: {
+                            pairDialog.openDialog()
+                        }
                     }
-                }
 
-                Button {
-                    id: scanButton
-                    text: qsTr("Scan")
-                    Layout.columnSpan: 2
-                    //Layout.preferredWidth: 500
-                    Layout.fillWidth: true
+                    Button {
+                        id: scanButton
+                        text: qsTr("Scan")
 
-                    onClicked: {
-                        scanButton.enabled = false
-                        mBle.startScan()
+                        onClicked: {
+                            scanButton.enabled = false
+                            mBle.startScan()
+                        }
                     }
                 }
 
                 ComboBox {
                     id: bleBox
-                    Layout.columnSpan: 6
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                    transformOrigin: Item.Center
 
                     textRole: "key"
                     model: ListModel {
@@ -88,29 +81,15 @@ Page {
                 }
 
                 Button {
-                    id: disconnectButton
-                    text: qsTr("Disconnect")
-                    enabled: false
-                    //Layout.preferredWidth: 500
-                    Layout.fillWidth: true
-                    Layout.columnSpan: 3
-
-                    onClicked: {
-                        VescIf.disconnectPort()
-                    }
-                }
-
-                Button {
-                    id: connectButton
+                    id: bleConnectButton
                     text: qsTr("Connect")
                     enabled: false
                     //Layout.preferredWidth: 500
                     Layout.fillWidth: true
-                    Layout.columnSpan: 3
 
                     onClicked: {
                         if (bleItems.rowCount() > 0) {
-                            connectButton.enabled = false
+                            setConnectButtonsEnabled(false)
                             VescIf.connectBle(bleItems.get(bleBox.currentIndex).value)
                         }
                     }
@@ -141,7 +120,7 @@ Page {
                         }
                     }
 
-                    connectButton.enabled = (bleItems.rowCount() > 0) && !VescIf.isPortConnected()
+                    bleConnectButton.enabled = (bleItems.rowCount() > 0) && !VescIf.isPortConnected()
 
                     bleBox.currentIndex = 0
                 }
@@ -240,40 +219,92 @@ Page {
                     }
                 }
 
+                /*
                 Timer {
                     interval: 100
                     running: true
                     repeat: true
 
                     onTriggered: {
-                        connectButton.enabled = (bleItems.rowCount() > 0) && !VescIf.isPortConnected() && !mBle.isConnecting()
+                        setConnectButtonsEnabled((bleItems.rowCount() > 0) && !VescIf.isPortConnected() && !mBle.isConnecting())
                         disconnectButton.enabled = VescIf.isPortConnected()
                     }
                 }
+                */
             }
         }
 
         GroupBox {
-            id: usbConnBox
-
-            title: qsTr("USB Connection")
+            title: qsTr("USB/Serial")
             Layout.fillWidth: true
-            //anchors: 20
+
+            GridLayout {
+                anchors.fill: parent
+
+                rowSpacing: 5
+                columnSpacing: 5
+
+                Button {
+                    id: usbConnectButton
+                    Layout.fillWidth: true
+                    text: qsTr("Auto Connect")
+
+                    onClicked: {
+                        VescIf.autoconnect()
+                        setConnectButtonsEnabled(false)
+                    }
+                }
+
+            }
         }
 
         Item {
-            //color: 'blue'
             Layout.fillHeight: true
             Layout.fillWidth: true
-            Text {
+
+            Button {
+                id: disconnectButton
+                text: qsTr("Disconnect")
+
                 anchors.centerIn: parent
-                text: parent.width + 'x' + parent.height
+                enabled: false
+
+                onClicked: {
+                    VescIf.disconnectPort()
+                }
             }
         }
-        //        Text {
-        //            //anchors.fill: parent
-        //            //anchors.centerIn: parent
-        //            text: width + 'x' + height
-        //        }
+
+        Label {
+            id: vescMessage
+
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignRight
+
+            text: qsTr("Not connected")
+            color: "red"
+        }
+    }
+
+    Connections {
+        target: VescIf
+
+        onPortConnectedChanged: {
+            if(VescIf.isPortConnected()) {
+                setConnectButtonsEnabled(false)
+                disconnectButton.enabled = true
+            }
+            else {
+                setConnectButtonsEnabled(true)
+                disconnectButton.enabled = false
+                vescMessage.text = qsTr("Not connected")
+                vescMessage.color = "red"
+            }
+        }
+
+        onStatusMessage: {
+            vescMessage.text = msg
+            vescMessage.color = isGood ? "green" : "red"
+        }
     }
 }
