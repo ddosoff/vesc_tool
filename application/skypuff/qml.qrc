@@ -4,5 +4,7 @@
         <file>qtquickcontrols2.conf</file>
         <file>res/PageConnection.qml</file>
         <file>res/PairingDialog.qml</file>
+        <file>res/PageSkypuff.qml</file>
+        <file>res/PageTerminal.qml</file>
     </qresource>
 </RCC>

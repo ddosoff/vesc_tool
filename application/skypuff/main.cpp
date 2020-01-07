@@ -36,7 +36,6 @@ QObject *vescinterface_singletontype_provider(QQmlEngine *engine, QJSEngine *scr
     vesc->appConfig()->loadParamsXml("://res/parameters_appconf.xml");
     vesc->infoConfig()->loadParamsXml("://res/info.xml");
 
-    qWarning() << "VescInterface created";
     return vesc;
 }
 
@@ -50,8 +49,6 @@ QObject *skypuff_singletontype_provider(QQmlEngine *engine, QJSEngine *scriptEng
 
     if(!skypuff)
         skypuff = new Skypuff(vesc);
-
-    qWarning() << "Skypuff created";
 
     return skypuff;
 }
@@ -79,7 +76,7 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     
     qmlRegisterSingletonType<VescInterface>("Vedder.vesc.vescinterface", 1, 0, "VescIf", vescinterface_singletontype_provider);
-    qmlRegisterSingletonType<Skypuff>("Skypuff.vesc.winch", 1, 0, "Skypuff", skypuff_singletontype_provider);
+    qmlRegisterSingletonType<Skypuff>("SkyPuff.vesc.winch", 1, 0, "Skypuff", skypuff_singletontype_provider);
     qmlRegisterSingletonType<Utility>("Vedder.vesc.utility", 1, 0, "Utility", utility_singletontype_provider);
 #ifdef HAS_BLUETOOTH
     qmlRegisterType<BleUart>("Vedder.vesc.bleuart", 1, 0, "BleUart");

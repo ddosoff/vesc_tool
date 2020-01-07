@@ -297,6 +297,7 @@ Page {
 
             Text {
                 id: vescDialogLabel
+                color: "#ffffff"
                 linkColor: "lightblue"
                 verticalAlignment: Text.AlignVCenter
                 anchors.fill: parent
@@ -306,18 +307,6 @@ Page {
                     Qt.openUrlExternally(link)
                 }
             }
-        }
-    }
-
-    Connections {
-        target: VescIf
-
-        // Display modal dialog with errors from VESC interface
-        onMessageDialog: {
-            vescDialog.title = title
-            vescDialogLabel.text = (richText ? "<style>a:link { color: lightblue; }</style>" : "") + msg
-            vescDialogLabel.textFormat = richText ? Text.RichText : Text.AutoText
-            vescDialog.open()
         }
     }
 
@@ -335,6 +324,13 @@ Page {
         onStatusMessage: {
             statusMessage.text = msg
             statusMessage.color = isGood ? "green" : "red"
+        }
+
+        onMessageDialog: {
+            vescDialog.title = title
+            vescDialogLabel.text = (richText ? "<style>a:link { color: lightblue; }</style>" : "") + msg
+            vescDialogLabel.textFormat = richText ? Text.RichText : Text.AutoText
+            vescDialog.open()
         }
     }
 

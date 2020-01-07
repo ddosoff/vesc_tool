@@ -16,14 +16,14 @@
     */
 
 import QtQuick 2.7
-import QtQuick.Controls 2.0
+import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 
 import Vedder.vesc.vescinterface 1.0
 import Vedder.vesc.commands 1.0
 import Vedder.vesc.configparams 1.0
 import Vedder.vesc.utility 1.0
-import Skypuff.vesc.winch 1.0
+import SkyPuff.vesc.winch 1.0
 
 ApplicationWindow {
     visible: true
@@ -37,170 +37,33 @@ ApplicationWindow {
         id: swipeView
         anchors.fill: parent
 
-        PageConnection {
-
-        }
-
+        PageConnection {}
+        PageSkypuff {}
         Page {
-            ColumnLayout {
-                anchors.fill: parent
-                Text {
-                    id: valText
-                    text: VescIf.getConnectedPortName()
-                    verticalAlignment: Text.AlignVCenter
-                    font.family: "DejaVu Sans Mono"
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.margins: 10
-                }
+            Text {
+                text: "Settings"
             }
         }
-
-        /*
-        RowLayout {
-            anchors.fill: parent
-            spacing: 6
-            Rectangle {
-                color: 'azure'
-                Layout.preferredWidth: 100
-                Layout.preferredHeight: 150
-            }
-            Rectangle {
-                color: "plum"
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-            }
-        }
-
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: 10
-
-            Rectangle {
-                color: "red"
-                width: 50
-                height: 100
-            }
-            Rectangle {
-                color: "green"
-                width: 200
-                height: 100
-            }
-            Rectangle {
-                color: "blue";
-                width: swipeView.width / 2
-                height: 50
-            }
-*/
-            /*ConnectBle {
-                    id: connBle
-                    width: parent.width
-                    //height: parent.height
-                    //anchors.fill: parent
-
-                    //onRequestOpenControls: {
-                    //    controls.openDialog()
-                    //}
-                }*/
-            /*
-                ConnectUsb {
-                    //anchors.fill: parent
-                    //anchors.margins: 10
-                }
-
-            Rectangle {
-                Layout.fillHeight: true
-            }
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 10
-
-
-                    Button {
-                        Layout.fillWidth: true
-                        text: "Connect"
-
-                        onClicked: {
-                            VescIf.autoconnect()
-                        }
-                    }
-
-                    Button {
-                        Layout.fillWidth: true
-                        text: "Disconnect"
-
-                        onClicked: {
-                            VescIf.disconnectPort()
-                        }
-                    }
-
-                    Text {
-                        id: connText
-                        text: VescIf.getConnectedPortName()
-                        Layout.fillWidth: true
-                    }
-
-                    Rectangle {
-                        Layout.fillHeight: true
-                    }
-                }
-*/
-        }
-
-
-    //}
-
-    /*header: Text {
-        text: qsTr("My Header")
-    }*/
-
-    /*footer: Text {
-        text: qsTr("My Footer")
-    }*/
-
-    /*footer: TabBar {
-        id: tabBar
-        currentIndex: swipeView.currentIndex
-        TabButton {
-            text: qsTr("Connection")
-        }
-        TabButton {
-            text: qsTr("Data")
-        }
+        PageTerminal {}
     }
-    
-    Timer {
-        id: rtTimer
-        interval: 50
-        running: true
-        repeat: true
 
-        onTriggered: {
-            connText.text = VescIf.getConnectedPortName()
-
-            if (VescIf.isPortConnected() && tabBar.currentIndex == 1) {
-                // Sample RT data when the RT page is selected
-                mCommands.getValues()
-            }
-        }
-    }*/
-    
     Connections {
-        target: mCommands
+        target: Skypuff
 
-        onValuesReceived: {
-            valText.text =
-                    "Battery    : " + parseFloat(values.v_in).toFixed(2) + " V\n" +
-                    "I Battery  : " + parseFloat(values.current_in).toFixed(2) + " A\n" +
-                    "Temp MOS   : " + parseFloat(values.temp_mos).toFixed(2) + " \u00B0C\n" +
-                    "Temp Motor : " + parseFloat(values.temp_motor).toFixed(2) + " \u00B0C\n" +
-                    "Ah Draw    : " + parseFloat(values.amp_hours * 1000.0).toFixed(1) + " mAh\n" +
-                    "Ah Charge  : " + parseFloat(values.amp_hours_charged * 1000.0).toFixed(1) + " mAh\n" +
-                    "Wh Draw    : " + parseFloat(values.watt_hours).toFixed(2) + " Wh\n" +
-                    "Wh Charge  : " + parseFloat(values.watt_hours_charged).toFixed(2) + " Wh\n" +
-                    "ABS Tacho  : " + values.tachometer_abs + " Counts\n" +
-                    "Fault      : " + values.fault_str
+        onNewState: {
+            switch(newState) {
+            case "DISCONNECTED":
+                if(swipeView.currentIndex != 0)
+                    swipeView.currentIndex = 0
+                break
+            case "UNITIALIZED":
+                if(swipeView.currentIndex != 2)
+                    swipeView.currentIndex = 2
+                break
+            default:
+                if(swipeView.currentIndex != 1)
+                    swipeView.currentIndex = 1
+            }
         }
     }
 }
