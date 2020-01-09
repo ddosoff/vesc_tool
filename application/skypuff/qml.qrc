@@ -6,5 +6,7 @@
         <file>res/PairingDialog.qml</file>
         <file>res/PageSkypuff.qml</file>
         <file>res/PageTerminal.qml</file>
+        <file>res/PageConfig.qml</file>
+        <file>res/RealSpinBox.qml</file>
     </qresource>
 </RCC>

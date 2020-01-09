@@ -16,41 +16,37 @@
     */
 
 import QtQuick 2.7
+import Qt.labs.settings 1.0
 import QtQuick.Controls 2.2
-import QtQuick.Layouts 1.3
 
-import Vedder.vesc.vescinterface 1.0
-import Vedder.vesc.commands 1.0
-import Vedder.vesc.configparams 1.0
-import Vedder.vesc.utility 1.0
 import SkyPuff.vesc.winch 1.0
 
 ApplicationWindow {
+    id: app
     visible: true
-    width: 800
-    height: 480
-    title: qsTr("My Application")
+    title: "SkyPUFF"
     
-    property Commands mCommands: VescIf.commands()
-
     SwipeView {
         id: swipeView
         anchors.fill: parent
 
         PageConnection {}
         PageSkypuff {}
-        Page {
-            Text {
-                text: "Settings"
-            }
-        }
+        PageConfig {}
         PageTerminal {}
     }
 
+
+    Settings {
+        property alias width: app.width
+        property alias height: app.height
+    }
+
+    // Switch pages automatically on state changes
     Connections {
         target: Skypuff
 
-        onNewState: {
+        onStateChanged: {
             switch(newState) {
             case "DISCONNECTED":
                 if(swipeView.currentIndex != 0)

@@ -27,7 +27,7 @@ Page {
     Connections {
         target: Skypuff
 
-        onNewState: {
+        onStateChanged: {
             ctrl.state = newState
         }
     }
