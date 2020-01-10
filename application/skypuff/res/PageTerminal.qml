@@ -25,8 +25,15 @@ import Vedder.vesc.vescinterface 1.0
 import Vedder.vesc.commands 1.0
 import Vedder.vesc.configparams 1.0
 
-Item {
+import SkyPuff.vesc.winch 1.0
+
+Page {
     property Commands mCommands: VescIf.commands()
+
+    function sendCommand() {
+        mCommands.sendTerminalCmd(stringInput.text)
+        stringInput.clear()
+    }
 
     ColumnLayout {
         id: column
@@ -37,89 +44,45 @@ Item {
             id: scroll
             Layout.fillWidth: true
             Layout.fillHeight: true
+            Layout.leftMargin: 10
             contentWidth: terminalText.width
             clip: true
 
             TextArea {
                 id: terminalText
-                anchors.fill: parent
                 readOnly: true
                 font.family: "DejaVu Sans Mono"
+                font.pointSize: 10
             }
         }
 
         RowLayout {
             Layout.fillWidth: true
-            Button {
-                Layout.preferredWidth: 100
+            Layout.margins: 10
+
+            TextInput {
+                id: stringInput
                 Layout.fillWidth: true
-                text: "Clear"
+                focus: true
+                cursorVisible: true
+
+                onAccepted: {sendCommand()}
+            }
+
+            Button {
+                text: qsTr("Send")
+                enabled: Skypuff.state != "DISCONNECTED"
+
+                onClicked: {sendCommand()}
+            }
+            Button {
+                text: qsTr("Clear")
 
                 onClicked: {
                     terminalText.clear()
                 }
             }
-
-            Button {
-                Layout.preferredWidth: 100
-                Layout.fillWidth: true
-                text: "Send"
-
-                onClicked: {
-                    mCommands.sendTerminalCmd(stringInput.text)
-                    stringInput.clear()
-                }
-            }
-
-            Button {
-                Layout.preferredWidth: 50
-                Layout.fillWidth: true
-                text: "..."
-                onClicked: menu.open()
-
-                Menu {
-                    id: menu
-                    width: 500
-
-                    MenuItem {
-                        text: "Print Faults"
-                        onTriggered: {
-                            mCommands.sendTerminalCmd("faults")
-                        }
-                    }
-                    MenuItem {
-                        text: "Print Threads"
-                        onTriggered: {
-                            mCommands.sendTerminalCmd("threads")
-                        }
-                    }
-                    MenuItem {
-                        text: "Show Help"
-                        onTriggered: {
-                            mCommands.sendTerminalCmd("help")
-                        }
-                    }
-                }
-            }
-        }
-
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.bottomMargin: 10
-            height: stringInput.implicitHeight + 14
-            border.width: 2
-            border.color: "#8d8d8d"
-            color: "#33a8a8a8"
-            radius: 3
-            TextInput {
-                id: stringInput
-                color: "white"
-                anchors.fill: parent
-                anchors.margins: 7
-                font.pointSize: 12
-                focus: true
-            }
-        }
+       }
     }
 
     Connections {
@@ -127,6 +90,7 @@ Item {
 
         onPrintReceived: {
             terminalText.text += "\n" + str
+            scroll.contentItem.contentY = terminalText.height - scroll.height
         }
     }
 }

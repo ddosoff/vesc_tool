@@ -16,12 +16,21 @@
 */
 #include "skypuff.h"
 
-Skypuff::Skypuff(VescInterface *parent) : QObject(parent),
-    vesc(parent), aliveTimerId(0), commandTimeoutTimerId(0), m_state("DISCONNECTED")
+Skypuff::Skypuff(VescInterface *v) : QObject(),
+    vesc(v), aliveTimerId(0), commandTimeoutTimerId(0), m_state("DISCONNECTED")
 {
     connect(vesc, SIGNAL(portConnectedChanged()), this, SLOT(portConnectedChanged()));
     connect(vesc->commands(), SIGNAL(printReceived(QString)), this, SLOT(printReceived(QString)));
     connect(vesc->commands(), SIGNAL(customAppDataReceived(QByteArray)), this, SLOT(customAppDataReceived(QByteArray)));
+
+    // Can't use Q_ENUM because skypuff_state declared out of Q_OBJECT class
+    QString eof = "UNKNOWN";
+    for(int i = 0;;i++) {
+        QString s = state_str((skypuff_state)i);
+        if(eof == s)
+            break;
+        h_states[s] = i;
+    }
 }
 
 void Skypuff::setState(const QString& newState)
@@ -124,9 +133,88 @@ bool Skypuff::stopTimout(const QString& cmd)
     return true;
 }
 
+// Parse known command and payload
+bool Skypuff::parseCommand(QStringRef &str, CommandAndPayload &c)
+{
+    int len = str.length();
+
+    if(!len)
+        return false;
+
+    int i;
+
+    // Skip spaces
+    for(i = 0;str[i].isSpace() && i < len;i++);
+
+    if(i == len)
+        return false;
+
+    if(i)
+        str = str.mid(i);
+
+    if(str.startsWith("--")) {
+        // Payload up to next -- or end of string
+        c.first = MESSAGE;
+
+        int e = str.indexOf("--", 2);
+        if(e == -1)
+            e = str.length();
+
+        c.second = str.mid(2, e - 2).trimmed();
+        str = str.mid(e);
+
+        return true;
+    }
+
+    // Unknown command type, just ignore
+    return false;
+}
+
 void Skypuff::printReceived(QString str)
 {
-    qWarning() << "printReceived" << str;
+    // Parse state
+    int i = str.indexOf(':');
+
+    if(i == -1) {
+        qWarning() << "Can't parse state, no colon" << str;
+        return;
+    }
+
+    QString p_state = str.left(i);
+
+    if(!h_states.contains(p_state)) {
+        qWarning() << "Can't parse state, unknown state" << str;
+        return;
+    }
+
+    // Yeagh, we know the state!
+    setState(p_state);
+
+    QStringRef rStr = str.midRef(i + 1); // Skip ':'
+    QStringList messages;
+
+    // Process commands..
+    CommandAndPayload c;
+    while(parseCommand(rStr, c)) {
+        switch(c.first) {
+        case MESSAGE:
+            messages.append(c.second.toString());
+            break;
+        default:
+            // Just ignore all command we do not know to to what with
+            break;
+        }
+    };
+
+    // Emit messages signals
+    if(!messages.isEmpty()) {
+        QString title = messages.takeFirst();
+
+        if(messages.isEmpty())
+            emit statusMessage(title);
+        else
+            vesc->emitMessageDialog(title, messages.join("\n"), false);
+    }
 }
 
 void Skypuff::customAppDataReceived(QByteArray data)
@@ -263,7 +351,5 @@ QByteArray Skypuff::serializeV1(const QMLable_skypuff_config &cfg)
 
 void Skypuff::saveSettings(const QMLable_skypuff_config& cfg)
 {
-    qWarning() << "amps_per_kg" << cfg.amps_per_sec;
-
     vesc->commands()->sendCustomAppData(serializeV1(cfg));
 }

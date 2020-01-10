@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     QQmlApplicationEngine engine;
-    
+
     qmlRegisterSingletonType<VescInterface>("Vedder.vesc.vescinterface", 1, 0, "VescIf", vescinterface_singletontype_provider);
     qmlRegisterSingletonType<Skypuff>("SkyPuff.vesc.winch", 1, 0, "Skypuff", skypuff_singletontype_provider);
     qmlRegisterSingletonType<Utility>("Vedder.vesc.utility", 1, 0, "Utility", utility_singletontype_provider);

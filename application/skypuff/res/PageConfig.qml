@@ -14,7 +14,7 @@ Page {
             width: sv.width
 
             GroupBox {
-                title: qsTr("VESC drive settings (editable from vesc_tool)")
+                title: qsTr("VESC drive settings (editable from vesc_tool too)")
                 Layout.fillWidth: true
                 Layout.margins: 10
 
@@ -94,13 +94,14 @@ Page {
                     RowLayout {
                         Text {text: qsTr("Rope length (meters)")}
                         Item {Layout.fillWidth: true}
-                        SpinBox {
+                        RealSpinBox {
                             id: rope_length
                             editable: true
                             from: 5
                             to: 5000
                             value: 1000
                             stepSize: 10
+                            decimals: 1
                         }
                     }
                 }
@@ -126,12 +127,12 @@ Page {
                         }
                     }
                     RowLayout {
-                        Text {text: qsTr("Passive braking length (meters)")}
+                        Text {text: qsTr("Passive/additional braking length (meters)")}
                         Item {Layout.fillWidth: true}
-                        SpinBox {
+                        RealSpinBox {
                             id: passive_braking_length
                             editable: true
-                            from: 1
+                            from: 0.2
                             to: 5000
                             stepSize: 10
                         }
@@ -140,7 +141,7 @@ Page {
                         Text {text: qsTr("Brake force (KG)")}
                         Item {Layout.fillWidth: true}
                         RealSpinBox {
-                            id: brake_current
+                            id: brake_kg
                             from: 0.2
                             to: 200 // High force possible, no special mode yet
                             value: 1
@@ -164,6 +165,7 @@ Page {
                         Item {Layout.fillWidth: true}
                         RealSpinBox {
                             id: unwinding_trigger_length
+                            value: 0.8
                             from: 0.1
                             to: 10
                             decimals: 1
@@ -174,10 +176,10 @@ Page {
                         Text {text: qsTr("Unwinding force (KG)")}
                         Item {Layout.fillWidth: true}
                         RealSpinBox {
-                            id: unwinding_current
+                            id: unwinding_kg
+                            value: 3
                             from: 0.2
                             to: 20
-                            value: 3
                             decimals: 1
                             stepSize: 0.2
                         }
@@ -187,6 +189,7 @@ Page {
                         Item {Layout.fillWidth: true}
                         RealSpinBox {
                             id: rewinding_trigger_length
+                            value: 20
                             from: 0.5
                             to: 50
                             decimals: 1
@@ -196,7 +199,7 @@ Page {
                         Text {text: qsTr("Rewinding force (KG)")}
                         Item {Layout.fillWidth: true}
                         RealSpinBox {
-                            id: rewinding_current
+                            id: rewinding_kg
                             from: 0.2
                             to: 40
                             value: 5
@@ -229,12 +232,12 @@ Page {
                         Text {text: qsTr("Slowing brake force (KG)")}
                         Item {Layout.fillWidth: true}
                         RealSpinBox {
-                            id: slowing_current
+                            id: slowing_kg
                             from: 0
                             to: 10
-                            value: 0
+                            value: 0.1
                             decimals: 1
-                            stepSize: 0.2
+                            stepSize: 0.1
                         }
                     }
                     RowLayout {
@@ -252,7 +255,7 @@ Page {
                         Text {text: qsTr("Maximum slow mode force (KG)")}
                         Item {Layout.fillWidth: true}
                         RealSpinBox {
-                            id: slow_max_current
+                            id: slow_max_kg
                             from: 0.2
                             to: 20
                             value: 5
@@ -275,7 +278,7 @@ Page {
                         Text {text: qsTr("Default pull force (KG)")}
                         Item {Layout.fillWidth: true}
                         RealSpinBox {
-                            id: pull_current
+                            id: pull_kg
                             from: 0.1
                             to: 600
                             value: 100
@@ -367,7 +370,7 @@ Page {
                         Text {text: qsTr("Manual brake force (KG)")}
                         Item {Layout.fillWidth: true}
                         RealSpinBox {
-                            id: manual_brake_current
+                            id: manual_brake_kg
                             from: 0.2
                             to: 10
                             value: 3
@@ -391,7 +394,7 @@ Page {
                         Text {text: qsTr("Manual slow speed up force (KG)")}
                         Item {Layout.fillWidth: true}
                         RealSpinBox {
-                            id: manual_slow_speed_up_current
+                            id: manual_slow_speed_up_kg
                             from: 0.2
                             to: 20
                             value: 2
@@ -403,7 +406,7 @@ Page {
                         Text {text: qsTr("Manual slow maximum force (KG)")}
                         Item {Layout.fillWidth: true}
                         RealSpinBox {
-                            id: manual_slow_max_current
+                            id: manual_slow_max_kg
                             from: 0.2
                             to: 20
                             value: 5
@@ -423,7 +426,7 @@ Page {
         onClicked: {
             var cfg = Skypuff.emptySettings()
 
-            // This part should be first
+            // This part should be first to update units conversion params
             cfg.motor_poles = motor_poles.value
             cfg.gear_ratio = gear_ratio.value
             cfg.wheel_diameter_mm = wheel_diameter_mm.value
@@ -431,8 +434,33 @@ Page {
 
             // This part depended on values above
             cfg.kg_per_sec = kg_per_sec.value
-            cfg.rope_length = rope_length.value
+            cfg.rope_length_meters = rope_length.value
             cfg.braking_length_meters = braking_length.value
+            cfg.passive_braking_length_meters = passive_braking_length.value
+            cfg.slowing_length_meters = slowing_length.value
+
+            cfg.rewinding_trigger_length_meters = rewinding_trigger_length.value
+            cfg.unwinding_trigger_length_meters = unwinding_trigger_length.value
+            cfg.takeoff_trigger_length_meters = takeoff_trigger_length.value
+            cfg.slow_erpm_ms = slow_erpm.value
+            cfg.manual_slow_erpm_ms = manual_slow_erpm.value
+
+            cfg.pull_kg = pull_kg.value
+            cfg.brake_kg = brake_kg.value
+            cfg.manual_brake_kg = manual_brake_kg.value
+            cfg.unwinding_kg = unwinding_kg.value
+            cfg.rewinding_kg = rewinding_kg.value
+
+            cfg.slow_max_kg = slow_max_kg.value
+            cfg.slowing_kg = slowing_kg.value
+            cfg.manual_slow_max_kg = manual_slow_max_kg.value
+            cfg.manual_slow_speed_up_kg = manual_slow_speed_up_kg.value
+            cfg.pre_pull_k_percents = pre_pull_k.value
+
+            cfg.takeoff_pull_k_percents = takeoff_pull_k.value
+            cfg.fast_pull_k_percents = fast_pull_k.value
+            cfg.pre_pull_timeout_seconds = pre_pull_timeout.value
+            cfg.takeoff_period_seconds = takeoff_period.value
 
             Skypuff.saveSettings(cfg)
         }
@@ -442,18 +470,43 @@ Page {
         target: Skypuff
 
         onSettingsChanged: {
-            motor_poles.value = cfg.motor_poles
-            gear_ratio.value = cfg.gear_ratio
-            wheel_diameter_mm.value = cfg.wheel_diameter_mm
-
             // DIRTY: do not override nice UI defaults with empty conf
             if(cfg.amps_per_kg < 0.1)
                 return
 
+            motor_poles.value = cfg.motor_poles
+            gear_ratio.value = cfg.gear_ratio
+            wheel_diameter_mm.value = cfg.wheel_diameter_mm
             amps_per_kg.value = cfg.amps_per_kg
-            kg_per_sec.value = cfg.amps_per_sec / cfg.amps_to_kg
-            rope_length.value = cfg.rope_length
+
+            kg_per_sec.value = cfg.kg_per_sec
+            rope_length.value = cfg.rope_length_meters
             braking_length.value = cfg.braking_length_meters
+            passive_braking_length.value = cfg.passive_braking_length_meters
+            slowing_length.value = cfg.slowing_length_meters
+
+            rewinding_trigger_length.value = cfg.rewinding_trigger_length_meters
+            unwinding_trigger_length.value = cfg.unwinding_trigger_length_meters
+            takeoff_trigger_length.value = cfg.takeoff_trigger_length_meters
+            slow_erpm.value = cfg.slow_erpm_ms
+            manual_slow_erpm.value = cfg.manual_slow_erpm_ms
+
+            pull_kg.value = cfg.pull_kg
+            brake_kg.value = cfg.brake_kg
+            manual_brake_kg.value = cfg.manual_brake_kg
+            unwinding_kg.value = cfg.unwinding_kg
+            rewinding_kg.value = cfg.rewinding_kg
+
+            slow_max_kg.value = cfg.slow_max_kg
+            slowing_kg.value = cfg.slowing_kg
+            manual_slow_max_kg.value = cfg.manual_slow_max_kg
+            manual_slow_speed_up_kg.value = cfg.manual_slow_speed_up_kg
+            pre_pull_k.value = cfg.pre_pull_k_percents
+
+            takeoff_pull_k.value = cfg.takeoff_pull_k_percents
+            fast_pull_k.value = cfg.fast_pull_k_percents
+            pre_pull_timeout.value = cfg.pre_pull_timeout_seconds
+            takeoff_period.value = cfg.takeoff_period_seconds
         }
     }
 }
