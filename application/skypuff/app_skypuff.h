@@ -25,13 +25,15 @@
 
 // Must be increased on skypuff_config struct update
 // Don't forget to update HW limits structs, serialization and checking functions
-static const uint8_t skypuff_config_version = 1;
+// Sometimes this have to be changed to existing serialization solution
+const uint8_t skypuff_config_version = 1;
 
 // Winch FSM
 typedef enum
 {
     UNINITIALIZED,             // Released motor until some valid configuration set
     BRAKING,                   // Braking zone near take off
+    BRAKING_EXTENSION,         // Braking after braking zone. Set long to disable automatic transition to UNWINDING. Manual possible.
     SLOWING,                   // Next to braking zone to slow down the motor
     SLOW,                      // Constant speed in direction to zero
     UNWINDING,                 // Low force rope tension during step up or unwinder mode
@@ -55,9 +57,9 @@ typedef struct
 {
     float amps_per_kg;                  // Winch drive force coefficient
     float amps_per_sec;                 // Speed to change force during smooth motor adjustments
-    int rope_length;                    // Winch rope length in tac steps (used by interface only)
+    int rope_length;                    // Winch rope length in tachometer steps (used by interface only)
     int braking_length;                 // Tachometer range of braking zone
-    int passive_braking_length;         // Increase braking_length for passive winches when car drive 150m from takeoff
+    int braking_extension_length;       // Increase braking_length for passive winches when car drive 150m from takeoff
     int slowing_length;                 // Range after braking zone to slow down motor when unwinding to zero
     float slow_erpm;                    // Constant erpm in direction to zero
     int rewinding_trigger_length;       // Switch to fast rewinding state after going back this length
@@ -96,6 +98,8 @@ inline const char *state_str(const skypuff_state s)
         return "UNITIALIZED";
     case BRAKING:
         return "BRAKING";
+    case BRAKING_EXTENSION:
+        return "BRAKING_EXTENSION";
     case MANUAL_BRAKING:
         return "MANUAL_BRAKING";
     case MANUAL_SLOW_SPEED_UP:

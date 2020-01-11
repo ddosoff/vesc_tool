@@ -89,7 +89,11 @@ Page {
         target: mCommands
 
         onPrintReceived: {
-            terminalText.text += "\n" + str
+            // Do not become too fat
+            if(terminalText.text.length > 1024*16)
+                terminalText.clear()
+
+            terminalText.text = terminalText.text.concat("\n", str);
             scroll.contentItem.contentY = terminalText.height - scroll.height
         }
     }

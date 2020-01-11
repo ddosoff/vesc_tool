@@ -19,6 +19,13 @@
 Skypuff::Skypuff(VescInterface *v) : QObject(),
     vesc(v), aliveTimerId(0), commandTimeoutTimerId(0), m_state("DISCONNECTED")
 {
+    // Fill message types
+    messageTypes[TEXT_MESSAGE] = "--";
+    messageTypes[POSITION] = "pos";
+    messageTypes[SPEED] = "speed";
+    messageTypes[BRAKING] = "braking";
+    messageTypes[PULL] = "pull";
+
     connect(vesc, SIGNAL(portConnectedChanged()), this, SLOT(portConnectedChanged()));
     connect(vesc->commands(), SIGNAL(printReceived(QString)), this, SLOT(printReceived(QString)));
     connect(vesc->commands(), SIGNAL(customAppDataReceived(QByteArray)), this, SLOT(customAppDataReceived(QByteArray)));
@@ -33,11 +40,11 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
     }
 }
 
-void Skypuff::setState(const QString& newState)
+void Skypuff::setState(const QString& newState, const QVariantMap& params)
 {
     if(this->m_state != newState) {
         this->m_state = newState;
-        emit this->stateChanged(this->m_state);
+        emit this->stateChanged(this->m_state, params);
     }
 }
 
@@ -134,7 +141,7 @@ bool Skypuff::stopTimout(const QString& cmd)
 }
 
 // Parse known command and payload
-bool Skypuff::parseCommand(QStringRef &str, CommandAndPayload &c)
+bool Skypuff::parseCommand(QStringRef &str, MessageTypeAndPayload &c)
 {
     int len = str.length();
 
@@ -143,8 +150,8 @@ bool Skypuff::parseCommand(QStringRef &str, CommandAndPayload &c)
 
     int i;
 
-    // Skip spaces
-    for(i = 0;str[i].isSpace() && i < len;i++);
+    // Skip spaces or ','
+    for(i = 0;(str[i].isSpace() || str[i] == ',') && i < len;i++);
 
     if(i == len)
         return false;
@@ -152,19 +159,20 @@ bool Skypuff::parseCommand(QStringRef &str, CommandAndPayload &c)
     if(i)
         str = str.mid(i);
 
-    if(str.startsWith("--")) {
-        // Payload up to next -- or end of string
-        c.first = MESSAGE;
+    for(auto ci = messageTypes.constBegin();ci != messageTypes.constEnd();ci++)
+        if(str.startsWith(ci.value())) {
+            // Payload up to next '--' or end of string
+            c.first = ci.key();
 
-        int e = str.indexOf("--", 2);
-        if(e == -1)
-            e = str.length();
+            int e = str.indexOf(c.first == TEXT_MESSAGE ? "--" : ",", ci.value().length());
+            if(e == -1)
+                e = str.length();
 
-        c.second = str.mid(2, e - 2).trimmed();
-        str = str.mid(e);
+            c.second = str.mid(ci.value().length(), e - ci.value().length()).trimmed();
+            str = str.mid(e);
 
-        return true;
-    }
+            return true;
+        }
 
     // Unknown command type, just ignore
     return false;
@@ -187,24 +195,44 @@ void Skypuff::printReceived(QString str)
         return;
     }
 
-    // Yeagh, we know the state!
-    setState(p_state);
-
     QStringRef rStr = str.midRef(i + 1); // Skip ':'
     QStringList messages;
+    QVariantMap params;
 
     // Process commands..
-    CommandAndPayload c;
+    MessageTypeAndPayload c;
     while(parseCommand(rStr, c)) {
         switch(c.first) {
-        case MESSAGE:
+        case TEXT_MESSAGE:
             messages.append(c.second.toString());
             break;
+        case BRAKING:
+        {
+            // Remove amps from payload
+            int s = c.second.indexOf(' ');
+            params[messageTypes[c.first]] = s == -1 ? c.second.toString() : c.second.left(s).toString();
+            break;
+        }
+        case SPEED:
+        case PULL:
+        {
+            // Remove first '-'
+            if(c.second.indexOf('-') == 0)
+                c.second = c.second.mid(1);
+
+            // Remove amps from payload
+            int s = c.second.indexOf(' ');
+            params[messageTypes[c.first]] = s == -1 ? c.second.toString() : c.second.left(s).toString();
+            break;
+        }
         default:
-            // Just ignore all command we do not know to to what with
+            params[messageTypes[c.first]] = c.second.toString();
             break;
         }
     };
+
+    // Yeagh, we know the state!
+    setState(p_state, params);
 
     // Emit messages signals
     if(!messages.isEmpty()) {
@@ -276,7 +304,7 @@ void Skypuff::deserializeV1(VByteArray & vb)
     cfg.amps_per_sec = vb.vbPopFrontDouble32Auto();
     cfg.rope_length = vb.vbPopFrontInt32();
     cfg.braking_length = vb.vbPopFrontInt32();
-    cfg.passive_braking_length = vb.vbPopFrontInt32();
+    cfg.braking_extension_length = vb.vbPopFrontInt32();
 
     cfg.slowing_length = vb.vbPopFrontInt32();
     cfg.slow_erpm = vb.vbPopFrontDouble32Auto();
@@ -324,7 +352,7 @@ QByteArray Skypuff::serializeV1(const QMLable_skypuff_config &cfg)
     vb.vbAppendDouble32Auto(cfg.amps_per_sec);
     vb.vbAppendInt32(cfg.rope_length);
     vb.vbAppendInt32(cfg.braking_length);
-    vb.vbAppendInt32(cfg.passive_braking_length);
+    vb.vbAppendInt32(cfg.braking_extension_length);
     vb.vbAppendInt32(cfg.slowing_length);
     vb.vbAppendDouble32Auto(cfg.slow_erpm);
     vb.vbAppendInt32(cfg.rewinding_trigger_length);

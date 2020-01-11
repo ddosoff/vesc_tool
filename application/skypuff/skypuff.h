@@ -34,7 +34,7 @@ struct QMLable_skypuff_config : public skypuff_config, public skypuff_drive {
     Q_PROPERTY(float kg_per_sec READ amps_per_sec_to_kg WRITE kg_per_sec_to_amps)
     Q_PROPERTY(float rope_length_meters READ rope_length_to_meters WRITE meters_to_rope_length)
     Q_PROPERTY(float braking_length_meters READ braking_length_to_meters WRITE meters_to_braking_length)
-    Q_PROPERTY(float passive_braking_length_meters READ passive_braking_length_to_meters WRITE meters_to_passive_braking_length)
+    Q_PROPERTY(float braking_extension_length_meters READ braking_extension_length_to_meters WRITE meters_to_braking_extension_length)
     Q_PROPERTY(float slowing_length_meters READ slowing_length_to_meters WRITE meters_to_slowing_length)
     Q_PROPERTY(float slow_erpm_ms READ slow_erpm_to_ms WRITE ms_to_slow_erpm)
     Q_PROPERTY(float rewinding_trigger_length_meters READ rewinding_trigger_length_to_meters WRITE meters_to_rewinding_trigger_length)
@@ -111,8 +111,8 @@ public:
     float braking_length_to_meters() {return tac_steps_to_meters(braking_length);}
     void meters_to_braking_length(float meters) {braking_length = meters_to_tac_steps(meters);}
 
-    float passive_braking_length_to_meters() {return tac_steps_to_meters(passive_braking_length);}
-    void meters_to_passive_braking_length(float meters) {passive_braking_length = meters_to_tac_steps(meters);}
+    float braking_extension_length_to_meters() {return tac_steps_to_meters(braking_extension_length);}
+    void meters_to_braking_extension_length(float meters) {braking_extension_length = meters_to_tac_steps(meters);}
 
     float slowing_length_to_meters() {return tac_steps_to_meters(slowing_length);}
     void meters_to_slowing_length(float meters) {slowing_length = meters_to_tac_steps(meters);}
@@ -177,12 +177,18 @@ public:
     // QML settings constructor
     Q_INVOKABLE QMLable_skypuff_config emptySettings() {return QMLable_skypuff_config();}
     Q_INVOKABLE void saveSettings(const QMLable_skypuff_config& cfg);
+    Q_INVOKABLE void sendTerminal(const QString &c) {vesc->commands()->sendTerminalCmd(c);}
 
-    // Parsed commands from prints
-    enum ParsedCommand {
-        MESSAGE,
+    // Parsed messages from prints
+    enum MessageType {
+        TEXT_MESSAGE,
+        POSITION,
+        SPEED,
+        BRAKING,
+        PULL,
     };
-    typedef QPair<ParsedCommand, QStringRef> CommandAndPayload;
+    typedef QPair<MessageType, QStringRef> MessageTypeAndPayload;
+    typedef QPair<QString, MessageType> StrMessageType;
 signals:
     /* It is simple to work with QML text states:
      *
@@ -190,7 +196,7 @@ signals:
      * UNITIALIZED - Skypuff app is waiting for correct settings
      * BRAKING .. and all skypuff states
      */
-    void stateChanged(const QString& newState);
+    void stateChanged(const QString& newState, const QVariantMap& params);
     void settingsChanged(const QMLable_skypuff_config &cfg);
     void statsChanged(const float cur_pos_meters, const float speed_ms);
 
@@ -205,12 +211,12 @@ protected:
     QString lastCmd;
 
     QString getState() {return m_state;}
-    void setState(const QString& newState);
+    void setState(const QString& newState, const QVariantMap& params = QVariantMap());
     bool sendCmd(const QString& cmd);
     void sendCmdOrDisconnect(const QString& cmd);
     bool stopTimout(const QString& cmd);
     void timerEvent(QTimerEvent *event) override;
-    bool parseCommand(QStringRef &str, CommandAndPayload &c);
+    bool parseCommand(QStringRef &str, MessageTypeAndPayload &c);
 protected slots:
     void printReceived(QString str);
     void customAppDataReceived(QByteArray data);
@@ -218,6 +224,7 @@ protected slots:
 private:
     QString m_state;
     QHash<QString, int> h_states; // Dirty hack about skypuff_states enum
+    QHash<MessageType, QString> messageTypes;
 
     // Sorry for hardcoded serialization..
     void deserializeV1(VByteArray & vb);

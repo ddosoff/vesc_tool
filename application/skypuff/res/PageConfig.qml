@@ -11,7 +11,8 @@ Page {
         clip: true
 
         ColumnLayout {
-            width: sv.width
+            // Expand layout if window is bigger
+            width: sv.width > implicitWidth ? sv.width : implicitWidth
 
             GroupBox {
                 title: qsTr("VESC drive settings (editable from vesc_tool too)")
@@ -127,10 +128,10 @@ Page {
                         }
                     }
                     RowLayout {
-                        Text {text: qsTr("Passive/additional braking length (meters)")}
+                        Text {text: qsTr("Extension braking length (meters)")}
                         Item {Layout.fillWidth: true}
                         RealSpinBox {
-                            id: passive_braking_length
+                            id: braking_extension_length
                             editable: true
                             from: 0.2
                             to: 5000
@@ -436,7 +437,7 @@ Page {
             cfg.kg_per_sec = kg_per_sec.value
             cfg.rope_length_meters = rope_length.value
             cfg.braking_length_meters = braking_length.value
-            cfg.passive_braking_length_meters = passive_braking_length.value
+            cfg.braking_extension_length_meters = braking_extension_length.value
             cfg.slowing_length_meters = slowing_length.value
 
             cfg.rewinding_trigger_length_meters = rewinding_trigger_length.value
@@ -482,7 +483,7 @@ Page {
             kg_per_sec.value = cfg.kg_per_sec
             rope_length.value = cfg.rope_length_meters
             braking_length.value = cfg.braking_length_meters
-            passive_braking_length.value = cfg.passive_braking_length_meters
+            braking_extension_length.value = cfg.braking_extension_length_meters
             slowing_length.value = cfg.slowing_length_meters
 
             rewinding_trigger_length.value = cfg.rewinding_trigger_length_meters
