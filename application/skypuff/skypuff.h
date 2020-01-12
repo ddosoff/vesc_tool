@@ -150,6 +150,9 @@ public:
 
         return rps * meters_per_rev();
     }
+
+    QByteArray serializeV1() const;
+    bool deserializeV1(VByteArray& from);
 };
 
 Q_DECLARE_METATYPE(QMLable_skypuff_config)
@@ -167,6 +170,8 @@ class Skypuff : public QObject
 
     // Do we really need to divide state into many properties?
     Q_PROPERTY(QString state READ getState NOTIFY stateChanged)
+    // To enable back to braking from unwinding in the braking extension zone
+    Q_PROPERTY(bool isBrakingExtensionPos READ isBrakingExtensionPos NOTIFY brakingExtensionPosChanged)
 
     const int aliveTimerDelay = 300; // milliseconds
     const int aliveTimeout = 400;
@@ -174,10 +179,11 @@ class Skypuff : public QObject
 public:
     Skypuff(VescInterface *parent = 0);
 
-    // QML settings constructor
-    Q_INVOKABLE QMLable_skypuff_config emptySettings() {return QMLable_skypuff_config();}
-    Q_INVOKABLE void saveSettings(const QMLable_skypuff_config& cfg);
     Q_INVOKABLE void sendTerminal(const QString &c) {vesc->commands()->sendTerminalCmd(c);}
+
+    // All this types conversion between C++ and QML is very strange...
+    Q_INVOKABLE QMLable_skypuff_config emptySettings() {return QMLable_skypuff_config();}
+    Q_INVOKABLE void sendSettings(const QMLable_skypuff_config& cfg);
 
     // Parsed messages from prints
     enum MessageType {
@@ -197,18 +203,19 @@ signals:
      * BRAKING .. and all skypuff states
      */
     void stateChanged(const QString& newState, const QVariantMap& params);
-    void settingsChanged(const QMLable_skypuff_config &cfg);
-    void statsChanged(const float cur_pos_meters, const float speed_ms);
-
-    // Parsed messages from MCU
+    void settingsChanged(const QMLable_skypuff_config & cfg);
+    void statsChanged(const QVariantMap& params);
     void statusMessage(const QString &msg);
-    // Will be emited vescinterface message dialog
-    //void alarmMessage(const QString& title, const QString &msg);
+    void brakingExtensionPosChanged(const bool isBrakingExtensionPos);
 protected:
     VescInterface *vesc;
     int aliveTimerId;
     int commandTimeoutTimerId;
     QString lastCmd;
+
+    QMLable_skypuff_config cfg;
+    int cur_pos;
+    float erpm;
 
     QString getState() {return m_state;}
     void setState(const QString& newState, const QVariantMap& params = QVariantMap());
@@ -217,6 +224,8 @@ protected:
     bool stopTimout(const QString& cmd);
     void timerEvent(QTimerEvent *event) override;
     bool parseCommand(QStringRef &str, MessageTypeAndPayload &c);
+    void setPos(int new_pos);
+    bool isBrakingExtensionPos() const {return cur_pos > cfg.braking_length && cur_pos <= cfg.braking_length + cfg.braking_extension_length;}
 protected slots:
     void printReceived(QString str);
     void customAppDataReceived(QByteArray data);
@@ -227,8 +236,8 @@ private:
     QHash<MessageType, QString> messageTypes;
 
     // Sorry for hardcoded serialization..
-    void deserializeV1(VByteArray & vb);
-    QByteArray serializeV1(const QMLable_skypuff_config & cfg);
+    //void deserializeV1(VByteArray & vb);
+    //QByteArray serializeV1(const QMLable_skypuff_config & cfg);
 };
 
 #endif // SKYPUFF_H

@@ -127,7 +127,7 @@ bool Skypuff::stopTimout(const QString& cmd)
     }
 
     if(!this->commandTimeoutTimerId) {
-        vesc->emitMessageDialog(tr("Incorrect timeout"),
+        vesc->emitMessageDialog(tr("Timeout is not set"),
                                 tr("stopTimeout(<i>%1</i>) commandTimeoutTimerId is not set..").arg(cmd),
                                 true);
         return false;
@@ -199,7 +199,7 @@ void Skypuff::printReceived(QString str)
     QStringList messages;
     QVariantMap params;
 
-    // Process commands..
+    // Parse messages with types
     MessageTypeAndPayload c;
     while(parseCommand(rStr, c)) {
         switch(c.first) {
@@ -223,8 +223,19 @@ void Skypuff::printReceived(QString str)
             // Remove amps from payload
             int s = c.second.indexOf(' ');
             params[messageTypes[c.first]] = s == -1 ? c.second.toString() : c.second.left(s).toString();
-            break;
         }
+            break;
+        case POSITION:
+        {
+            // Remove first '-'
+            if(c.second.indexOf('-') == 0)
+                c.second = c.second.mid(1);
+
+            // Remove tac_steps
+            int s = c.second.indexOf('m');
+            params[messageTypes[c.first]] = s == -1 ? c.second.toString() : c.second.left(s).toString();
+        }
+            break;
         default:
             params[messageTypes[c.first]] = c.second.toString();
             break;
@@ -238,17 +249,24 @@ void Skypuff::printReceived(QString str)
     if(!messages.isEmpty()) {
         QString title = messages.takeFirst();
 
+        // Only title available?
         if(messages.isEmpty())
             emit statusMessage(title);
-        else
-            vesc->emitMessageDialog(title, messages.join("\n"), false);
+        else {
+            vesc->emitMessageDialog(title, messages.join("\n"), false);\
+        }
     }
+
+    if(!params.isEmpty())
+        emit statsChanged(params);
 }
 
 void Skypuff::customAppDataReceived(QByteArray data)
 {
-    if(!stopTimout("get_conf"))
-        return;
+    // Configuration could be set from console
+    // get_conf command is not necessary, but possible
+    if(commandTimeoutTimerId)
+        stopTimout("get_conf");
 
     VByteArray vb(data);
 
@@ -262,122 +280,139 @@ void Skypuff::customAppDataReceived(QByteArray data)
 
     uint8_t version = vb.vbPopFrontUint8();
 
-    switch(version) {
-    case 1:
-        this->deserializeV1(vb);
-        break;
-    default:
+    if(version != 1) {
         vesc->emitMessageDialog(tr("Wrong config version"),
                                 tr("Received skypuff version %1, my version %2.").arg(version).arg(skypuff_config_version),
                                 true);
         vesc->disconnectPort();
         return;
     }
+
+    // Enough data?
+    const int v1_settings_length = 118;
+    if(vb.length() < v1_settings_length) {
+        vesc->emitMessageDialog(tr("Can't deserialize V1 settings"),
+                                tr("Received %1 bytes, but need %2 bytes!").arg(vb.length()).arg(v1_settings_length),
+                                true);
+        vesc->disconnectPort();
+    }
+
+    // Get state and pos
+    skypuff_state mcu_state;
+    int new_pos;
+    float new_erpm;
+
+    mcu_state = (skypuff_state)vb.vbPopFrontUint8();
+    new_pos = vb.vbPopFrontInt32();
+    new_erpm = vb.vbPopFrontDouble32Auto();
+
+    cfg.deserializeV1(vb);
+
+    QVariantMap params;
+    params["pos"] = cfg.tac_steps_to_meters(new_pos);
+    params["speed"] = cfg.erpm_to_ms(new_erpm);
+
+    emit settingsChanged(cfg);
+    setState(state_str(mcu_state), params);
+    emit statsChanged(params);
+
     return;
 }
 
-void Skypuff::deserializeV1(VByteArray & vb)
+bool QMLable_skypuff_config::deserializeV1(VByteArray& from)
 {
-    const int v1_settings_length = 114;
-    if(vb.length() < v1_settings_length) {
-        vesc->emitMessageDialog(tr("Can't deserialize"),
-                                tr("%1 bytes is not enough to deserialize V1 %2 bytes settings")
-                                .arg(vb.length())
-                                .arg(v1_settings_length),
-                                true);
-        vesc->disconnectPort();
-        return;
-    }
+    if(from.length() < 109)
+            return false;
 
-    skypuff_state mcu_state;
-    int cur_pos;
-    QMLable_skypuff_config cfg;
+    motor_poles = from.vbPopFrontUint8();
+    gear_ratio = from.vbPopFrontDouble32Auto();
+    wheel_diameter = from.vbPopFrontDouble32Auto();
 
-    mcu_state = (skypuff_state)vb.vbPopFrontUint8();
-    cur_pos = vb.vbPopFrontInt32();
+    amps_per_kg = from.vbPopFrontDouble32Auto();
+    amps_per_sec = from.vbPopFrontDouble32Auto();
+    rope_length = from.vbPopFrontInt32();
+    braking_length = from.vbPopFrontInt32();
+    braking_extension_length = from.vbPopFrontInt32();
 
-    cfg.motor_poles = vb.vbPopFrontUint8();
-    cfg.gear_ratio = vb.vbPopFrontDouble32Auto();
-    cfg.wheel_diameter = vb.vbPopFrontDouble32Auto();
+    slowing_length = from.vbPopFrontInt32();
+    slow_erpm = from.vbPopFrontDouble32Auto();
+    rewinding_trigger_length = from.vbPopFrontInt32();
+    unwinding_trigger_length = from.vbPopFrontInt32();
+    pull_current = from.vbPopFrontDouble32Auto();
 
-    cfg.amps_per_kg = vb.vbPopFrontDouble32Auto();
-    cfg.amps_per_sec = vb.vbPopFrontDouble32Auto();
-    cfg.rope_length = vb.vbPopFrontInt32();
-    cfg.braking_length = vb.vbPopFrontInt32();
-    cfg.braking_extension_length = vb.vbPopFrontInt32();
+    pre_pull_k = from.vbPopFrontDouble32Auto();
+    takeoff_pull_k = from.vbPopFrontDouble32Auto();
+    fast_pull_k = from.vbPopFrontDouble32Auto();
+    takeoff_trigger_length = from.vbPopFrontInt32();
+    pre_pull_timeout = from.vbPopFrontInt32();
 
-    cfg.slowing_length = vb.vbPopFrontInt32();
-    cfg.slow_erpm = vb.vbPopFrontDouble32Auto();
-    cfg.rewinding_trigger_length = vb.vbPopFrontInt32();
-    cfg.unwinding_trigger_length = vb.vbPopFrontInt32();
-    cfg.pull_current = vb.vbPopFrontDouble32Auto();
+    takeoff_period = from.vbPopFrontInt32();
+    brake_current = from.vbPopFrontDouble32Auto();
+    slowing_current = from.vbPopFrontDouble32Auto();
+    manual_brake_current = from.vbPopFrontDouble32Auto();
+    unwinding_current = from.vbPopFrontDouble32Auto();
 
-    cfg.pre_pull_k = vb.vbPopFrontDouble32Auto();
-    cfg.takeoff_pull_k = vb.vbPopFrontDouble32Auto();
-    cfg.fast_pull_k = vb.vbPopFrontDouble32Auto();
-    cfg.takeoff_trigger_length = vb.vbPopFrontInt32();
-    cfg.pre_pull_timeout = vb.vbPopFrontInt32();
+    rewinding_current = from.vbPopFrontDouble32Auto();
+    slow_max_current = from.vbPopFrontDouble32Auto();
+    manual_slow_max_current = from.vbPopFrontDouble32Auto();
+    manual_slow_speed_up_current = from.vbPopFrontDouble32Auto();
+    manual_slow_erpm = from.vbPopFrontDouble32Auto();
 
-    cfg.takeoff_period = vb.vbPopFrontInt32();
-    cfg.brake_current = vb.vbPopFrontDouble32Auto();
-    cfg.slowing_current = vb.vbPopFrontDouble32Auto();
-    cfg.manual_brake_current = vb.vbPopFrontDouble32Auto();
-    cfg.unwinding_current = vb.vbPopFrontDouble32Auto();
-
-    cfg.rewinding_current = vb.vbPopFrontDouble32Auto();
-    cfg.slow_max_current = vb.vbPopFrontDouble32Auto();
-    cfg.manual_slow_max_current = vb.vbPopFrontDouble32Auto();
-    cfg.manual_slow_speed_up_current = vb.vbPopFrontDouble32Auto();
-    cfg.manual_slow_erpm = vb.vbPopFrontDouble32Auto();
-
-    emit settingsChanged(cfg);
-
-    (void)cur_pos;
-    //emit newStats()
-
-    setState(state_str(mcu_state));
+    return true;
 }
 
-QByteArray Skypuff::serializeV1(const QMLable_skypuff_config &cfg)
+QByteArray QMLable_skypuff_config::serializeV1() const
 {
     VByteArray vb;
 
-    vb.vbAppendUint8(1); // 1 byte version
+    vb.vbAppendUint8(1); // Version
 
-    vb.vbAppendUint8(cfg.motor_poles);
-    vb.vbAppendDouble32Auto(cfg.gear_ratio);
-    vb.vbAppendDouble32Auto(cfg.wheel_diameter);
+    vb.vbAppendUint8(motor_poles);
+    vb.vbAppendDouble32Auto(gear_ratio);
+    vb.vbAppendDouble32Auto(wheel_diameter);
 
-    vb.vbAppendDouble32Auto(cfg.amps_per_kg);
-    vb.vbAppendDouble32Auto(cfg.amps_per_sec);
-    vb.vbAppendInt32(cfg.rope_length);
-    vb.vbAppendInt32(cfg.braking_length);
-    vb.vbAppendInt32(cfg.braking_extension_length);
-    vb.vbAppendInt32(cfg.slowing_length);
-    vb.vbAppendDouble32Auto(cfg.slow_erpm);
-    vb.vbAppendInt32(cfg.rewinding_trigger_length);
-    vb.vbAppendInt32(cfg.unwinding_trigger_length);
-    vb.vbAppendDouble32Auto(cfg.pull_current);
-    vb.vbAppendDouble32Auto(cfg.pre_pull_k);
-    vb.vbAppendDouble32Auto(cfg.takeoff_pull_k);
-    vb.vbAppendDouble32Auto(cfg.fast_pull_k);
-    vb.vbAppendInt32(cfg.takeoff_trigger_length);
-    vb.vbAppendInt32(cfg.pre_pull_timeout);
-    vb.vbAppendInt32(cfg.takeoff_period);
-    vb.vbAppendDouble32Auto(cfg.brake_current);
-    vb.vbAppendDouble32Auto(cfg.slowing_current);
-    vb.vbAppendDouble32Auto(cfg.manual_brake_current);
-    vb.vbAppendDouble32Auto(cfg.unwinding_current);
-    vb.vbAppendDouble32Auto(cfg.rewinding_current);
-    vb.vbAppendDouble32Auto(cfg.slow_max_current);
-    vb.vbAppendDouble32Auto(cfg.manual_slow_max_current);
-    vb.vbAppendDouble32Auto(cfg.manual_slow_speed_up_current);
-    vb.vbAppendDouble32Auto(cfg.manual_slow_erpm);
+    vb.vbAppendDouble32Auto(amps_per_kg);
+    vb.vbAppendDouble32Auto(amps_per_sec);
+    vb.vbAppendInt32(rope_length);
+    vb.vbAppendInt32(braking_length);
+    vb.vbAppendInt32(braking_extension_length);
+    vb.vbAppendInt32(slowing_length);
+    vb.vbAppendDouble32Auto(slow_erpm);
+    vb.vbAppendInt32(rewinding_trigger_length);
+    vb.vbAppendInt32(unwinding_trigger_length);
+    vb.vbAppendDouble32Auto(pull_current);
+    vb.vbAppendDouble32Auto(pre_pull_k);
+    vb.vbAppendDouble32Auto(takeoff_pull_k);
+    vb.vbAppendDouble32Auto(fast_pull_k);
+    vb.vbAppendInt32(takeoff_trigger_length);
+    vb.vbAppendInt32(pre_pull_timeout);
+    vb.vbAppendInt32(takeoff_period);
+    vb.vbAppendDouble32Auto(brake_current);
+    vb.vbAppendDouble32Auto(slowing_current);
+    vb.vbAppendDouble32Auto(manual_brake_current);
+    vb.vbAppendDouble32Auto(unwinding_current);
+    vb.vbAppendDouble32Auto(rewinding_current);
+    vb.vbAppendDouble32Auto(slow_max_current);
+    vb.vbAppendDouble32Auto(manual_slow_max_current);
+    vb.vbAppendDouble32Auto(manual_slow_speed_up_current);
+    vb.vbAppendDouble32Auto(manual_slow_erpm);
 
     return vb;
 }
 
-void Skypuff::saveSettings(const QMLable_skypuff_config& cfg)
+void Skypuff::sendSettings(const QMLable_skypuff_config& cfg)
 {
-    vesc->commands()->sendCustomAppData(serializeV1(cfg));
+    vesc->commands()->sendCustomAppData(cfg.serializeV1());
+}
+
+void Skypuff::setPos(int new_pos)
+{
+    bool wasBrakingExtensionPos = isBrakingExtensionPos();
+
+    cur_pos = new_pos;
+
+    bool newBrakingExtensionPos = isBrakingExtensionPos();
+
+    if(wasBrakingExtensionPos != newBrakingExtensionPos)
+        emit brakingExtensionPosChanged(newBrakingExtensionPos);
 }

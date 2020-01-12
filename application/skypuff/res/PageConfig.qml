@@ -84,12 +84,14 @@ Page {
                     RowLayout {
                         Text {text: qsTr("Smooth force changing speed (KG per Sec)")}
                         Item {Layout.fillWidth: true}
-                        SpinBox {
+                        RealSpinBox {
                             id: kg_per_sec
                             editable: true
                             from: 1
                             to: 600
                             value: 30
+                            decimals: 1
+                            stepSize: 1
                         }
                     }
                     RowLayout {
@@ -119,12 +121,14 @@ Page {
                     RowLayout {
                         Text {text: qsTr("Braking length (meters)")}
                         Item {Layout.fillWidth: true}
-                        SpinBox {
+                        RealSpinBox {
                             id: braking_length
                             editable: true
                             from: 1
                             to: 100
                             value: 15
+                            stepSize: 1
+                            decimals: 1
                         }
                     }
                     RowLayout {
@@ -222,11 +226,12 @@ Page {
                     RowLayout {
                         Text {text: qsTr("Slowing length (meters)")}
                         Item {Layout.fillWidth: true}
-                        SpinBox {
+                        RealSpinBox {
                             id: slowing_length
                             editable: true
                             from: 1
                             to: 100
+                            decimals: 1
                         }
                     }
                     RowLayout {
@@ -463,7 +468,7 @@ Page {
             cfg.pre_pull_timeout_seconds = pre_pull_timeout.value
             cfg.takeoff_period_seconds = takeoff_period.value
 
-            Skypuff.saveSettings(cfg)
+            Skypuff.sendSettings(cfg)
         }
     }
 
