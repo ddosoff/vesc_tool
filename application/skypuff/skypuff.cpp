@@ -17,7 +17,12 @@
 #include "skypuff.h"
 
 Skypuff::Skypuff(VescInterface *v) : QObject(),
-    vesc(v), aliveTimerId(0), commandTimeoutTimerId(0), m_state("DISCONNECTED")
+    vesc(v), aliveTimerId(0), commandTimeoutTimerId(0),
+    pos(0), erpm(0),
+    // Compile regexps once here
+    rePos("(\\d.\\.?\\d*)m \\((-?\\d+) steps"), // absolute meters and signed steps
+    reSpeed("-?(\\d.\\.?\\d*)ms \\((-?\\d+) ERPM"), // absolute ms and signed erpm
+    m_state("DISCONNECTED")
 {
     // Fill message types
     messageTypes[TEXT_MESSAGE] = "--";
@@ -104,7 +109,7 @@ bool Skypuff::sendCmd(const QString &cmd)
 
     this->lastCmd = cmd;
     vesc->commands()->sendTerminalCmd(cmd);
-    this->commandTimeoutTimerId = this->startTimer(this->commandTimeout, Qt::PreciseTimer);
+    this->commandTimeoutTimerId = this->startTimer(commandTimeout, Qt::PreciseTimer);
 
     return true;
 }
@@ -206,15 +211,20 @@ void Skypuff::printReceived(QString str)
         case TEXT_MESSAGE:
             messages.append(c.second.toString());
             break;
-        case BRAKING:
+        case BRAKING: // "1.0Kg (7.0A)"
         {
             // Remove amps from payload
             int s = c.second.indexOf(' ');
             params[messageTypes[c.first]] = s == -1 ? c.second.toString() : c.second.left(s).toString();
             break;
         }
-        case SPEED:
-        case PULL:
+        case SPEED: // "-0.0ms (-0 ERPM)"
+            if(reSpeed.indexIn(c.second.toString()) != -1) {
+                params[messageTypes[c.first]] = reSpeed.cap(1);
+                setSpeed(reSpeed.cap(2).toFloat());
+            }
+            break;
+        case PULL: // "-0.4Kg (-2.8A)"
         {
             // Remove first '-'
             if(c.second.indexOf('-') == 0)
@@ -225,16 +235,11 @@ void Skypuff::printReceived(QString str)
             params[messageTypes[c.first]] = s == -1 ? c.second.toString() : c.second.left(s).toString();
         }
             break;
-        case POSITION:
-        {
-            // Remove first '-'
-            if(c.second.indexOf('-') == 0)
-                c.second = c.second.mid(1);
-
-            // Remove tac_steps
-            int s = c.second.indexOf('m');
-            params[messageTypes[c.first]] = s == -1 ? c.second.toString() : c.second.left(s).toString();
-        }
+        case POSITION: // "0.62m (151 steps)"
+            if(rePos.indexIn(c.second.toString()) != -1) {
+                params[messageTypes[c.first]] = rePos.cap(1);
+                setPos(rePos.cap(2).toFloat());
+            }
             break;
         default:
             params[messageTypes[c.first]] = c.second.toString();
@@ -251,14 +256,14 @@ void Skypuff::printReceived(QString str)
 
         // Only title available?
         if(messages.isEmpty())
-            emit statusMessage(title);
+            setStatus(title);
         else {
             vesc->emitMessageDialog(title, messages.join("\n"), false);\
         }
     }
 
-    if(!params.isEmpty())
-        emit statsChanged(params);
+    //if(!params.isEmpty())
+    //    emit statsChanged(params);
 }
 
 void Skypuff::customAppDataReceived(QByteArray data)
@@ -314,7 +319,8 @@ void Skypuff::customAppDataReceived(QByteArray data)
 
     emit settingsChanged(cfg);
     setState(state_str(mcu_state), params);
-    emit statsChanged(params);
+    setPos(new_pos);
+    setSpeed(new_erpm);
 
     return;
 }
@@ -405,14 +411,50 @@ void Skypuff::sendSettings(const QMLable_skypuff_config& cfg)
     vesc->commands()->sendCustomAppData(cfg.serializeV1());
 }
 
-void Skypuff::setPos(int new_pos)
+// overrideChanged after new seetings to update isBrakingExtensionRange
+void Skypuff::setPos(const int new_pos, const bool overrideChanged)
 {
-    bool wasBrakingExtensionPos = isBrakingExtensionPos();
+    if(new_pos != pos || overrideChanged) {
+        bool wasBrakingExtension = isBrakingExtensionRange();
 
-    cur_pos = new_pos;
+        pos = new_pos;
 
-    bool newBrakingExtensionPos = isBrakingExtensionPos();
+        bool newBrakingExtension = isBrakingExtensionRange();
 
-    if(wasBrakingExtensionPos != newBrakingExtensionPos)
-        emit brakingExtensionPosChanged(newBrakingExtensionPos);
+        if(wasBrakingExtension != newBrakingExtension)
+            emit brakingExtensionRangeChanged(newBrakingExtension);
+
+        emit posChanged(cfg.tac_steps_to_meters(new_pos));
+    }
+}
+
+void Skypuff::setSpeed(float new_erpm)
+{
+    if(erpm != new_erpm) {
+        erpm = new_erpm;
+        emit speedChanged(cfg.erpm_to_ms(new_erpm));
+    }
+}
+
+// Translate status messages to UI language
+void Skypuff::setStatus(const QString& mcuStatus)
+{
+    /*
+    // -- slow pulling too high -1.0Kg (-7.1A) is more 1.0Kg (7.0A)
+    statusTranslators[QRegExp("pulling too high .?(\\d+.\\d+)Kg")] = tr("Stopped by pulling %1Kg");
+
+    // -- Unwinded from slowing zone 4.00m (972 steps)
+    statusTranslators[QRegExp("Unwinded from slowing zone .?(\\d+.\\d+)m")] = tr("%1m slowing zone unwinded");
+
+    // -- Pre pull 2.0s timeout passed, saving position
+    statusTranslators[QRegExp("Pre pull (\\d+.\\d+)s timeout passed")] = tr("%1s passed, detecting motion");
+
+    // -- Motion 0.10m (24 steps) detected
+    statusTranslators[QRegExp("Motion (\\d+.\\d+)m")] = tr("%1m motion detected");
+
+    // -- Takeoff 5.0s timeout passed
+    statusTranslators[QRegExp("Takeoff (\\d+.\\d+)s")] = tr("%1s takeoff, normal pull");
+    */
+
+    emit statusChanged(mcuStatus);
 }

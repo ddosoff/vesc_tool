@@ -35,7 +35,8 @@ SOURCES += main.cpp \
 
 HEADERS += \ 
     skypuff.h \
-    app_skypuff.h
+    app_skypuff.h \
+    qmlable_skypuff_types.h
     
 contains(DEFINES, HAS_BLUETOOTH) {
     SOURCES += ../../bleuart.cpp

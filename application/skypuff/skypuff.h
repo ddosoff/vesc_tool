@@ -17,149 +17,23 @@
 #ifndef SKYPUFF_H
 #define SKYPUFF_H
 
-#include <math.h>
-#include <QObject>
-
 #include "vescinterface.h"
-#include "app_skypuff.h"
+#include "qmlable_skypuff_types.h"
 
-// Make settings accesible to QML with on the fly units conversions
-struct QMLable_skypuff_config : public skypuff_config, public skypuff_drive {
-    Q_GADGET
+const int aliveTimerDelay = 300; // milliseconds
+const int aliveTimeout = 400;
+const int commandTimeout = 400;
 
-    Q_PROPERTY(int motor_poles MEMBER motor_poles)
-    Q_PROPERTY(int wheel_diameter_mm READ wheel_diameter_to_mm WRITE wheel_diameter_from_mm)
-    Q_PROPERTY(float gear_ratio MEMBER gear_ratio)
-    Q_PROPERTY(float amps_per_kg MEMBER amps_per_kg)
-    Q_PROPERTY(float kg_per_sec READ amps_per_sec_to_kg WRITE kg_per_sec_to_amps)
-    Q_PROPERTY(float rope_length_meters READ rope_length_to_meters WRITE meters_to_rope_length)
-    Q_PROPERTY(float braking_length_meters READ braking_length_to_meters WRITE meters_to_braking_length)
-    Q_PROPERTY(float braking_extension_length_meters READ braking_extension_length_to_meters WRITE meters_to_braking_extension_length)
-    Q_PROPERTY(float slowing_length_meters READ slowing_length_to_meters WRITE meters_to_slowing_length)
-    Q_PROPERTY(float slow_erpm_ms READ slow_erpm_to_ms WRITE ms_to_slow_erpm)
-    Q_PROPERTY(float rewinding_trigger_length_meters READ rewinding_trigger_length_to_meters WRITE meters_to_rewinding_trigger_length)
-    Q_PROPERTY(float unwinding_trigger_length_meters READ unwinding_trigger_length_to_meters WRITE meters_to_unwinding_trigger_length)
-    Q_PROPERTY(float pull_kg READ pull_current_to_kg WRITE kg_to_pull_current)
-    Q_PROPERTY(int pre_pull_k_percents READ pre_pull_k_to_percents WRITE percents_to_pre_pull_k)
-    Q_PROPERTY(int takeoff_pull_k_percents READ takeoff_pull_k_to_percents WRITE percents_to_takeoff_pull_k)
-    Q_PROPERTY(int fast_pull_k_percents READ fast_pull_k_to_percents WRITE percents_to_fast_pull_k)
-    Q_PROPERTY(float takeoff_trigger_length_meters READ takeoff_trigger_length_to_meters WRITE meters_to_takeoff_trigger_length)
-    Q_PROPERTY(float pre_pull_timeout_seconds READ pre_pull_timeout_to_seconds WRITE seconds_to_pre_pull_timeout)
-    Q_PROPERTY(float takeoff_period_seconds  READ takeoff_period_to_seconds WRITE seconds_to_takeoff_period)
-    Q_PROPERTY(float brake_kg READ brake_current_to_kg WRITE kg_to_brake_current)
-    Q_PROPERTY(float slowing_kg READ slowing_current_to_kg WRITE kg_to_slowing_current)
-    Q_PROPERTY(float manual_brake_kg READ manual_brake_current_to_kg WRITE kg_to_manual_brake_current)
-    Q_PROPERTY(float unwinding_kg READ unwinding_current_to_kg WRITE kg_to_unwinding_current)
-    Q_PROPERTY(float rewinding_kg READ rewinding_current_to_kg WRITE kg_to_rewinding_current)
-    Q_PROPERTY(float slow_max_kg READ slow_max_current_to_kg WRITE kg_to_slow_max_current)
-    Q_PROPERTY(float manual_slow_max_kg READ manual_slow_max_current_to_kg WRITE kg_to_manual_slow_max_current)
-    Q_PROPERTY(float manual_slow_speed_up_kg READ manual_slow_speed_up_current_to_kg WRITE kg_to_manual_slow_speed_up_current)
-    Q_PROPERTY(float manual_slow_erpm_ms READ manual_slow_erpm_to_ms WRITE ms_to_manual_slow_erpm)
-
-public:
-    int wheel_diameter_to_mm() {return round(wheel_diameter * (float)1000);}
-    void wheel_diameter_from_mm(int mm) {wheel_diameter = (float)mm / (float)1000;}
-
-    int pre_pull_k_to_percents() {return round(pre_pull_k * (float)100);}
-    void percents_to_pre_pull_k(int p) {pre_pull_k = (float)p / (float)100;}
-
-    int takeoff_pull_k_to_percents() {return round(takeoff_pull_k * (float)100);}
-    void percents_to_takeoff_pull_k(int p) {takeoff_pull_k = (float)p / (float)100;}
-
-    int fast_pull_k_to_percents() {return round(fast_pull_k * (float)100);}
-    void percents_to_fast_pull_k(int p) {fast_pull_k = (float)p / (float)100;}
-
-    float pre_pull_timeout_to_seconds() {return pre_pull_timeout / (float)1000;}
-    void seconds_to_pre_pull_timeout(float secs) {pre_pull_timeout = round(secs * (float)1000);}
-
-    float takeoff_period_to_seconds() {return takeoff_period / (float)1000;}
-    void seconds_to_takeoff_period(float secs) {takeoff_period = round(secs * (float)1000);}
-
-    float amps_per_sec_to_kg() {return amps_per_sec / amps_per_kg;}
-    void kg_per_sec_to_amps(float kg) {amps_per_sec = kg * amps_per_kg;}
-
-    float pull_current_to_kg() {return pull_current / amps_per_kg;}
-    void kg_to_pull_current(float kg) {pull_current = kg * amps_per_kg;}
-
-    float brake_current_to_kg() {return brake_current / amps_per_kg;}
-    void kg_to_brake_current(float kg) {brake_current = kg * amps_per_kg;}
-
-    float manual_brake_current_to_kg() {return manual_brake_current / amps_per_kg;}
-    void kg_to_manual_brake_current(float kg) {manual_brake_current = kg * amps_per_kg;}
-
-    float unwinding_current_to_kg() {return unwinding_current / amps_per_kg;}
-    void kg_to_unwinding_current(float kg) {unwinding_current = kg * amps_per_kg;}
-
-    float rewinding_current_to_kg() {return rewinding_current / amps_per_kg;}
-    void kg_to_rewinding_current(float kg) {rewinding_current = kg * amps_per_kg;}
-
-    float slowing_current_to_kg() {return slowing_current / amps_per_kg;}
-    void kg_to_slowing_current(float kg) {slowing_current = kg * amps_per_kg;}
-
-    float slow_max_current_to_kg() {return slow_max_current / amps_per_kg;}
-    void kg_to_slow_max_current(float kg) {slow_max_current = kg * amps_per_kg;}
-
-    float manual_slow_max_current_to_kg() {return manual_slow_max_current / amps_per_kg;}
-    void kg_to_manual_slow_max_current(float kg) {manual_slow_max_current = kg * amps_per_kg;}
-
-    float manual_slow_speed_up_current_to_kg() {return manual_slow_speed_up_current / amps_per_kg;}
-    void kg_to_manual_slow_speed_up_current(float kg) {manual_slow_speed_up_current = kg * amps_per_kg;}
-
-    float rope_length_to_meters() {return tac_steps_to_meters(rope_length);}
-    void meters_to_rope_length(float meters) {rope_length = meters_to_tac_steps(meters);}
-
-    float braking_length_to_meters() {return tac_steps_to_meters(braking_length);}
-    void meters_to_braking_length(float meters) {braking_length = meters_to_tac_steps(meters);}
-
-    float braking_extension_length_to_meters() {return tac_steps_to_meters(braking_extension_length);}
-    void meters_to_braking_extension_length(float meters) {braking_extension_length = meters_to_tac_steps(meters);}
-
-    float slowing_length_to_meters() {return tac_steps_to_meters(slowing_length);}
-    void meters_to_slowing_length(float meters) {slowing_length = meters_to_tac_steps(meters);}
-
-    float rewinding_trigger_length_to_meters() {return tac_steps_to_meters(rewinding_trigger_length);}
-    void meters_to_rewinding_trigger_length(float meters) {rewinding_trigger_length = meters_to_tac_steps(meters);}
-
-    float unwinding_trigger_length_to_meters() {return tac_steps_to_meters(unwinding_trigger_length);}
-    void meters_to_unwinding_trigger_length(float meters) {unwinding_trigger_length = meters_to_tac_steps(meters);}
-
-    float takeoff_trigger_length_to_meters() {return tac_steps_to_meters(takeoff_trigger_length);}
-    void meters_to_takeoff_trigger_length(float meters) {takeoff_trigger_length = meters_to_tac_steps(meters);}
-
-    float slow_erpm_to_ms() {return erpm_to_ms(slow_erpm);}
-    void ms_to_slow_erpm(float ms) {slow_erpm = ms_to_erpm(ms);}
-
-    float manual_slow_erpm_to_ms() {return erpm_to_ms(manual_slow_erpm);}
-    void ms_to_manual_slow_erpm(float ms) {manual_slow_erpm = ms_to_erpm(ms);}
-
-    inline float meters_per_rev() {return wheel_diameter / gear_ratio * M_PI;}
-    inline float steps_per_rev(void) {return motor_poles * 3;}
-    inline int meters_to_tac_steps(float meters) {return round(meters / meters_per_rev() * steps_per_rev());}
-    inline float tac_steps_to_meters(int steps) {return (float)steps / steps_per_rev() * meters_per_rev();}
-    inline float ms_to_erpm(float ms)
-    {
-        float rps = ms / meters_per_rev();
-        float rpm = rps * 60;
-
-        return rpm * (motor_poles / 2);
-    }
-    inline float erpm_to_ms(float erpm)
-    {
-        float erps = erpm / 60;
-        float rps = erps / (motor_poles / 2);
-
-        return rps * meters_per_rev();
-    }
-
-    QByteArray serializeV1() const;
-    bool deserializeV1(VByteArray& from);
-};
-
-Q_DECLARE_METATYPE(QMLable_skypuff_config)
 
 /*
- * After vesc is connected, Skypuff will start
- * sending alive commands and ask for configuration and state.
+ * After vesc is connected, Skypuff will ask configuration and
+ * will starts sending alive commands.
+ *
+ * Received MCU terminal prints will be parsed, CUSTOM_APP_DATA
+ * deserialized and translated to QML accessible properties and signals.
+ *
+ * Sorry for some hardcore stings parsing.
+ * It's not too bad in the end.
  *
  * If no answer within commandTimeout, vesc will be disconnected
  * and error message thrown via vesc interface.
@@ -168,14 +42,17 @@ class Skypuff : public QObject
 {
     Q_OBJECT
 
-    // Do we really need to divide state into many properties?
-    Q_PROPERTY(QString state READ getState NOTIFY stateChanged)
-    // To enable back to braking from unwinding in the braking extension zone
-    Q_PROPERTY(bool isBrakingExtensionPos READ isBrakingExtensionPos NOTIFY brakingExtensionPosChanged)
+    // Skypuff MCU connected?
+    //Q_PROPERTY(bool isSkypuffConnected READ isConnected NOTIFY connectedChanged)
 
-    const int aliveTimerDelay = 300; // milliseconds
-    const int aliveTimeout = 400;
-    const int commandTimeout = 400;
+    // I tried to make enum skypuff_state QML accesible, but ..
+    Q_PROPERTY(QString state READ getState NOTIFY stateChanged)
+    Q_PROPERTY(QString status READ getStatus NOTIFY statusChanged)
+
+    // Enable back to braking from unwinding in the braking extension zone
+    Q_PROPERTY(bool isBrakingExtensionRange READ isBrakingExtensionRange NOTIFY brakingExtensionRangeChanged)
+    Q_PROPERTY(float pos_meters READ getPosMeters NOTIFY posChanged)
+    Q_PROPERTY(float speed_ms READ getSpeedMs NOTIFY speedChanged)
 public:
     Skypuff(VescInterface *parent = 0);
 
@@ -185,6 +62,20 @@ public:
     Q_INVOKABLE QMLable_skypuff_config emptySettings() {return QMLable_skypuff_config();}
     Q_INVOKABLE void sendSettings(const QMLable_skypuff_config& cfg);
 
+signals:
+    /* It is simple to work with QML text states:
+     *
+     * DISCONNECTED - VESC is disconnected or connected but state not detected yet
+     * UNITIALIZED - Skypuff app is waiting for correct settings
+     * BRAKING .. and all skypuff states
+     */
+    void stateChanged(const QString& newState, const QVariantMap& params);
+    void settingsChanged(const QMLable_skypuff_config & cfg);
+    void statusChanged(const QString &status);
+    void brakingExtensionRangeChanged(const bool isBrakingExtensionRange);
+    void posChanged(const float meters);
+    void speedChanged(const float ms);
+protected:
     // Parsed messages from prints
     enum MessageType {
         TEXT_MESSAGE,
@@ -195,49 +86,41 @@ public:
     };
     typedef QPair<MessageType, QStringRef> MessageTypeAndPayload;
     typedef QPair<QString, MessageType> StrMessageType;
-signals:
-    /* It is simple to work with QML text states:
-     *
-     * DISCONNECTED - VESC is disconnected or connected but state not detected yet
-     * UNITIALIZED - Skypuff app is waiting for correct settings
-     * BRAKING .. and all skypuff states
-     */
-    void stateChanged(const QString& newState, const QVariantMap& params);
-    void settingsChanged(const QMLable_skypuff_config & cfg);
-    void statsChanged(const QVariantMap& params);
-    void statusMessage(const QString &msg);
-    void brakingExtensionPosChanged(const bool isBrakingExtensionPos);
-protected:
+
     VescInterface *vesc;
     int aliveTimerId;
     int commandTimeoutTimerId;
     QString lastCmd;
 
     QMLable_skypuff_config cfg;
-    int cur_pos;
+    int pos;
     float erpm;
+    QString status;
 
     QString getState() {return m_state;}
+    QString getStatus() {return status;}
     void setState(const QString& newState, const QVariantMap& params = QVariantMap());
     bool sendCmd(const QString& cmd);
     void sendCmdOrDisconnect(const QString& cmd);
     bool stopTimout(const QString& cmd);
     void timerEvent(QTimerEvent *event) override;
     bool parseCommand(QStringRef &str, MessageTypeAndPayload &c);
-    void setPos(int new_pos);
-    bool isBrakingExtensionPos() const {return cur_pos > cfg.braking_length && cur_pos <= cfg.braking_length + cfg.braking_extension_length;}
+
+    void setStatus(const QString& mcuStatus);
+    void setPos(const int new_pos, const bool ovverideChanged = false);
+    void setSpeed(float new_erpm);
+    bool isBrakingExtensionRange() const {return pos > cfg.braking_length && pos <= cfg.braking_length + cfg.braking_extension_length;}
+    float getPosMeters() {return cfg.tac_steps_to_meters(pos);}
+    float getSpeedMs() {return cfg.erpm_to_ms(erpm);}
 protected slots:
     void printReceived(QString str);
     void customAppDataReceived(QByteArray data);
     void portConnectedChanged();
 private:
+    QRegExp rePos, reSpeed;
     QString m_state;
     QHash<QString, int> h_states; // Dirty hack about skypuff_states enum
     QHash<MessageType, QString> messageTypes;
-
-    // Sorry for hardcoded serialization..
-    //void deserializeV1(VByteArray & vb);
-    //QByteArray serializeV1(const QMLable_skypuff_config & cfg);
 };
 
 #endif // SKYPUFF_H

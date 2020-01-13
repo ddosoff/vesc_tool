@@ -374,12 +374,5 @@ Page {
             lPull.text = qsTr("%1Kg").arg(cfg.pull_kg)
             updateRope(curPos)
         }
-
-        onStatsChanged: {
-            if("speed" in params)
-                tSpeed.text = params["speed"]
-            if("pos" in params)
-                updateRope(params["pos"])
-        }
     }
 }
