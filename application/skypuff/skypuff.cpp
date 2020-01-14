@@ -18,11 +18,15 @@
 
 Skypuff::Skypuff(VescInterface *v) : QObject(),
     vesc(v), aliveTimerId(0), commandTimeoutTimerId(0),
-    pos(0), erpm(0),
+    cur_tac(0), erpm(0),
     // Compile regexps once here
     rePos("(\\d.\\.?\\d*)m \\((-?\\d+) steps"), // absolute meters and signed steps
     reSpeed("-?(\\d.\\.?\\d*)ms \\((-?\\d+) ERPM"), // absolute ms and signed erpm
-    m_state("DISCONNECTED")
+    rePullingHigh("pulling too high .?(\\d+.\\d+)Kg"),
+    reUnwindedFromSlowing("Unwinded from slowing zone .?(\\d+.\\d+)m"),
+    rePrePullTimeout("Pre pull (\\d+.\\d+)s timeout passed"),
+    reMotionDetected("Motion (\\d+.\\d+)m"),
+    reTakeoffTimeout("Takeoff (\\d+.\\d+)s")
 {
     // Fill message types
     messageTypes[TEXT_MESSAGE] = "--";
@@ -43,13 +47,19 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
             break;
         h_states[s] = i;
     }
+
+    setState("DISCONNECTED");
 }
 
 void Skypuff::setState(const QString& newState, const QVariantMap& params)
 {
-    if(this->m_state != newState) {
-        this->m_state = newState;
-        emit this->stateChanged(this->m_state, params);
+    if(state != newState) {
+        state = newState;
+        emit stateChanged(state);
+
+        // Translate to UI
+        stateText = newState;
+        emit stateTextChanged(stateText);
     }
 }
 
@@ -313,13 +323,16 @@ void Skypuff::customAppDataReceived(QByteArray data)
 
     cfg.deserializeV1(vb);
 
+    // Update maximum motor current to calculate scales
+    cfg.motor_max_current = vesc->mcConfig()->getParamDouble("l_current_max");
+
     QVariantMap params;
     params["pos"] = cfg.tac_steps_to_meters(new_pos);
     params["speed"] = cfg.erpm_to_ms(new_erpm);
 
     emit settingsChanged(cfg);
     setState(state_str(mcu_state), params);
-    setPos(new_pos);
+    setPos(new_pos, true);
     setSpeed(new_erpm);
 
     return;
@@ -414,10 +427,10 @@ void Skypuff::sendSettings(const QMLable_skypuff_config& cfg)
 // overrideChanged after new seetings to update isBrakingExtensionRange
 void Skypuff::setPos(const int new_pos, const bool overrideChanged)
 {
-    if(new_pos != pos || overrideChanged) {
+    if(new_pos != cur_tac || overrideChanged) {
         bool wasBrakingExtension = isBrakingExtensionRange();
 
-        pos = new_pos;
+        cur_tac = new_pos;
 
         bool newBrakingExtension = isBrakingExtensionRange();
 
@@ -439,22 +452,27 @@ void Skypuff::setSpeed(float new_erpm)
 // Translate status messages to UI language
 void Skypuff::setStatus(const QString& mcuStatus)
 {
-    /*
+    QString s = mcuStatus;
+
     // -- slow pulling too high -1.0Kg (-7.1A) is more 1.0Kg (7.0A)
-    statusTranslators[QRegExp("pulling too high .?(\\d+.\\d+)Kg")] = tr("Stopped by pulling %1Kg");
+    if(rePullingHigh.indexIn(s) != -1)
+        s = tr("Stopped by pulling %1Kg").arg(rePullingHigh.cap(1));
 
     // -- Unwinded from slowing zone 4.00m (972 steps)
-    statusTranslators[QRegExp("Unwinded from slowing zone .?(\\d+.\\d+)m")] = tr("%1m slowing zone unwinded");
+    else if(reUnwindedFromSlowing.indexIn(s) != -1)
+        s = tr("%1m slowing zone unwinded").arg(reUnwindedFromSlowing.cap(1));
 
     // -- Pre pull 2.0s timeout passed, saving position
-    statusTranslators[QRegExp("Pre pull (\\d+.\\d+)s timeout passed")] = tr("%1s passed, detecting motion");
+    else if(rePrePullTimeout.indexIn(s) != -1)
+        s = tr("%1s passed, detecting motion").arg(rePrePullTimeout.cap(1));
 
     // -- Motion 0.10m (24 steps) detected
-    statusTranslators[QRegExp("Motion (\\d+.\\d+)m")] = tr("%1m motion detected");
+    else if(reMotionDetected.indexIn(s) != -1)
+        s = tr("%1m motion detected").arg(reMotionDetected.cap(1));
 
     // -- Takeoff 5.0s timeout passed
-    statusTranslators[QRegExp("Takeoff (\\d+.\\d+)s")] = tr("%1s takeoff, normal pull");
-    */
+    else if(reTakeoffTimeout.indexIn(s) != -1)
+        s = tr("%1s takeoff, normal pull").arg(reTakeoffTimeout.cap(1));
 
-    emit statusChanged(mcuStatus);
+    emit statusChanged(s);
 }

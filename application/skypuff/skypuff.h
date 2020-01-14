@@ -42,16 +42,16 @@ class Skypuff : public QObject
 {
     Q_OBJECT
 
-    // Skypuff MCU connected?
-    //Q_PROPERTY(bool isSkypuffConnected READ isConnected NOTIFY connectedChanged)
-
     // I tried to make enum skypuff_state QML accesible, but ..
     Q_PROPERTY(QString state READ getState NOTIFY stateChanged)
-    Q_PROPERTY(QString status READ getStatus NOTIFY statusChanged)
+    // Translated state
+    Q_PROPERTY(QString stateText READ getStateText NOTIFY stateTextChanged)
 
-    // Enable back to braking from unwinding in the braking extension zone
+    // To enable transitions to braking, if pos below or equal braking_length + braking_extension_length
     Q_PROPERTY(bool isBrakingExtensionRange READ isBrakingExtensionRange NOTIFY brakingExtensionRangeChanged)
-    Q_PROPERTY(float pos_meters READ getPosMeters NOTIFY posChanged)
+    Q_PROPERTY(float rope_meters READ getRopeMeters NOTIFY settingsChanged)
+    Q_PROPERTY(float drawn_meters READ getDrawnMeters NOTIFY posChanged)
+    Q_PROPERTY(float left_meters READ getLeftMeters NOTIFY posChanged)
     Q_PROPERTY(float speed_ms READ getSpeedMs NOTIFY speedChanged)
 public:
     Skypuff(VescInterface *parent = 0);
@@ -69,12 +69,17 @@ signals:
      * UNITIALIZED - Skypuff app is waiting for correct settings
      * BRAKING .. and all skypuff states
      */
-    void stateChanged(const QString& newState, const QVariantMap& params);
+    void stateChanged(const QString& newState); // Clear state
+    void stateTextChanged(const QString& newStateText);
     void settingsChanged(const QMLable_skypuff_config & cfg);
     void statusChanged(const QString &status);
     void brakingExtensionRangeChanged(const bool isBrakingExtensionRange);
     void posChanged(const float meters);
     void speedChanged(const float ms);
+protected slots:
+    void printReceived(QString str);
+    void customAppDataReceived(QByteArray data);
+    void portConnectedChanged();
 protected:
     // Parsed messages from prints
     enum MessageType {
@@ -93,34 +98,44 @@ protected:
     QString lastCmd;
 
     QMLable_skypuff_config cfg;
-    int pos;
+    int cur_tac; // Signed tachometer value
     float erpm;
     QString status;
 
-    QString getState() {return m_state;}
+    // Tons of regexps to parse terminal prints
+    QRegExp rePos, reSpeed, rePullingHigh;
+    QRegExp reUnwindedFromSlowing, rePrePullTimeout, reMotionDetected;
+    QRegExp reTakeoffTimeout;
+
+    QString state;
+    QString stateText;
+
+    QHash<QString, int> h_states;
+    QHash<MessageType, QString> messageTypes;
+
+    // Getters
+    bool isBrakingExtensionRange() const {return abs(cur_tac) <= cfg.braking_length + cfg.braking_extension_length;}
+    float getRopeMeters() {return cfg.rope_length_to_meters();}
+    float getDrawnMeters() {return cfg.tac_steps_to_meters(abs(cur_tac));}
+    float getLeftMeters() {return cfg.tac_steps_to_meters(cfg.rope_length - abs(cur_tac));}
+    float getSpeedMs() {return cfg.erpm_to_ms(erpm);}
+    QString getState() {return state;}
+    QString getStateText() {return stateText;}
     QString getStatus() {return status;}
+
+    // Setters
     void setState(const QString& newState, const QVariantMap& params = QVariantMap());
+    void setStatus(const QString& mcuStatus);
+    void setPos(const int new_pos, const bool ovverideChanged = false);
+    void setSpeed(float new_erpm);
+
+    // Helpers
     bool sendCmd(const QString& cmd);
     void sendCmdOrDisconnect(const QString& cmd);
     bool stopTimout(const QString& cmd);
     void timerEvent(QTimerEvent *event) override;
     bool parseCommand(QStringRef &str, MessageTypeAndPayload &c);
 
-    void setStatus(const QString& mcuStatus);
-    void setPos(const int new_pos, const bool ovverideChanged = false);
-    void setSpeed(float new_erpm);
-    bool isBrakingExtensionRange() const {return pos > cfg.braking_length && pos <= cfg.braking_length + cfg.braking_extension_length;}
-    float getPosMeters() {return cfg.tac_steps_to_meters(pos);}
-    float getSpeedMs() {return cfg.erpm_to_ms(erpm);}
-protected slots:
-    void printReceived(QString str);
-    void customAppDataReceived(QByteArray data);
-    void portConnectedChanged();
-private:
-    QRegExp rePos, reSpeed;
-    QString m_state;
-    QHash<QString, int> h_states; // Dirty hack about skypuff_states enum
-    QHash<MessageType, QString> messageTypes;
 };
 
 #endif // SKYPUFF_H
