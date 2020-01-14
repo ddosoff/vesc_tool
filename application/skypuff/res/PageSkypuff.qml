@@ -68,7 +68,7 @@ Page {
             Text {
                 Layout.fillWidth: true
 
-                text: isNaN(Skypuff.drawn_meters) ? "" : qsTr("%1m left").arg(Skypuff.left_meters.toFixed(1))
+                text: isNaN(Skypuff.drawn_meters) ? "" : qsTr("%1m rope").arg(Skypuff.left_meters.toFixed(1))
 
                 // 15% - yellow, 5% - red
                 color: Skypuff.left_meters / Skypuff.rope_meters < 0.05 ? "red" : Skypuff.left_meters / Skypuff.rope_meters < 0.15 ? "yellow": "green"
@@ -82,7 +82,6 @@ Page {
             }
         }
 
-        // RadialBar?
         ProgressBar {
             id: pRopeLeft
             Layout.fillWidth: true
@@ -90,17 +89,27 @@ Page {
             from: 0
             to: Skypuff.rope_meters
 
-            value: Skypuff.rope_meters - Skypuff.pos_meters
+            value: Skypuff.left_meters
         }
 
+        // Speed
         Text {
             Layout.fillWidth: true
-            horizontalAlignment: Text.AlignHCenter
+            Layout.topMargin: 10
 
-            text: isNaN(Skypuff.drawn_meters) ? "" : qsTr("%1m/s").arg(Skypuff.speed_ms.toFixed(1))
+            text: isNaN(Skypuff.drawn_meters) ? "" : qsTr("%1m/s speed").arg(Skypuff.speed_ms.toFixed(1))
 
             // above 15ms red, above 10 yellow
             color: Skypuff.speed_ms > 15 ? "red" : Skypuff.speed_ms > 10 ? "yellow" : "green"
+        }
+
+        ProgressBar {
+            Layout.fillWidth: true
+
+            from: 0
+            to: 20
+
+            value: Math.abs(Skypuff.speed_ms)
         }
 
         Item {
@@ -186,8 +195,15 @@ Page {
 
                 onBrakingExtensionRangeChanged: {
                     // Brake if possible
-                    if(Skypuff.state === "MANUAL_BRAKING")
+                    switch(Skypuff.state) {
+                    case "MANUAL_BRAKING":
                         bUnwinding.state = isBrakingExtensionRange ? "BRAKING_EXTENSION" : "UNWINDING"
+                        break
+                    case "UNWINDING":
+                    case "REWINDING":
+                        bUnwinding.enabled = isBrakingExtensionRange
+                        break
+                    }
                 }
             }
         }
@@ -201,8 +217,12 @@ Page {
             switch(state) {
             case "MANUAL_BRAKING":
                 bStop.enabled = true
+
+                // Disable MANUAL_BRAKING elemets
                 bSetZero.visible = false
                 rManualSlow.visible = false
+
+                // Return other states visibles
                 bPrePull.visible = true
                 bPrePull.state = "PRE_PULL"
                 break
@@ -234,12 +254,17 @@ Page {
             switch(state) {
             case "MANUAL_BRAKING":
                 bStop.enabled = false
+
+                // Make MANUAL_BRAKING controls visible
                 bSetZero.visible = true
+                rManualSlow.visible = true
+
+                // Disable normal controls
+                bPrePull.visible = false
+                bPrePull.state = "PRE_PULL"
+
                 bUnwinding.state = Skypuff.isBrakingExtensionRange ? "BRAKING_EXTENSION" : "UNWINDING"
                 bUnwinding.enabled = true
-                bPrePull.visible = false
-                rManualSlow.visible = true
-                bPrePull.state = "PRE_PULL"
                 break
             case "BRAKING":
                 bUnwinding.enabled = false
