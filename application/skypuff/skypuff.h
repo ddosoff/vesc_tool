@@ -83,14 +83,14 @@ protected slots:
 protected:
     // Parsed messages from prints
     enum MessageType {
-        TEXT_MESSAGE,
-        POSITION,
-        SPEED,
-        BRAKING,
-        PULL,
+        PARAM_TEXT,
+        PARAM_POS,
+        PARAM_SPEED,
+        PARAM_BRAKING,
+        PARAM_PULL,
     };
     typedef QPair<MessageType, QStringRef> MessageTypeAndPayload;
-    typedef QPair<QString, MessageType> StrMessageType;
+    typedef QMap<MessageType, QString> MessagesByType;
 
     VescInterface *vesc;
     int aliveTimerId;
@@ -103,7 +103,7 @@ protected:
     QString status;
 
     // Tons of regexps to parse terminal prints
-    QRegExp rePos, reSpeed, rePullingHigh;
+    QRegExp reBraking, rePull, rePos, reSpeed, rePullingHigh;
     QRegExp reUnwindedFromSlowing, rePrePullTimeout, reMotionDetected;
     QRegExp reTakeoffTimeout;
 
@@ -124,7 +124,7 @@ protected:
     QString getStatus() {return status;}
 
     // Setters
-    void setState(const QString& newState, const QVariantMap& params = QVariantMap());
+    void setState(const QString& newState);
     void setStatus(const QString& mcuStatus);
     void setPos(const int new_pos, const bool ovverideChanged = false);
     void setSpeed(float new_erpm);

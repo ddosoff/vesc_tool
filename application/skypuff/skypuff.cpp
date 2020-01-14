@@ -20,6 +20,8 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
     vesc(v), aliveTimerId(0), commandTimeoutTimerId(0),
     cur_tac(0), erpm(0),
     // Compile regexps once here
+    reBraking("(\\d.\\.?\\d*)Kg \\((-?\\d+.?\\d*)A"),
+    rePull("(\\d.\\.?\\d*)Kg \\((-?\\d+.?\\d*)A"), // absolute kg, signed amps
     rePos("(\\d.\\.?\\d*)m \\((-?\\d+) steps"), // absolute meters and signed steps
     reSpeed("-?(\\d.\\.?\\d*)ms \\((-?\\d+) ERPM"), // absolute ms and signed erpm
     rePullingHigh("pulling too high .?(\\d+.\\d+)Kg"),
@@ -29,11 +31,11 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
     reTakeoffTimeout("Takeoff (\\d+.\\d+)s")
 {
     // Fill message types
-    messageTypes[TEXT_MESSAGE] = "--";
-    messageTypes[POSITION] = "pos";
-    messageTypes[SPEED] = "speed";
-    messageTypes[BRAKING] = "braking";
-    messageTypes[PULL] = "pull";
+    messageTypes[PARAM_TEXT] = "--";
+    messageTypes[PARAM_POS] = "pos";
+    messageTypes[PARAM_SPEED] = "speed";
+    messageTypes[PARAM_BRAKING] = "braking";
+    messageTypes[PARAM_PULL] = "pull";
 
     connect(vesc, SIGNAL(portConnectedChanged()), this, SLOT(portConnectedChanged()));
     connect(vesc->commands(), SIGNAL(printReceived(QString)), this, SLOT(printReceived(QString)));
@@ -51,14 +53,42 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
     setState("DISCONNECTED");
 }
 
-void Skypuff::setState(const QString& newState, const QVariantMap& params)
+void Skypuff::setState(const QString& newState)
 {
     if(state != newState) {
         state = newState;
         emit stateChanged(state);
 
         // Translate to UI
-        stateText = newState;
+        if(!newState.compare("DISCONNECTED"))
+            stateText = tr("Disconnected");
+        else if(!newState.compare("BRAKING"))
+            stateText = tr("Braking");
+        else if(!newState.compare("MANUAL_BRAKING"))
+            stateText = tr("Manual Braking");
+        else if(!newState.compare("BRAKING_EXTENSION"))
+            stateText = tr("Braking Extension");
+        else if(!newState.compare("UNWINDING"))
+            stateText = tr("Unwinding");
+        else if(!newState.compare("REWINDING"))
+            stateText = tr("Rewinding");
+        else if(!newState.compare("SLOWING"))
+            stateText = tr("Slowing");
+        else if(!newState.compare("SLOW"))
+            stateText = tr("Slow");
+        else if(!newState.compare("PRE_PULL"))
+            stateText = tr("Pre Pull");
+        else if(!newState.compare("TAKEOFF_PULL"))
+            stateText = tr("Takeoff Pull");
+        else if(!newState.compare("PULL"))
+            stateText = tr("Pull");
+        else if(!newState.compare("FAST_PULL"))
+            stateText = tr("Fast Pull");
+        else if(!newState.compare("UNITIALIZED"))
+            stateText = tr("No Valid Settings");
+        else
+            stateText = newState;
+
         emit stateTextChanged(stateText);
     }
 }
@@ -179,7 +209,7 @@ bool Skypuff::parseCommand(QStringRef &str, MessageTypeAndPayload &c)
             // Payload up to next '--' or end of string
             c.first = ci.key();
 
-            int e = str.indexOf(c.first == TEXT_MESSAGE ? "--" : ",", ci.value().length());
+            int e = str.indexOf(c.first == PARAM_TEXT ? "--" : ",", ci.value().length());
             if(e == -1)
                 e = str.length();
 
@@ -212,53 +242,29 @@ void Skypuff::printReceived(QString str)
 
     QStringRef rStr = str.midRef(i + 1); // Skip ':'
     QStringList messages;
-    QVariantMap params;
 
     // Parse messages with types
     MessageTypeAndPayload c;
     while(parseCommand(rStr, c)) {
         switch(c.first) {
-        case TEXT_MESSAGE:
+        case PARAM_TEXT: // -- Hello baby
             messages.append(c.second.toString());
             break;
-        case BRAKING: // "1.0Kg (7.0A)"
-        {
-            // Remove amps from payload
-            int s = c.second.indexOf(' ');
-            params[messageTypes[c.first]] = s == -1 ? c.second.toString() : c.second.left(s).toString();
-            break;
-        }
-        case SPEED: // "-0.0ms (-0 ERPM)"
-            if(reSpeed.indexIn(c.second.toString()) != -1) {
-                params[messageTypes[c.first]] = reSpeed.cap(1);
+        case PARAM_SPEED: // "-0.0ms (-0 ERPM)"
+            if(reSpeed.indexIn(c.second.toString()) != -1)
                 setSpeed(reSpeed.cap(2).toFloat());
-            }
             break;
-        case PULL: // "-0.4Kg (-2.8A)"
-        {
-            // Remove first '-'
-            if(c.second.indexOf('-') == 0)
-                c.second = c.second.mid(1);
-
-            // Remove amps from payload
-            int s = c.second.indexOf(' ');
-            params[messageTypes[c.first]] = s == -1 ? c.second.toString() : c.second.left(s).toString();
-        }
-            break;
-        case POSITION: // "0.62m (151 steps)"
-            if(rePos.indexIn(c.second.toString()) != -1) {
-                params[messageTypes[c.first]] = rePos.cap(1);
+        case PARAM_POS: // "0.62m (151 steps)"
+            if(rePos.indexIn(c.second.toString()) != -1)
                 setPos(rePos.cap(2).toFloat());
-            }
             break;
         default:
-            params[messageTypes[c.first]] = c.second.toString();
             break;
         }
     };
 
     // Yeagh, we know the state!
-    setState(p_state, params);
+    setState(p_state);
 
     // Emit messages signals
     if(!messages.isEmpty()) {
@@ -271,9 +277,6 @@ void Skypuff::printReceived(QString str)
             vesc->emitMessageDialog(title, messages.join("\n"), false);\
         }
     }
-
-    //if(!params.isEmpty())
-    //    emit statsChanged(params);
 }
 
 void Skypuff::customAppDataReceived(QByteArray data)
@@ -326,12 +329,8 @@ void Skypuff::customAppDataReceived(QByteArray data)
     // Update maximum motor current to calculate scales
     cfg.motor_max_current = vesc->mcConfig()->getParamDouble("l_current_max");
 
-    QVariantMap params;
-    params["pos"] = cfg.tac_steps_to_meters(new_pos);
-    params["speed"] = cfg.erpm_to_ms(new_erpm);
-
     emit settingsChanged(cfg);
-    setState(state_str(mcu_state), params);
+    setState(state_str(mcu_state));
     setPos(new_pos, true);
     setSpeed(new_erpm);
 
