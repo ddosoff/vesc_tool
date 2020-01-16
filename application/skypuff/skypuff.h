@@ -57,6 +57,7 @@ class Skypuff : public QObject
     Q_PROPERTY(float speedMs READ getSpeedMs NOTIFY speedChanged)
     Q_PROPERTY(QString motorMode READ getMotorMode NOTIFY motorModeChanged)
     Q_PROPERTY(float motorKg READ getMotorKg NOTIFY motorKgChanged)
+    Q_PROPERTY(float power READ getPower NOTIFY powerChanged)
 public:
     Skypuff(VescInterface *parent = 0);
 
@@ -83,6 +84,7 @@ signals:
     void speedChanged(const float ms);
     void motorModeChanged(const QString& newMotorMode);
     void motorKgChanged(const float kg);
+    void powerChanged(const float power);
 protected slots:
     void printReceived(QString str);
     void customAppDataReceived(QByteArray data);
@@ -110,7 +112,7 @@ protected:
     smooth_motor_mode smoothMotorMode;
     QString motorModeText;
     int curTac;
-    float erpm, amps;
+    float erpm, amps, power;
 
     // Tons of regexps to parse terminal prints
     QRegExp reBraking, rePull, rePos, reSpeed, rePullingHigh;
@@ -132,6 +134,7 @@ protected:
     float getLeftMeters() {return cfg.tac_steps_to_meters(cfg.rope_length - abs(curTac));}
     float getSpeedMs() {return cfg.erpm_to_ms(erpm);}
     float getMotorKg() {return amps / cfg.amps_per_kg;}
+    float getPower() {return power;}
     QString getState() {return state;}
     QString getStateText() {return stateText;}
     QString getStatus() {return status;}
@@ -142,7 +145,7 @@ protected:
     void setStatus(const QString& mcuStatus);
     void setPos(const int new_pos);
     void setSpeed(const float new_erpm);
-    void setMotor(const smooth_motor_mode newMode, const float newAmps);
+    void setMotor(const smooth_motor_mode newMode, const float newAmps, const float newPower);
 
     // Helpers
     bool sendCmd(const QString& cmd);

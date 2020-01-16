@@ -61,6 +61,7 @@ Page {
             }
         }
 
+        // Rope
         RowLayout {
             Layout.fillWidth: true
             Layout.topMargin: 20
@@ -68,7 +69,7 @@ Page {
             Text {
                 Layout.fillWidth: true
 
-                text: isNaN(Skypuff.drawnMeters) ? "" : qsTr("%1m rope").arg(Skypuff.leftMeters.toFixed(1))
+                text: isNaN(Skypuff.drawnMeters) ? "" : qsTr("Rope: %1 m").arg(Skypuff.leftMeters.toFixed(1))
 
                 // 15% - yellow, 5% - red
                 color: Skypuff.leftMeters / Skypuff.ropeMeters < 0.05 ? "red" : Skypuff.leftMeters / Skypuff.ropeMeters < 0.15 ? "yellow": "green"
@@ -78,7 +79,7 @@ Page {
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignRight
 
-                text: isNaN(Skypuff.drawnMeters) ? "" : qsTr("Drawn: %1m").arg(Skypuff.drawnMeters.toFixed(1))
+                text: isNaN(Skypuff.drawnMeters) ? "" : qsTr("Drawn: %1 m").arg(Skypuff.drawnMeters.toFixed(1))
             }
         }
 
@@ -97,10 +98,7 @@ Page {
             Layout.fillWidth: true
             Layout.topMargin: 10
 
-            text: isNaN(Skypuff.drawnMeters) ? "" : qsTr("%1m/s speed").arg(Skypuff.speedMs.toFixed(1))
-
-            // above 15ms red, above 10 yellow
-            color: Skypuff.speedMs > 15 ? "red" : Skypuff.speedMs > 10 ? "yellow" : "green"
+            text: isNaN(Skypuff.drawnMeters) ? "" : qsTr("Speed: %1 m/s").arg(Skypuff.speedMs.toFixed(1))
         }
 
         ProgressBar {
@@ -117,7 +115,7 @@ Page {
             Layout.fillWidth: true
             Layout.topMargin: 10
 
-            text: qsTr("%1 %2Kg").arg(Skypuff.motorMode).arg(Math.abs(Skypuff.motorKg).toFixed(1))
+            text: qsTr("%1: %2 Kg").arg(Skypuff.motorMode).arg(Math.abs(Skypuff.motorKg).toFixed(1))
         }
 
         ProgressBar {
@@ -128,6 +126,24 @@ Page {
             to: 0
 
             value: Math.abs(Skypuff.motorKg)
+        }
+
+        // Power
+        Text {
+            Layout.fillWidth: true
+            Layout.topMargin: 10
+
+            text: qsTr("Power: %1 W").arg(Skypuff.power.toFixed(1))
+        }
+
+        ProgressBar {
+            id: pbPower
+            Layout.fillWidth: true
+
+            from: 0
+            to: 0
+
+            value: Math.abs(Skypuff.power)
         }
 
         Item {
@@ -342,6 +358,7 @@ Page {
             pullForce.value = cfg.pull_kg
 
             pbMotor.to = cfg.motor_max_kg
+            pbPower.to = cfg.max_power
         }
     }
 }

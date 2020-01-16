@@ -326,7 +326,7 @@ void Skypuff::customAppDataReceived(QByteArray data)
 void Skypuff::processAlive(VByteArray &vb)
 {
     // Enough data?
-    const int alive_length = 1 + 3 * 4;
+    const int alive_length = 1 + 4 * 4;
     if(vb.length() < alive_length) {
         vesc->emitMessageDialog(tr("Can't deserialize alive command"),
                                 tr("Received %1 bytes, expected %2 bytes!").arg(vb.length()).arg(alive_length),
@@ -338,10 +338,11 @@ void Skypuff::processAlive(VByteArray &vb)
     int newTac = vb.vbPopFrontInt32();
     float newErpm = vb.vbPopFrontDouble32Auto();
     float newAmps = vb.vbPopFrontDouble32Auto();
+    float newPower = vb.vbPopFrontDouble32Auto();
 
     setPos(newTac);
     setSpeed(newErpm);
-    setMotor(newMotorMode, newAmps);
+    setMotor(newMotorMode, newAmps, newPower);
 }
 
 void Skypuff::processSettingsV1(VByteArray &vb)
@@ -359,10 +360,16 @@ void Skypuff::processSettingsV1(VByteArray &vb)
     skypuff_state mcu_state;
 
     mcu_state = (skypuff_state)vb.vbPopFrontUint8();
+    setState(state_str(mcu_state));
+
+    cfg.v_in = vb.vbPopFrontDouble32Auto();
+    cfg.deserializeV1(vb);
+    // Update maximum motor current to calculate scales
+    cfg.motor_max_current = vesc->mcConfig()->getParamDouble("l_current_max");
+
+    emit settingsChanged(cfg);
 
     processAlive(vb);
-
-    cfg.deserializeV1(vb);
 
     if(vb.length()) {
         vesc->emitMessageDialog(tr("Extra bytes received with V1 settings"),
@@ -371,14 +378,7 @@ void Skypuff::processSettingsV1(VByteArray &vb)
         vesc->disconnectPort();
     }
 
-    // Update maximum motor current to calculate scales
-    cfg.motor_max_current = vesc->mcConfig()->getParamDouble("l_current_max");
-
-    emit settingsChanged(cfg);
-
-    setState(state_str(mcu_state));
-
-    // Override all stats changed
+    // Override position
     emit posChanged(cfg.tac_steps_to_meters(curTac));
     emit brakingRangeChanged(isBrakingRange());
     emit brakingExtensionRangeChanged(isBrakingExtensionRange());
@@ -393,8 +393,20 @@ void Skypuff::sendSettings(const QMLable_skypuff_config& cfg)
 void Skypuff::setPos(const int new_pos)
 {
     if(new_pos != curTac) {
+        bool wasBrakingRange = isBrakingRange();
+        bool wasBrakingExtensionRange = isBrakingExtensionRange();
+
         curTac = new_pos;
         emit posChanged(cfg.tac_steps_to_meters(new_pos));
+
+        bool newBrakingRange = isBrakingRange();
+        bool newBrakingExtensionRange = isBrakingExtensionRange();
+
+        if(wasBrakingRange != newBrakingRange)
+            emit brakingRangeChanged(newBrakingRange);
+
+        if(wasBrakingExtensionRange != newBrakingExtensionRange)
+            emit brakingExtensionRangeChanged(newBrakingExtensionRange);
     }
 }
 
@@ -406,7 +418,7 @@ void Skypuff::setSpeed(float new_erpm)
     }
 }
 
-void Skypuff::setMotor(const smooth_motor_mode newMode, const float newAmps)
+void Skypuff::setMotor(const smooth_motor_mode newMode, const float newAmps, const float newPower)
 {
     if(smoothMotorMode != newMode) {
         smoothMotorMode = newMode;
@@ -435,6 +447,12 @@ void Skypuff::setMotor(const smooth_motor_mode newMode, const float newAmps)
         amps = newAmps;
 
         emit motorKgChanged(amps / cfg.amps_per_kg);
+    }
+
+    if(power != newPower) {
+        power = newPower;
+
+        emit powerChanged(newPower);
     }
 }
 
