@@ -23,10 +23,12 @@
 
 /* --- This is common file for MCU and UI SkyPUFF apps --- */
 
-// Must be increased on skypuff_config struct update
-// Don't forget to update HW limits structs, serialization and checking functions
-// Sometimes this have to be changed to existing serialization solution
-const uint8_t skypuff_config_version = 1;
+// Do not forget to add next settings version command on skypuff_config struct update
+typedef enum
+{
+    SK_COMM_ALIVE,
+    SK_COMM_SETTINGS_V1,
+} skypuff_custom_app_data_command;
 
 // Winch FSM
 typedef enum
@@ -90,6 +92,30 @@ typedef struct
     float gear_ratio;
 } skypuff_drive;
 
+/*
+	Smooth Motor Control
+
+	Respect pilot and do not pull or release him too sharply.
+	Unwinding current is minimal step of applying pull or brake.
+
+	Use config.amps_per_sec as force changing speed and
+	smooth_max_step_delay as maximum step delay.
+
+	In case of different current and target modes, 
+	switch instantly if force is less then unwinding 
+	and smoothly decrease/increase until unwinding if above.
+
+	Always brake instantly if braking zone.
+*/
+typedef enum
+{
+    MOTOR_RELEASED,
+    MOTOR_CURRENT,
+    MOTOR_BRAKING,
+    MOTOR_SPEED,
+} smooth_motor_mode;
+
+// UI side use this too
 inline const char *state_str(const skypuff_state s)
 {
     switch (s)
@@ -132,6 +158,36 @@ inline const char *state_str(const skypuff_state s)
 #endif
     default:
         return "UNKNOWN";
+    }
+}
+
+inline const char *sk_command_str(const skypuff_custom_app_data_command c)
+{
+    switch (c)
+    {
+    case SK_COMM_ALIVE:
+        return "SK_COMM_ALIVE";
+    case SK_COMM_SETTINGS_V1:
+        return "SK_COMM_SETTINGS_V1";
+    default:
+        return "SK_COMM_UNKNOWN";
+    }
+}
+
+inline static const char *motor_mode_str(smooth_motor_mode m)
+{
+    switch (m)
+    {
+    case MOTOR_RELEASED:
+        return "MOTOR_RELEASED";
+    case MOTOR_BRAKING:
+        return "MOTOR_BRAKING";
+    case MOTOR_CURRENT:
+        return "MOTOR_CURRENT";
+    case MOTOR_SPEED:
+        return "MOTOR_SPEED";
+    default:
+        return "MOTOR_UNKNOWN";
     }
 }
 

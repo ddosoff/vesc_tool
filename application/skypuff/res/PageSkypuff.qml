@@ -68,17 +68,17 @@ Page {
             Text {
                 Layout.fillWidth: true
 
-                text: isNaN(Skypuff.drawn_meters) ? "" : qsTr("%1m rope").arg(Skypuff.left_meters.toFixed(1))
+                text: isNaN(Skypuff.drawnMeters) ? "" : qsTr("%1m rope").arg(Skypuff.leftMeters.toFixed(1))
 
                 // 15% - yellow, 5% - red
-                color: Skypuff.left_meters / Skypuff.rope_meters < 0.05 ? "red" : Skypuff.left_meters / Skypuff.rope_meters < 0.15 ? "yellow": "green"
+                color: Skypuff.leftMeters / Skypuff.ropeMeters < 0.05 ? "red" : Skypuff.leftMeters / Skypuff.ropeMeters < 0.15 ? "yellow": "green"
             }
 
             Text {
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignRight
 
-                text: isNaN(Skypuff.drawn_meters) ? "" : qsTr("Drawn: %1m").arg(Skypuff.drawn_meters.toFixed(1))
+                text: isNaN(Skypuff.drawnMeters) ? "" : qsTr("Drawn: %1m").arg(Skypuff.drawnMeters.toFixed(1))
             }
         }
 
@@ -87,9 +87,9 @@ Page {
             Layout.fillWidth: true
 
             from: 0
-            to: Skypuff.rope_meters
+            to: Skypuff.ropeMeters
 
-            value: Skypuff.left_meters
+            value: Skypuff.leftMeters
         }
 
         // Speed
@@ -97,10 +97,10 @@ Page {
             Layout.fillWidth: true
             Layout.topMargin: 10
 
-            text: isNaN(Skypuff.drawn_meters) ? "" : qsTr("%1m/s speed").arg(Skypuff.speed_ms.toFixed(1))
+            text: isNaN(Skypuff.drawnMeters) ? "" : qsTr("%1m/s speed").arg(Skypuff.speedMs.toFixed(1))
 
             // above 15ms red, above 10 yellow
-            color: Skypuff.speed_ms > 15 ? "red" : Skypuff.speed_ms > 10 ? "yellow" : "green"
+            color: Skypuff.speedMs > 15 ? "red" : Skypuff.speedMs > 10 ? "yellow" : "green"
         }
 
         ProgressBar {
@@ -109,7 +109,25 @@ Page {
             from: 0
             to: 20
 
-            value: Math.abs(Skypuff.speed_ms)
+            value: Math.abs(Skypuff.speedMs)
+        }
+
+        // Motor
+        Text {
+            Layout.fillWidth: true
+            Layout.topMargin: 10
+
+            text: qsTr("%1 %2Kg").arg(Skypuff.motorMode).arg(Math.abs(Skypuff.motorKg).toFixed(1))
+        }
+
+        ProgressBar {
+            id: pbMotor
+            Layout.fillWidth: true
+
+            from: 0
+            to: 0
+
+            value: Math.abs(Skypuff.motorKg)
         }
 
         Item {
@@ -140,12 +158,16 @@ Page {
 
             Button {
                 text: "←";
+                enabled: !Skypuff.isBrakingRange
+                onClicked: {Skypuff.sendTerminal("set manual_slow")}
             }
             Item {
                 Layout.fillWidth: true
             }
             Button {
                 text: "→";
+                enabled: !Skypuff.isBrakingRange
+                onClicked: {Skypuff.sendTerminal("set manual_slow_back")}
             }
         }
         Button {
@@ -318,6 +340,8 @@ Page {
             pullForce.to = cfg.motor_max_kg
             pullForce.stepSize = cfg.motor_max_kg / 30
             pullForce.value = cfg.pull_kg
+
+            pbMotor.to = cfg.motor_max_kg
         }
     }
 }

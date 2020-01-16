@@ -18,7 +18,7 @@
 
 Skypuff::Skypuff(VescInterface *v) : QObject(),
     vesc(v), aliveTimerId(0), commandTimeoutTimerId(0),
-    cur_tac(0), erpm(0),
+    curTac(0), erpm(0),
     // Compile regexps once here
     reBraking("(\\d.\\.?\\d*)Kg \\((-?\\d+.?\\d*)A"),
     rePull("(\\d.\\.?\\d*)Kg \\((-?\\d+.?\\d*)A"), // absolute kg, signed amps
@@ -66,6 +66,14 @@ void Skypuff::setState(const QString& newState)
             stateText = tr("Braking");
         else if(!newState.compare("MANUAL_BRAKING"))
             stateText = tr("Manual Braking");
+        else if(!newState.compare("MANUAL_SLOW_SPEED_UP"))
+            stateText = tr("Manual Speed Up");
+        else if(!newState.compare("MANUAL_SLOW"))
+            stateText = tr("Manual Slow");
+        else if(!newState.compare("MANUAL_SLOW_BACK_SPEED_UP"))
+            stateText = tr("Manual Speed Up Back");
+        else if(!newState.compare("MANUAL_SLOW_BACK"))
+            stateText = tr("Manual Slow Back");
         else if(!newState.compare("BRAKING_EXTENSION"))
             stateText = tr("Braking Extension");
         else if(!newState.compare("UNWINDING"))
@@ -290,132 +298,90 @@ void Skypuff::customAppDataReceived(QByteArray data)
 
     if(vb.length() < 1) {
         vesc->emitMessageDialog(tr("Can't deserialize"),
-                                tr("Not enough data to deserialize version"),
+                                tr("Not enough data to deserialize command byte"),
                                 true);
         vesc->disconnectPort();
         return;
     }
 
-    uint8_t version = vb.vbPopFrontUint8();
+    skypuff_custom_app_data_command command = (skypuff_custom_app_data_command)vb.vbPopFrontUint8();
 
-    if(version != 1) {
-        vesc->emitMessageDialog(tr("Wrong config version"),
-                                tr("Received skypuff version %1, my version %2.").arg(version).arg(skypuff_config_version),
+    switch(command) {
+    case SK_COMM_ALIVE:
+        processAlive(vb);
+        break;
+    case SK_COMM_SETTINGS_V1:
+        processSettingsV1(vb);
+        break;
+    default:
+        vesc->emitMessageDialog(tr("Unknown CUSTOM_APP_DATA command"),
+                                tr("Received commad: '%1'.").arg((int)command),
                                 true);
         vesc->disconnectPort();
         return;
     }
 
+}
+
+void Skypuff::processAlive(VByteArray &vb)
+{
     // Enough data?
-    const int v1_settings_length = 118;
+    const int alive_length = 1 + 3 * 4;
+    if(vb.length() < alive_length) {
+        vesc->emitMessageDialog(tr("Can't deserialize alive command"),
+                                tr("Received %1 bytes, expected %2 bytes!").arg(vb.length()).arg(alive_length),
+                                true);
+        vesc->disconnectPort();
+    }
+
+    smooth_motor_mode newMotorMode = (smooth_motor_mode)vb.vbPopFrontUint8();
+    int newTac = vb.vbPopFrontInt32();
+    float newErpm = vb.vbPopFrontDouble32Auto();
+    float newAmps = vb.vbPopFrontDouble32Auto();
+
+    setPos(newTac);
+    setSpeed(newErpm);
+    setMotor(newMotorMode, newAmps);
+}
+
+void Skypuff::processSettingsV1(VByteArray &vb)
+{
+    // Enough data?
+    const int v1_settings_length = 123;
     if(vb.length() < v1_settings_length) {
         vesc->emitMessageDialog(tr("Can't deserialize V1 settings"),
-                                tr("Received %1 bytes, but need %2 bytes!").arg(vb.length()).arg(v1_settings_length),
+                                tr("Received %1 bytes, expected %2 bytes!").arg(vb.length()).arg(v1_settings_length),
                                 true);
         vesc->disconnectPort();
     }
 
     // Get state and pos
     skypuff_state mcu_state;
-    int new_pos;
-    float new_erpm;
 
     mcu_state = (skypuff_state)vb.vbPopFrontUint8();
-    new_pos = vb.vbPopFrontInt32();
-    new_erpm = vb.vbPopFrontDouble32Auto();
+
+    processAlive(vb);
 
     cfg.deserializeV1(vb);
+
+    if(vb.length()) {
+        vesc->emitMessageDialog(tr("Extra bytes received with V1 settings"),
+                                tr("Received %1 extra bytes!").arg(vb.length()),
+                                true);
+        vesc->disconnectPort();
+    }
 
     // Update maximum motor current to calculate scales
     cfg.motor_max_current = vesc->mcConfig()->getParamDouble("l_current_max");
 
     emit settingsChanged(cfg);
+
     setState(state_str(mcu_state));
-    setPos(new_pos, true);
-    setSpeed(new_erpm);
 
-    return;
-}
-
-bool QMLable_skypuff_config::deserializeV1(VByteArray& from)
-{
-    if(from.length() < 109)
-            return false;
-
-    motor_poles = from.vbPopFrontUint8();
-    gear_ratio = from.vbPopFrontDouble32Auto();
-    wheel_diameter = from.vbPopFrontDouble32Auto();
-
-    amps_per_kg = from.vbPopFrontDouble32Auto();
-    amps_per_sec = from.vbPopFrontDouble32Auto();
-    rope_length = from.vbPopFrontInt32();
-    braking_length = from.vbPopFrontInt32();
-    braking_extension_length = from.vbPopFrontInt32();
-
-    slowing_length = from.vbPopFrontInt32();
-    slow_erpm = from.vbPopFrontDouble32Auto();
-    rewinding_trigger_length = from.vbPopFrontInt32();
-    unwinding_trigger_length = from.vbPopFrontInt32();
-    pull_current = from.vbPopFrontDouble32Auto();
-
-    pre_pull_k = from.vbPopFrontDouble32Auto();
-    takeoff_pull_k = from.vbPopFrontDouble32Auto();
-    fast_pull_k = from.vbPopFrontDouble32Auto();
-    takeoff_trigger_length = from.vbPopFrontInt32();
-    pre_pull_timeout = from.vbPopFrontInt32();
-
-    takeoff_period = from.vbPopFrontInt32();
-    brake_current = from.vbPopFrontDouble32Auto();
-    slowing_current = from.vbPopFrontDouble32Auto();
-    manual_brake_current = from.vbPopFrontDouble32Auto();
-    unwinding_current = from.vbPopFrontDouble32Auto();
-
-    rewinding_current = from.vbPopFrontDouble32Auto();
-    slow_max_current = from.vbPopFrontDouble32Auto();
-    manual_slow_max_current = from.vbPopFrontDouble32Auto();
-    manual_slow_speed_up_current = from.vbPopFrontDouble32Auto();
-    manual_slow_erpm = from.vbPopFrontDouble32Auto();
-
-    return true;
-}
-
-QByteArray QMLable_skypuff_config::serializeV1() const
-{
-    VByteArray vb;
-
-    vb.vbAppendUint8(1); // Version
-
-    vb.vbAppendUint8(motor_poles);
-    vb.vbAppendDouble32Auto(gear_ratio);
-    vb.vbAppendDouble32Auto(wheel_diameter);
-
-    vb.vbAppendDouble32Auto(amps_per_kg);
-    vb.vbAppendDouble32Auto(amps_per_sec);
-    vb.vbAppendInt32(rope_length);
-    vb.vbAppendInt32(braking_length);
-    vb.vbAppendInt32(braking_extension_length);
-    vb.vbAppendInt32(slowing_length);
-    vb.vbAppendDouble32Auto(slow_erpm);
-    vb.vbAppendInt32(rewinding_trigger_length);
-    vb.vbAppendInt32(unwinding_trigger_length);
-    vb.vbAppendDouble32Auto(pull_current);
-    vb.vbAppendDouble32Auto(pre_pull_k);
-    vb.vbAppendDouble32Auto(takeoff_pull_k);
-    vb.vbAppendDouble32Auto(fast_pull_k);
-    vb.vbAppendInt32(takeoff_trigger_length);
-    vb.vbAppendInt32(pre_pull_timeout);
-    vb.vbAppendInt32(takeoff_period);
-    vb.vbAppendDouble32Auto(brake_current);
-    vb.vbAppendDouble32Auto(slowing_current);
-    vb.vbAppendDouble32Auto(manual_brake_current);
-    vb.vbAppendDouble32Auto(unwinding_current);
-    vb.vbAppendDouble32Auto(rewinding_current);
-    vb.vbAppendDouble32Auto(slow_max_current);
-    vb.vbAppendDouble32Auto(manual_slow_max_current);
-    vb.vbAppendDouble32Auto(manual_slow_speed_up_current);
-    vb.vbAppendDouble32Auto(manual_slow_erpm);
-
-    return vb;
+    // Override all stats changed
+    emit posChanged(cfg.tac_steps_to_meters(curTac));
+    emit brakingRangeChanged(isBrakingRange());
+    emit brakingExtensionRangeChanged(isBrakingExtensionRange());
 }
 
 void Skypuff::sendSettings(const QMLable_skypuff_config& cfg)
@@ -423,19 +389,11 @@ void Skypuff::sendSettings(const QMLable_skypuff_config& cfg)
     vesc->commands()->sendCustomAppData(cfg.serializeV1());
 }
 
-// overrideChanged after new seetings to update isBrakingExtensionRange
-void Skypuff::setPos(const int new_pos, const bool overrideChanged)
+// overrideChanged after new seetings to update ranges flags
+void Skypuff::setPos(const int new_pos)
 {
-    if(new_pos != cur_tac || overrideChanged) {
-        bool wasBrakingExtension = isBrakingExtensionRange();
-
-        cur_tac = new_pos;
-
-        bool newBrakingExtension = isBrakingExtensionRange();
-
-        if(wasBrakingExtension != newBrakingExtension)
-            emit brakingExtensionRangeChanged(newBrakingExtension);
-
+    if(new_pos != curTac) {
+        curTac = new_pos;
         emit posChanged(cfg.tac_steps_to_meters(new_pos));
     }
 }
@@ -445,6 +403,38 @@ void Skypuff::setSpeed(float new_erpm)
     if(erpm != new_erpm) {
         erpm = new_erpm;
         emit speedChanged(cfg.erpm_to_ms(new_erpm));
+    }
+}
+
+void Skypuff::setMotor(const smooth_motor_mode newMode, const float newAmps)
+{
+    if(smoothMotorMode != newMode) {
+        smoothMotorMode = newMode;
+
+        motorModeText = motor_mode_str(newMode);
+
+        switch(smoothMotorMode) {
+        case MOTOR_RELEASED:
+            motorModeText = tr("Released");
+            break;
+        case MOTOR_CURRENT:
+            motorModeText = tr("Pull");
+            break;
+        case MOTOR_BRAKING:
+            motorModeText = tr("Brake");
+            break;
+        case MOTOR_SPEED:
+            motorModeText = tr("Speed");
+            break;
+        }
+        emit motorModeChanged(motorModeText);
+    }
+
+
+    if(amps != newAmps) {
+        amps = newAmps;
+
+        emit motorKgChanged(amps / cfg.amps_per_kg);
     }
 }
 

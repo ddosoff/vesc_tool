@@ -49,10 +49,14 @@ class Skypuff : public QObject
 
     // To enable transitions to braking, if pos below or equal braking_length + braking_extension_length
     Q_PROPERTY(bool isBrakingExtensionRange READ isBrakingExtensionRange NOTIFY brakingExtensionRangeChanged)
-    Q_PROPERTY(float rope_meters READ getRopeMeters NOTIFY settingsChanged)
-    Q_PROPERTY(float drawn_meters READ getDrawnMeters NOTIFY posChanged)
-    Q_PROPERTY(float left_meters READ getLeftMeters NOTIFY posChanged)
-    Q_PROPERTY(float speed_ms READ getSpeedMs NOTIFY speedChanged)
+    // To enable manual_slow buttons
+    Q_PROPERTY(bool isBrakingRange READ isBrakingRange NOTIFY brakingRangeChanged)
+    Q_PROPERTY(float ropeMeters READ getRopeMeters NOTIFY settingsChanged)
+    Q_PROPERTY(float drawnMeters READ getDrawnMeters NOTIFY posChanged)
+    Q_PROPERTY(float leftMeters READ getLeftMeters NOTIFY posChanged)
+    Q_PROPERTY(float speedMs READ getSpeedMs NOTIFY speedChanged)
+    Q_PROPERTY(QString motorMode READ getMotorMode NOTIFY motorModeChanged)
+    Q_PROPERTY(float motorKg READ getMotorKg NOTIFY motorKgChanged)
 public:
     Skypuff(VescInterface *parent = 0);
 
@@ -74,8 +78,11 @@ signals:
     void settingsChanged(const QMLable_skypuff_config & cfg);
     void statusChanged(const QString &status);
     void brakingExtensionRangeChanged(const bool isBrakingExtensionRange);
+    void brakingRangeChanged(const bool isBrakingRange);
     void posChanged(const float meters);
     void speedChanged(const float ms);
+    void motorModeChanged(const QString& newMotorMode);
+    void motorKgChanged(const float kg);
 protected slots:
     void printReceived(QString str);
     void customAppDataReceived(QByteArray data);
@@ -98,9 +105,12 @@ protected:
     QString lastCmd;
 
     QMLable_skypuff_config cfg;
-    int cur_tac; // Signed tachometer value
-    float erpm;
-    QString status;
+
+    // Updated with SK_COMM_ALIVE
+    smooth_motor_mode smoothMotorMode;
+    QString motorModeText;
+    int curTac;
+    float erpm, amps;
 
     // Tons of regexps to parse terminal prints
     QRegExp reBraking, rePull, rePos, reSpeed, rePullingHigh;
@@ -109,25 +119,30 @@ protected:
 
     QString state;
     QString stateText;
+    QString status;
 
     QHash<QString, int> h_states;
     QHash<MessageType, QString> messageTypes;
 
     // Getters
-    bool isBrakingExtensionRange() const {return abs(cur_tac) <= cfg.braking_length + cfg.braking_extension_length;}
+    bool isBrakingRange() const {return abs(curTac) <= cfg.braking_length;}
+    bool isBrakingExtensionRange() const {return abs(curTac) <= cfg.braking_length + cfg.braking_extension_length;}
     float getRopeMeters() {return cfg.rope_length_to_meters();}
-    float getDrawnMeters() {return cfg.tac_steps_to_meters(abs(cur_tac));}
-    float getLeftMeters() {return cfg.tac_steps_to_meters(cfg.rope_length - abs(cur_tac));}
+    float getDrawnMeters() {return cfg.tac_steps_to_meters(abs(curTac));}
+    float getLeftMeters() {return cfg.tac_steps_to_meters(cfg.rope_length - abs(curTac));}
     float getSpeedMs() {return cfg.erpm_to_ms(erpm);}
+    float getMotorKg() {return amps / cfg.amps_per_kg;}
     QString getState() {return state;}
     QString getStateText() {return stateText;}
     QString getStatus() {return status;}
+    QString getMotorMode() {return motorModeText;}
 
     // Setters
     void setState(const QString& newState);
     void setStatus(const QString& mcuStatus);
-    void setPos(const int new_pos, const bool ovverideChanged = false);
-    void setSpeed(float new_erpm);
+    void setPos(const int new_pos);
+    void setSpeed(const float new_erpm);
+    void setMotor(const smooth_motor_mode newMode, const float newAmps);
 
     // Helpers
     bool sendCmd(const QString& cmd);
@@ -135,7 +150,8 @@ protected:
     bool stopTimout(const QString& cmd);
     void timerEvent(QTimerEvent *event) override;
     bool parseCommand(QStringRef &str, MessageTypeAndPayload &c);
-
+    void processAlive(VByteArray &vb);
+    void processSettingsV1(VByteArray &vb);
 };
 
 #endif // SKYPUFF_H

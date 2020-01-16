@@ -31,7 +31,8 @@ contains(DEFINES, HAS_BLUETOOTH) {
 INCLUDEPATH += ../..
 
 SOURCES += main.cpp \
-    skypuff.cpp
+    skypuff.cpp \
+    qmlable_skypuff_types.cpp
 
 HEADERS += \ 
     skypuff.h \
