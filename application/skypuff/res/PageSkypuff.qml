@@ -358,7 +358,7 @@ Page {
             pullForce.value = cfg.pull_kg
 
             pbMotor.to = cfg.motor_max_kg
-            pbPower.to = cfg.max_power
+            pbPower.to = cfg.power_max
         }
     }
 }

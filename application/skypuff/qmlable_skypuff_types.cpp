@@ -46,7 +46,7 @@ QByteArray QMLable_skypuff_config::serializeV1() const
 {
     VByteArray vb;
 
-    vb.vbAppendUint8(1); // Version
+    vb.vbAppendUint8(SK_COMM_SETTINGS_V1); // Version
 
     vb.vbAppendUint8(motor_poles);
     vb.vbAppendDouble32Auto(gear_ratio);

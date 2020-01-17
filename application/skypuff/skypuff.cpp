@@ -38,6 +38,7 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
     messageTypes[PARAM_PULL] = "pull";
 
     connect(vesc, SIGNAL(portConnectedChanged()), this, SLOT(portConnectedChanged()));
+    connect(vesc, SIGNAL(messageDialog(QString,QString,bool,bool)), this, SLOT(logVescDialog(const QString&,const QString&)));
     connect(vesc->commands(), SIGNAL(printReceived(QString)), this, SLOT(printReceived(QString)));
     connect(vesc->commands(), SIGNAL(customAppDataReceived(QByteArray)), this, SLOT(customAppDataReceived(QByteArray)));
 
@@ -51,6 +52,12 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
     }
 
     setState("DISCONNECTED");
+}
+
+void Skypuff::logVescDialog(const QString & title, const QString & text)
+{
+    qWarning() << "-- VESC:" << title;
+    qWarning() << "  --" << text;
 }
 
 void Skypuff::setState(const QString& newState)
@@ -133,7 +140,7 @@ void Skypuff::timerEvent(QTimerEvent *event)
         vesc->disconnectPort();
     }
     else if(event->timerId() == this->aliveTimerId) {
-        qWarning() << "Skypuff::timerEvent(): alive timer";
+        sendAlive(aliveTimeout);
     }
     else
         qFatal("Skypuff::timerEvent(): unknown timer id %d", event->timerId());
@@ -155,9 +162,8 @@ bool Skypuff::sendCmd(const QString &cmd)
         return false;
     }
 
-    this->lastCmd = cmd;
     vesc->commands()->sendTerminalCmd(cmd);
-    this->commandTimeoutTimerId = this->startTimer(commandTimeout, Qt::PreciseTimer);
+    startCommandTimeout(cmd);
 
     return true;
 }
@@ -169,19 +175,42 @@ void Skypuff::sendCmdOrDisconnect(const QString &cmd)
     }
 }
 
+bool Skypuff::startCommandTimeout(const QString& cmd)
+{
+    if(commandTimeoutTimerId) {
+        vesc->emitMessageDialog(tr("Can't start command timeout timer"),
+                                tr("startCommandTimeout(<i>%1</i>) commandTimeoutTimerId set to previous command: '%2'..").arg(cmd).arg(lastCmd),
+                                true);
+        return false;
+
+    }
+
+    commandTimeoutTimerId = startTimer(commandTimeout, Qt::PreciseTimer);
+    if(!commandTimeoutTimerId) {
+        vesc->emitMessageDialog(tr("Can't start command timeout timer"),
+                                tr("startCommandTimeout(<i>%1</i>) startTimer return zero. Command: '%2'..").arg(cmd).arg(lastCmd),
+                                true);
+        return false;
+
+    }
+
+    lastCmd = cmd;
+    return true;
+}
+
 // Check the last command is the same or disconnect
-bool Skypuff::stopTimout(const QString& cmd)
+bool Skypuff::stopCommandTimeout(const QString& cmd)
 {
     if(this->lastCmd != cmd) {
         vesc->emitMessageDialog(tr("Incorrect last command"),
-                                tr("stopTimeout(<i>%1</i>) while processing command '%2'..").arg(cmd).arg(this->lastCmd),
+                                tr("stopTimeout('%1') while processing command '%2'..").arg(cmd).arg(this->lastCmd),
                                 true);
         return false;
     }
 
     if(!this->commandTimeoutTimerId) {
         vesc->emitMessageDialog(tr("Timeout is not set"),
-                                tr("stopTimeout(<i>%1</i>) commandTimeoutTimerId is not set..").arg(cmd),
+                                tr("stopTimeout('%1') commandTimeoutTimerId is not set..").arg(cmd),
                                 true);
         return false;
 
@@ -289,11 +318,6 @@ void Skypuff::printReceived(QString str)
 
 void Skypuff::customAppDataReceived(QByteArray data)
 {
-    // Configuration could be set from console
-    // get_conf command is not necessary, but possible
-    if(commandTimeoutTimerId)
-        stopTimout("get_conf");
-
     VByteArray vb(data);
 
     if(vb.length() < 1) {
@@ -325,6 +349,11 @@ void Skypuff::customAppDataReceived(QByteArray data)
 
 void Skypuff::processAlive(VByteArray &vb)
 {
+    if(lastCmd == "alive" && !stopCommandTimeout("alive")) {
+        vesc->disconnectPort();
+        return;
+    }
+
     // Enough data?
     const int alive_length = 1 + 4 * 4;
     if(vb.length() < alive_length) {
@@ -340,6 +369,13 @@ void Skypuff::processAlive(VByteArray &vb)
     float newAmps = vb.vbPopFrontDouble32Auto();
     float newPower = vb.vbPopFrontDouble32Auto();
 
+    if(vb.length()) {
+        vesc->emitMessageDialog(tr("Extra bytes received with alive stats"),
+                                tr("Received %1 extra bytes!").arg(vb.length()),
+                                true);
+        vesc->disconnectPort();
+    }
+
     setPos(newTac);
     setSpeed(newErpm);
     setMotor(newMotorMode, newAmps, newPower);
@@ -347,6 +383,14 @@ void Skypuff::processAlive(VByteArray &vb)
 
 void Skypuff::processSettingsV1(VByteArray &vb)
 {
+    // Configuration could be set from console
+    // get_conf command is not necessary, but possible
+    if(commandTimeoutTimerId)
+        if(!stopCommandTimeout("get_conf")) {
+            vesc->disconnectPort();
+            return;
+        }
+
     // Enough data?
     const int v1_settings_length = 123;
     if(vb.length() < v1_settings_length) {
@@ -382,11 +426,27 @@ void Skypuff::processSettingsV1(VByteArray &vb)
     emit posChanged(cfg.tac_steps_to_meters(curTac));
     emit brakingRangeChanged(isBrakingRange());
     emit brakingExtensionRangeChanged(isBrakingExtensionRange());
+
+    aliveTimerId = startTimer(aliveTimerDelay, Qt::PreciseTimer);
 }
 
 void Skypuff::sendSettings(const QMLable_skypuff_config& cfg)
 {
     vesc->commands()->sendCustomAppData(cfg.serializeV1());
+}
+
+void Skypuff::sendAlive(const int timeout)
+{
+    VByteArray vb;
+
+    vb.vbAppendUint8(SK_COMM_ALIVE); // Version
+    vb.vbAppendInt32(timeout);
+
+    vesc->commands()->sendCustomAppData(vb);
+    aliveResponseDelay.start();
+
+    if(!startCommandTimeout("alive"))
+        vesc->disconnectPort();
 }
 
 // overrideChanged after new seetings to update ranges flags

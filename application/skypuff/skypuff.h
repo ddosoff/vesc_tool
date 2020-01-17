@@ -17,12 +17,13 @@
 #ifndef SKYPUFF_H
 #define SKYPUFF_H
 
+#include <QElapsedTimer>
 #include "vescinterface.h"
 #include "qmlable_skypuff_types.h"
 
-const int aliveTimerDelay = 300; // milliseconds
-const int aliveTimeout = 400;
-const int commandTimeout = 400;
+const int aliveTimerDelay = 333; // milliseconds
+const int aliveTimeout = 500;
+const int commandTimeout = 300;
 
 
 /*
@@ -33,7 +34,7 @@ const int commandTimeout = 400;
  * deserialized and translated to QML accessible properties and signals.
  *
  * Sorry for some hardcore stings parsing.
- * It's not too bad in the end.
+ * It's not too much difference from binary in the end.
  *
  * If no answer within commandTimeout, vesc will be disconnected
  * and error message thrown via vesc interface.
@@ -89,6 +90,7 @@ protected slots:
     void printReceived(QString str);
     void customAppDataReceived(QByteArray data);
     void portConnectedChanged();
+    void logVescDialog(const QString & title, const QString & text);
 protected:
     // Parsed messages from prints
     enum MessageType {
@@ -104,6 +106,15 @@ protected:
     VescInterface *vesc;
     int aliveTimerId;
     int commandTimeoutTimerId;
+    QElapsedTimer aliveResponseDelay;
+
+    // Calculate average alive response
+    const int avgN = 10;
+    QVector<int> aliveResponseDelays;
+    int aliveResponseDelayIndex;
+    int sumAliveResponseDelay;
+    int alivePings;
+
     QString lastCmd;
 
     QMLable_skypuff_config cfg;
@@ -150,7 +161,9 @@ protected:
     // Helpers
     bool sendCmd(const QString& cmd);
     void sendCmdOrDisconnect(const QString& cmd);
-    bool stopTimout(const QString& cmd);
+    void sendAlive(const int timeout);
+    bool stopCommandTimeout(const QString& cmd);
+    bool startCommandTimeout(const QString& cmd);
     void timerEvent(QTimerEvent *event) override;
     bool parseCommand(QStringRef &str, MessageTypeAndPayload &c);
     void processAlive(VByteArray &vb);
