@@ -59,6 +59,10 @@ class Skypuff : public QObject
     Q_PROPERTY(QString motorMode READ getMotorMode NOTIFY motorModeChanged)
     Q_PROPERTY(float motorKg READ getMotorKg NOTIFY motorKgChanged)
     Q_PROPERTY(float power READ getPower NOTIFY powerChanged)
+    Q_PROPERTY(float tempFets READ getTempFets NOTIFY tempFetsChanged)
+    Q_PROPERTY(float tempMotor READ getTempMotor NOTIFY tempMotorChanged)
+    Q_PROPERTY(float whIn READ getWhIn NOTIFY whInChanged)
+    Q_PROPERTY(float whOut READ getWhOut NOTIFY whOutChanged)
 public:
     Skypuff(VescInterface *parent = 0);
 
@@ -86,6 +90,10 @@ signals:
     void motorModeChanged(const QString& newMotorMode);
     void motorKgChanged(const float kg);
     void powerChanged(const float power);
+    void tempFetsChanged(const float tempFets);
+    void tempMotorChanged(const float tempMotor);
+    void whInChanged(const float whIn);
+    void whOutChanged(const float whOut);
 protected slots:
     void printReceived(QString str);
     void customAppDataReceived(QByteArray data);
@@ -99,13 +107,18 @@ protected:
         PARAM_SPEED,
         PARAM_BRAKING,
         PARAM_PULL,
+        PARAM_TEMP_FETS,
+        PARAM_TEMP_MOTOR,
+        PARAM_WH_IN,
+        PARAM_WH_OUT,
     };
     typedef QPair<MessageType, QStringRef> MessageTypeAndPayload;
     typedef QMap<MessageType, QString> MessagesByType;
 
     VescInterface *vesc;
     int aliveTimerId;
-    int commandTimeoutTimerId;
+    int aliveTimeoutTimerId;
+    int getConfTimeoutTimerId;
     QElapsedTimer aliveResponseDelay;
 
     // Calculate average alive response
@@ -124,6 +137,9 @@ protected:
     QString motorModeText;
     int curTac;
     float erpm, amps, power;
+    float tempFets, tempMotor;
+    float whIn, whOut;
+
 
     // Tons of regexps to parse terminal prints
     QRegExp reBraking, rePull, rePos, reSpeed, rePullingHigh;
@@ -146,6 +162,10 @@ protected:
     float getSpeedMs() {return cfg.erpm_to_ms(erpm);}
     float getMotorKg() {return amps / cfg.amps_per_kg;}
     float getPower() {return power;}
+    float getTempFets() {return tempFets;}
+    float getTempMotor() {return tempMotor;}
+    float getWhIn() {return whIn;}
+    float getWhOut() {return whOut;}
     QString getState() {return state;}
     QString getStateText() {return stateText;}
     QString getStatus() {return status;}
@@ -157,15 +177,16 @@ protected:
     void setPos(const int new_pos);
     void setSpeed(const float new_erpm);
     void setMotor(const smooth_motor_mode newMode, const float newAmps, const float newPower);
+    void setTempFets(const float newTempFets);
+    void setTempMotor(const float newTempMotor);
+    void setWhIn(const float newWhIn);
+    void setWhOut(const float newWhOut);
 
     // Helpers
-    bool sendCmd(const QString& cmd);
-    void sendCmdOrDisconnect(const QString& cmd);
-    void sendAlive(const int timeout);
-    bool stopCommandTimeout(const QString& cmd);
-    bool startCommandTimeout(const QString& cmd);
+    void sendGetConf();
+    void sendAlive();
     void timerEvent(QTimerEvent *event) override;
-    bool parseCommand(QStringRef &str, MessageTypeAndPayload &c);
+    bool parsePrintMessage(QStringRef &str, MessageTypeAndPayload &c);
     void processAlive(VByteArray &vb);
     void processSettingsV1(VByteArray &vb);
 };

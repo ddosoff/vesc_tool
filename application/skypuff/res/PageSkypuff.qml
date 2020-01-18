@@ -9,6 +9,7 @@ Page {
     id: page
     state: "DISCONNECTED"
 
+    SystemPalette {id: systemPalette}
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 10
@@ -32,6 +33,8 @@ Page {
             horizontalAlignment: Text.AlignHCenter
             font.pointSize: 16
             font.bold: true
+
+            color: page.state === "MANUAL_BRAKING" ? "red" : systemPalette.text;
         }
 
         // Status text with 10 secs cleaner
@@ -99,13 +102,15 @@ Page {
             Layout.topMargin: 10
 
             text: isNaN(Skypuff.drawnMeters) ? "" : qsTr("Speed: %1 m/s").arg(Skypuff.speedMs.toFixed(1))
+
+            color: Skypuff.speedMs > 20 ? red : Skypuff.speedMs >  15 ? "yellow" : systemPalette.text;
         }
 
         ProgressBar {
             Layout.fillWidth: true
 
             from: 0
-            to: 20
+            to: 25
 
             value: Math.abs(Skypuff.speedMs)
         }
@@ -144,6 +149,23 @@ Page {
             to: 0
 
             value: Math.abs(Skypuff.power)
+        }
+
+        // Temps
+        RowLayout {
+            Layout.topMargin: 20
+
+            Text {
+                text: qsTr("Temp Fets, Motor: %1, %2").arg(Skypuff.tempFets).arg(Skypuff.tempMotor)
+
+                color: Skypuff.tempFets > 80 || Skypuff.tempMotor > 80 ? "red" : systemPalette.text;
+            }
+            Item {
+                Layout.fillWidth: true
+            }
+            Text {
+                text: qsTr("Wh Energy in/out: %1 / %2").arg(Skypuff.whIn.toFixed(3)).arg(Skypuff.whOut.toFixed(3))
+            }
         }
 
         Item {
