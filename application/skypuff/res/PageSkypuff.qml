@@ -156,7 +156,7 @@ Page {
             Layout.topMargin: 20
 
             Text {
-                text: qsTr("Temp Fets, Motor: %1, %2").arg(Skypuff.tempFets).arg(Skypuff.tempMotor)
+                text: qsTr("Fets, Motor: %1, %2").arg(Skypuff.tempFets).arg(Skypuff.tempMotor)
 
                 color: Skypuff.tempFets > 80 || Skypuff.tempMotor > 80 ? "red" : systemPalette.text;
             }
@@ -164,7 +164,7 @@ Page {
                 Layout.fillWidth: true
             }
             Text {
-                text: qsTr("Wh Energy in/out: %1 / %2").arg(Skypuff.whIn.toFixed(3)).arg(Skypuff.whOut.toFixed(3))
+                text: qsTr("In/out: %1 / %2 Wh").arg(Skypuff.whIn.toFixed(3)).arg(Skypuff.whOut.toFixed(3))
             }
         }
 

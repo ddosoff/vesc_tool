@@ -410,6 +410,7 @@ void Skypuff::processSettingsV1(VByteArray &vb)
     mcu_state = (skypuff_state)vb.vbPopFrontUint8();
     setState(state_str(mcu_state));
 
+    cfg.motor_max_current = vb.vbPopFrontDouble16(1e1);
     cfg.v_in = vb.vbPopFrontDouble32Auto();
     tempFets = vb.vbPopFrontDouble16(1e1);
     tempMotor = vb.vbPopFrontDouble16(1e1);
@@ -422,8 +423,6 @@ void Skypuff::processSettingsV1(VByteArray &vb)
     emit whOutChanged(whOut);
 
     cfg.deserializeV1(vb);
-    // Update maximum motor current to calculate scales
-    cfg.motor_max_current = vesc->mcConfig()->getParamDouble("l_current_max");
 
     emit settingsChanged(cfg);
 

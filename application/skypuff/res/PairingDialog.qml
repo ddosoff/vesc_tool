@@ -250,7 +250,7 @@ Item {
         standardButtons: Dialog.Ok | Dialog.Cancel
         modal: true
         focus: true
-        width: parent.width - 20
+        //width: parent.width - 20
         closePolicy: Popup.CloseOnEscape
         title: "Pair connected VESC"
         x: 10

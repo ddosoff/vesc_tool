@@ -78,5 +78,5 @@ QByteArray QMLable_skypuff_config::serializeV1() const
     vb.vbAppendDouble32Auto(manual_slow_speed_up_current);
     vb.vbAppendDouble32Auto(manual_slow_erpm);
 
-    return vb;
+    return std::move(vb);
 }
