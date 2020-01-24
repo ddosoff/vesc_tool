@@ -59,9 +59,9 @@ contains(DEFINES, HAS_BLUETOOTH) {
 
 include(../../application.pri)
 include(../../widgets/widgets.pri)
-include(../../lzo/lzo.pri)
+include(../../lzokay/lzokay.pri)
 
 RESOURCES += \
     qml.qrc \
-    ../../res.qrc \
+    ../../res_config.qrc \
 

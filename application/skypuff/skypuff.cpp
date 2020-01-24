@@ -147,7 +147,7 @@ void Skypuff::timerEvent(QTimerEvent *event)
         vesc->emitMessageDialog(tr("Command 'get_conf' timeout"),
                                 tr("Skypuff MCU did not answered within %2ms timeout.<br/><br/>"
                                    "Make sure connection is stable. VESC running Skypuff enabled firmware. "
-                                   "Motor configured, Custom User App started. Check it with 'skypuff' command.").arg(commandTimeout),
+                                   "Motor configured, Custom User App started. Use vesc_tool terminal 'skypuff' command.").arg(commandTimeout),
                                 true);
         vesc->disconnectPort();
     }
