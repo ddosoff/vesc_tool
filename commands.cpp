@@ -256,12 +256,15 @@ void Commands::processPacket(QByteArray data)
     case COMM_GET_MCCONF_DEFAULT:
         mTimeoutMcconf = 0;
         if (mMcConfig) {
-            mMcConfig->deSerialize(vb);
-            mMcConfig->updateDone();
+            if (mMcConfig->deSerialize(vb)) {
+                mMcConfig->updateDone();
 
-            if (mCheckNextMcConfig) {
-                mCheckNextMcConfig = false;
-                emit mcConfigCheckResult(mMcConfig->checkDifference(&mMcConfigLast));
+                if (mCheckNextMcConfig) {
+                    mCheckNextMcConfig = false;
+                    emit mcConfigCheckResult(mMcConfig->checkDifference(&mMcConfigLast));
+                }
+            } else {
+                emit deserializeConfigFailed(true, false);
             }
         }
         break;
@@ -270,8 +273,11 @@ void Commands::processPacket(QByteArray data)
     case COMM_GET_APPCONF_DEFAULT:
         mTimeoutAppconf = 0;
         if (mAppConfig) {
-            mAppConfig->deSerialize(vb);
-            mAppConfig->updateDone();
+            if (mAppConfig->deSerialize(vb)) {
+                mAppConfig->updateDone();
+            } else {
+                emit deserializeConfigFailed(false, true);
+            }
         }
         break;
 
@@ -1403,6 +1409,9 @@ QString Commands::faultToStr(mc_fault_code fault)
     case FAULT_CODE_HIGH_OFFSET_CURRENT_SENSOR_2: return "FAULT_CODE_HIGH_OFFSET_CURRENT_SENSOR_2";
     case FAULT_CODE_HIGH_OFFSET_CURRENT_SENSOR_3: return "FAULT_CODE_HIGH_OFFSET_CURRENT_SENSOR_3";
     case FAULT_CODE_UNBALANCED_CURRENTS: return "FAULT_CODE_UNBALANCED_CURRENTS";
+    case FAULT_CODE_RESOLVER_LOT: return "FAULT_CODE_RESOLVER_LOT";
+    case FAULT_CODE_RESOLVER_DOS: return "FAULT_CODE_RESOLVER_DOS";
+    case FAULT_CODE_RESOLVER_LOS: return "FAULT_CODE_RESOLVER_LOS";
     default: return "Unknown fault";
     }
 }

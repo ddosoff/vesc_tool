@@ -18,7 +18,7 @@ TEMPLATE = app
 DEFINES += HAS_SERIALPORT
 
 # Bluetooth available
-#DEFINES += HAS_BLUETOOTH
+DEFINES += HAS_BLUETOOTH
 
 contains(DEFINES, HAS_SERIALPORT) {
     QT += serialport
@@ -28,11 +28,11 @@ contains(DEFINES, HAS_BLUETOOTH) {
     QT += bluetooth
 }
 
-INCLUDEPATH += ../..
+INCLUDEPATH += ../../
 
-SOURCES += main.cpp
+SOURCES += main.cpp\
 
-HEADERS += 
+HEADERS  += 
     
 contains(DEFINES, HAS_BLUETOOTH) {
     SOURCES += ../../bleuart.cpp
@@ -41,9 +41,9 @@ contains(DEFINES, HAS_BLUETOOTH) {
 
 include(../../application.pri)
 include(../../widgets/widgets.pri)
-include(../../lzo/lzo.pri)
+include(../../lzokay/lzokay.pri)
 
 RESOURCES += \
     qml.qrc \
-    ../../res.qrc \
+    ../../res_config.qrc
 

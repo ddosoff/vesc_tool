@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 if [ -n "$1" ]; then
 	APP_NAME=$1
 else
@@ -15,6 +17,9 @@ fi
 
 mkdir $APP_NAME
 mkdir $APP_NAME/res
+mkdir $APP_NAME/res/config
+mkdir $APP_NAME/widgets
+mkdir $APP_NAME/lzokay
 
 if [ $QML == true ]; then
 	cp template/application_qml.pro $APP_NAME/$APP_NAME.pro
@@ -29,6 +34,3 @@ else
 	cp template/mainwindow.ui $APP_NAME
 	cp template/main.cpp $APP_NAME
 fi
-
-cp template/res.qrc $APP_NAME
-
