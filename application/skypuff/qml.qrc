@@ -8,5 +8,7 @@
         <file>res/PageTerminal.qml</file>
         <file>res/PageConfig.qml</file>
         <file>res/RealSpinBox.qml</file>
+        <file>res/sounds/Overvoltage.mp3</file>
+        <file>res/sounds/alert.mp3</file>
     </qresource>
 </RCC>

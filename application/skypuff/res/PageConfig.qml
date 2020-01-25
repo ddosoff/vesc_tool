@@ -2,6 +2,7 @@ import QtQuick 2.0
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 
+import Vedder.vesc.vescinterface 1.0
 import SkyPuff.vesc.winch 1.0
 
 Page {
@@ -23,7 +24,14 @@ Page {
                     anchors.fill: parent
 
                     RowLayout {
-                        Text { text: qsTr("Motor poles (pole pairs * 2)") }
+                        Text {
+                            text: qsTr('Motor poles (<a href="help">?</a>)')
+                            onLinkActivated: VescIf.emitMessageDialog(qsTr("Number of Motor Poles"),
+                                                                      qsTr("Actually number of magnets. Always even.<br/><br/>
+                                                                      Could be easily calculated if you enable handbrake (HB) current in the Vesc Tool.
+                                                                      Then rotate motor by hand and calculate number of stable positions. And multiply by two."),
+                                                                      false, false);
+                        }
                         Item {Layout.fillWidth: true}
                         SpinBox {
                             id: motor_poles
@@ -31,10 +39,16 @@ Page {
                             from: 2
                             to: 60
                             stepSize: 2
-                        }}
+                        }
+                    }
 
                     RowLayout {
-                        Text { text: qsTr("Gear ratio (motor turns per 1 spool turn)") }
+                        Text {
+                            text: qsTr('Gear ratio (<a href="help">?</a>)')
+                            onLinkActivated: VescIf.emitMessageDialog(qsTr("Drive Gear Ratio"),
+                                                                      qsTr("Number of motor turns per 1 spool turn."),
+                                                                      false, false);
+                        }
                         Item {Layout.fillWidth: true}
                         RealSpinBox {
                             id: gear_ratio
@@ -47,7 +61,7 @@ Page {
                     }
 
                     RowLayout {
-                        Text {text: qsTr("Wheel diaemeter (MM)")}
+                        Text {text: qsTr("Spool D (MM)")}
                         Item {Layout.fillWidth: true}
                         SpinBox {
                             id: wheel_diameter_mm
@@ -70,7 +84,12 @@ Page {
                     anchors.fill: parent
 
                     RowLayout {
-                        Text {text: qsTr("Amperes per 1 KG pulling force (A)")}
+                        Text {
+                            text: qsTr('Amps per KG (<a href="help">?</a>)')
+                            onLinkActivated: VescIf.emitMessageDialog(qsTr("Drive force coefficient"),
+                                                                      qsTr("How many motor Amps per 1Kg of rope force."),
+                                                                      false, false);
+                        }
                         Item {Layout.fillWidth: true}
                         RealSpinBox {
                             id: amps_per_kg

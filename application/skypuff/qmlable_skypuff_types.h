@@ -59,9 +59,10 @@ struct QMLable_skypuff_config : public skypuff_config, public skypuff_drive {
     Q_PROPERTY(float manual_slow_erpm_ms READ manual_slow_erpm_to_ms WRITE ms_to_manual_slow_erpm)
 public:
     float motor_max_current;
-    float v_in;
+    float v_in_first, v_in_max, v_in_min;
+    float fet_temp_max, motor_temp_max, bat_temp_max;
 
-    float get_power_max() {return v_in * motor_max_current;}
+    float get_power_max() {return v_in_first * motor_max_current;}
 
     int wheel_diameter_to_mm() {return round(wheel_diameter * (float)1000);}
     void wheel_diameter_from_mm(int mm) {wheel_diameter = (float)mm / (float)1000;}

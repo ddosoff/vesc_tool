@@ -14,6 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <QSound>
 #include "skypuff.h"
 
 Skypuff::Skypuff(VescInterface *v) : QObject(),
@@ -33,6 +34,8 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
     reMotionDetected("Motion (\\d+.\\d+)m"),
     reTakeoffTimeout("Takeoff (\\d+.\\d+)s")
 {
+    player = new QMediaPlayer(this);
+
     // Fill message types
     messageTypes[PARAM_TEXT] = "--";
     messageTypes[PARAM_POS] = "pos";
@@ -147,9 +150,11 @@ void Skypuff::timerEvent(QTimerEvent *event)
         vesc->emitMessageDialog(tr("Command 'get_conf' timeout"),
                                 tr("Skypuff MCU did not answered within %2ms timeout.<br/><br/>"
                                    "Make sure connection is stable. VESC running Skypuff enabled firmware. "
-                                   "Motor configured, Custom User App started. Use vesc_tool terminal 'skypuff' command.").arg(commandTimeout),
+                                   "Motor configured, Custom User App started.<br/><br/>Use vesc_tool terminal 'skypuff' command.").arg(commandTimeout),
                                 true);
         vesc->disconnectPort();
+        player->setMedia(QUrl("qrc:/res/sounds/alert.mp3"));
+        player->play();
     }
     else if(event->timerId() == aliveTimeoutTimerId) {
         killTimer(aliveTimeoutTimerId);
@@ -367,9 +372,9 @@ void Skypuff::processAlive(VByteArray &vb)
 
     smooth_motor_mode newMotorMode = (smooth_motor_mode)vb.vbPopFrontUint8();
     int newTac = vb.vbPopFrontInt32();
-    float newErpm = vb.vbPopFrontDouble32Auto();
-    float newAmps = vb.vbPopFrontDouble32Auto();
-    float newPower = vb.vbPopFrontDouble32Auto();
+    float newErpm = vb.vbPopFrontDouble32(1e1);
+    float newAmps = vb.vbPopFrontDouble32(1e1);
+    float newPower = vb.vbPopFrontDouble32(1e1);
 
     if(vb.length()) {
         vesc->emitMessageDialog(tr("Extra bytes received with alive stats"),
@@ -411,7 +416,11 @@ void Skypuff::processSettingsV1(VByteArray &vb)
     setState(state_str(mcu_state));
 
     cfg.motor_max_current = vb.vbPopFrontDouble16(1e1);
-    cfg.v_in = vb.vbPopFrontDouble32Auto();
+    cfg.fet_temp_max = vb.vbPopFrontDouble16(1e1);
+    cfg.motor_temp_max = vb.vbPopFrontDouble16(1e1);
+    cfg.v_in_min = vb.vbPopFrontDouble16(1e1);
+    cfg.v_in_max = vb.vbPopFrontDouble16(1e1);
+    cfg.v_in_first = vb.vbPopFrontDouble16(1e1);
     tempFets = vb.vbPopFrontDouble16(1e1);
     tempMotor = vb.vbPopFrontDouble16(1e1);
     whIn = vb.vbPopFrontDouble32(1e4);

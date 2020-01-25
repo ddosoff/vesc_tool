@@ -17,6 +17,7 @@
 #ifndef SKYPUFF_H
 #define SKYPUFF_H
 
+#include <QMediaPlayer>
 #include <QElapsedTimer>
 #include "vescinterface.h"
 #include "qmlable_skypuff_types.h"
@@ -116,6 +117,7 @@ protected:
     typedef QMap<MessageType, QString> MessagesByType;
 
     VescInterface *vesc;
+    QMediaPlayer *player;
     int aliveTimerId;
     int aliveTimeoutTimerId;
     int getConfTimeoutTimerId;
@@ -137,7 +139,7 @@ protected:
     QString motorModeText;
     int curTac;
     float erpm, amps, power;
-    float tempFets, tempMotor;
+    float tempFets, tempMotor, tempBattery;
     float whIn, whOut;
 
 

@@ -21,6 +21,7 @@ QT += serialport
 QT += network
 QT += printsupport
 QT += quick
+QT += multimedia
 
 TARGET = application
 TEMPLATE = app
