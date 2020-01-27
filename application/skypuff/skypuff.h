@@ -68,8 +68,6 @@ class Skypuff : public QObject
     Q_PROPERTY(float whOut READ getWhOut NOTIFY whOutChanged)
     // Readable fault, empty if none
     Q_PROPERTY(QString fault READ getFaultTranslation NOTIFY faultChanged)
-    Q_PROPERTY(int blinkingRedTimeout READ getBlinkingRedTimeout)
-    Q_PROPERTY(int blinkingOffTimeout READ getBlinkingOffTimeout)
 public:
     Skypuff(VescInterface *parent = 0);
 
@@ -89,7 +87,7 @@ signals:
     void stateChanged(const QString& newState); // Clear state
     void stateTextChanged(const QString& newStateText);
     void settingsChanged(const QMLable_skypuff_config & cfg);
-    void statusChanged(const QString &status);
+    void statusChanged(const QString &newStatus);
     void brakingExtensionRangeChanged(const bool isBrakingExtensionRange);
     void brakingRangeChanged(const bool isBrakingRange);
     void posChanged(const float meters);
@@ -110,8 +108,6 @@ protected slots:
     void portConnectedChanged();
     void logVescDialog(const QString & title, const QString & text);
 protected:
-    const static int blinkingRedTimeout = 400;
-    const static int blinkingOffTimeout = 100;
 
     // Parsed messages from prints
     enum MessageType {
@@ -191,8 +187,6 @@ protected:
     float getWhIn() {return whIn;}
     float getWhOut() {return whOut;}
     float getBatteryPercents();
-    int getBlinkingRedTimeout() {return blinkingRedTimeout;}
-    int getBlinkingOffTimeout() {return blinkingOffTimeout;}
     QString getState() {return state;}
     QString getStateText() {return stateText;}
     QString getStatus() {return status;}

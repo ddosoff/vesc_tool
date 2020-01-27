@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.12
 import QtQuick.Controls 2.2
 import QtQuick.Extras 1.4
 import QtQuick.Layouts 1.3
@@ -39,37 +39,31 @@ Page {
             color: page.state === "MANUAL_BRAKING" ? "red" : systemPalette.text;
         }
 
-        // Status or faults and warnings text with 10 secs cleaner
+        // Status messages from skypuff with normal text color
+        // or blinking faults
         Text {
             id: tStatus
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
+
+            SequentialAnimation on color {
+                id: faultsBlinker
+                loops: Animation.Infinite
+                ColorAnimation { easing.type: Easing.OutExpo; from: systemPalette.window; to: "red"; duration: 400 }
+                ColorAnimation { easing.type: Easing.OutExpo; from: "red"; to: systemPalette.window;  duration: 200 }
+            }
 
             Timer {
                 id: statusCleaner
                 interval: 5 * 1000
 
                 onTriggered: {
-                    tStatus.text = ""
-                    tStatus.color = systemPalette.text
-                    blinker.stop()
-                }
-            }
+                    tStatus.text = Skypuff.fault
 
-            Timer {
-                id: blinker
-
-                onTriggered: {
-                    if(blinker.interval === Skypuff.blinkingRedTimeout) {
-                        tStatus.color = systemPalette.base
-                        blinker.interval = Skypuff.blinkingOffTimeout
-                        blinker.start()
-                    }
-                    else {
-                        tStatus.color = "red"
-                        blinker.interval = Skypuff.blinkingRedTimeout
-                        blinker.start()
-                    }
+                    if(Skypuff.fault)
+                        faultsBlinker.start()
+                    else
+                        faultsBlinker.stop()
                 }
             }
 
@@ -77,20 +71,20 @@ Page {
                 target: Skypuff
 
                 onStatusChanged: {
-                    tStatus.text = status
+                    tStatus.text = newStatus
                     tStatus.color = systemPalette.text
-                    blinker.stop()
+
                     statusCleaner.restart()
+                    faultsBlinker.stop()
                 }
 
                 onFaultChanged:  {
                     if(newFault) {
                         tStatus.text = newFault
-                        tStatus.color = "red"
-                        statusCleaner.restart()
-                        blinker.interval = Skypuff.blinkingRedTimeout
-                        blinker.start()
+                        faultsBlinker.start()
                     }
+                    else
+                        statusCleaner.restart()
                 }
             }
         }
