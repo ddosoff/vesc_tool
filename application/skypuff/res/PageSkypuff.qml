@@ -9,7 +9,9 @@ Page {
     id: page
     state: "DISCONNECTED"
 
+    // Get normal text color from this palette
     SystemPalette {id: systemPalette}
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 10
@@ -37,7 +39,7 @@ Page {
             color: page.state === "MANUAL_BRAKING" ? "red" : systemPalette.text;
         }
 
-        // Status text with 10 secs cleaner
+        // Status or faults and warnings text with 10 secs cleaner
         Text {
             id: tStatus
             Layout.fillWidth: true
@@ -46,11 +48,28 @@ Page {
             Timer {
                 id: statusCleaner
                 interval: 5 * 1000
-                running: false
-                repeat: false
 
                 onTriggered: {
                     tStatus.text = ""
+                    tStatus.color = systemPalette.text
+                    blinker.stop()
+                }
+            }
+
+            Timer {
+                id: blinker
+
+                onTriggered: {
+                    if(blinker.interval === Skypuff.blinkingRedTimeout) {
+                        tStatus.color = systemPalette.base
+                        blinker.interval = Skypuff.blinkingOffTimeout
+                        blinker.start()
+                    }
+                    else {
+                        tStatus.color = "red"
+                        blinker.interval = Skypuff.blinkingRedTimeout
+                        blinker.start()
+                    }
                 }
             }
 
@@ -59,7 +78,19 @@ Page {
 
                 onStatusChanged: {
                     tStatus.text = status
+                    tStatus.color = systemPalette.text
+                    blinker.stop()
                     statusCleaner.restart()
+                }
+
+                onFaultChanged:  {
+                    if(newFault) {
+                        tStatus.text = newFault
+                        tStatus.color = "red"
+                        statusCleaner.restart()
+                        blinker.interval = Skypuff.blinkingRedTimeout
+                        blinker.start()
+                    }
                 }
             }
         }
@@ -103,7 +134,7 @@ Page {
 
             text: isNaN(Skypuff.drawnMeters) ? "" : qsTr("Speed: %1 m/s").arg(Skypuff.speedMs.toFixed(1))
 
-            color: Skypuff.speedMs > 20 ? red : Skypuff.speedMs >  15 ? "yellow" : systemPalette.text;
+            color: Skypuff.speedMs > 20 ? "red" : systemPalette.text;
         }
 
         ProgressBar {
@@ -156,7 +187,7 @@ Page {
             Layout.topMargin: 20
 
             Text {
-                text: qsTr("Fets, Motor: %1, %2").arg(Skypuff.tempFets).arg(Skypuff.tempMotor)
+                text: qsTr("T Fets, Mot, Bat: %1, %2, %3").arg(Skypuff.tempFets).arg(Skypuff.tempMotor).arg(Skypuff.tempBat)
 
                 color: Skypuff.tempFets > 80 || Skypuff.tempMotor > 80 ? "red" : systemPalette.text;
             }

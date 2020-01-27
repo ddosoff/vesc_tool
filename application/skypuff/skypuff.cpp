@@ -19,10 +19,15 @@
 
 Skypuff::Skypuff(VescInterface *v) : QObject(),
     vesc(v),
-    aliveTimerId(0), aliveTimeoutTimerId(0), getConfTimeoutTimerId(0),
-    curTac(0), erpm(0), amps(0), power(0),
-    tempFets(0), tempMotor(0),
+    aliveTimerId(0),
+    aliveTimeoutTimerId(0),
+    getConfTimeoutTimerId(0),
+    curTac(0),
+    erpm(0), amps(0), power(0),
+    tempFets(0), tempMotor(0), tempBat(0),
     whIn(0), whOut(0),
+    vBat(0),
+    fault(FAULT_CODE_NONE), playingFault(FAULT_CODE_NONE),
     // Compile regexps once here
     reBraking("(\\d.\\.?\\d*)Kg \\((-?\\d+.?\\d*)A"),
     rePull("(\\d.\\.?\\d*)Kg \\((-?\\d+.?\\d*)A"), // absolute kg, signed amps
@@ -35,6 +40,7 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
     reTakeoffTimeout("Takeoff (\\d+.\\d+)s")
 {
     player = new QMediaPlayer(this);
+    playlist = new QMediaPlaylist(this);
 
     // Fill message types
     messageTypes[PARAM_TEXT] = "--";
@@ -44,8 +50,11 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
     messageTypes[PARAM_PULL] = "pull";
     messageTypes[PARAM_TEMP_FETS] = "t_fets";
     messageTypes[PARAM_TEMP_MOTOR] = "t_motor";
+    messageTypes[PARAM_TEMP_BAT] = "t_bat";
     messageTypes[PARAM_WH_IN] = "wh_in";
     messageTypes[PARAM_WH_OUT] = "wh_out";
+    messageTypes[PARAM_FAULT] = "fault";
+    messageTypes[PARAM_V_BAT] = "v_bat";
 
     connect(vesc, SIGNAL(portConnectedChanged()), this, SLOT(portConnectedChanged()));
     connect(vesc, SIGNAL(messageDialog(QString,QString,bool,bool)), this, SLOT(logVescDialog(const QString&,const QString&)));
@@ -58,7 +67,16 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
         QString s = state_str((skypuff_state)i);
         if(eof == s)
             break;
-        h_states[s] = i;
+        h_states[s] = (skypuff_state)i;
+    }
+
+    // Fill faults string codes
+    eof = "Unknown fault";
+    for(int i = 0;;i++) {
+        QString s = Commands::faultToStr((mc_fault_code)i);
+        if(eof == s)
+            break;
+        h_faults[s] = (mc_fault_code)i;
     }
 
     setState("DISCONNECTED");
@@ -138,6 +156,9 @@ void Skypuff::portConnectedChanged()
             aliveTimeoutTimerId = 0;
         }
 
+        // Stop playing fault alert
+        setFault(FAULT_CODE_NONE);
+        // Inform UI
         setState("DISCONNECTED");
     }
 }
@@ -270,6 +291,7 @@ void Skypuff::printReceived(QString str)
 
     QStringRef rStr = str.midRef(i + 1); // Skip ':'
     QStringList messages;
+    auto fault_parsed = h_faults.end();
 
     // Parse messages with types
     MessageTypeAndPayload c;
@@ -292,11 +314,26 @@ void Skypuff::printReceived(QString str)
         case PARAM_TEMP_MOTOR: // "29.1C"
             setTempMotor(c.second.left(c.second.length() - 1).toFloat());
             break;
+        case PARAM_TEMP_BAT: // "29.1C"
+            setTempBat(c.second.left(c.second.length() - 1).toFloat());
+            break;
         case PARAM_WH_IN: // "0.003Wh"
             setWhIn(c.second.left(c.second.length() - 2).toFloat());
             break;
         case PARAM_WH_OUT: // "0.003Wh"
             setWhOut(c.second.left(c.second.length() - 2).toFloat());
+            break;
+        case PARAM_V_BAT: // "23.3V"
+            setVBat(c.second.left(c.second.length() - 1).toFloat());
+            break;
+        case PARAM_FAULT: // FAULT_CODE_OVER_VOLTAGE
+            fault_parsed = h_faults.find(c.second.toString());
+            if(fault_parsed == h_faults.end()) {
+                qWarning() << "Unknown fault string" << c.second;
+                vesc->emitMessageDialog(tr("Can't parse fault"),
+                                        tr("Unknown code: %s").arg(c.second),
+                                        false, false);
+            }
             break;
         default:
             break;
@@ -305,6 +342,10 @@ void Skypuff::printReceived(QString str)
 
     // Yeagh, we know the state!
     setState(p_state);
+
+    // Fault parsed?
+    if(fault_parsed != h_faults.end())
+        setFault(fault_parsed.value());
 
     // Emit messages signals
     if(!messages.isEmpty()) {
@@ -401,7 +442,7 @@ void Skypuff::processSettingsV1(VByteArray &vb)
     }
 
     // Enough data?
-    const int v1_settings_length = 123;
+    const int v1_settings_length = 154;
     if(vb.length() < v1_settings_length) {
         vesc->emitMessageDialog(tr("Can't deserialize V1 settings"),
                                 tr("Received %1 bytes, expected %2 bytes!").arg(vb.length()).arg(v1_settings_length),
@@ -413,21 +454,28 @@ void Skypuff::processSettingsV1(VByteArray &vb)
     skypuff_state mcu_state;
 
     mcu_state = (skypuff_state)vb.vbPopFrontUint8();
-    setState(state_str(mcu_state));
-
+    fault = (mc_fault_code)vb.vbPopFrontUint8();
     cfg.motor_max_current = vb.vbPopFrontDouble16(1e1);
     cfg.fet_temp_max = vb.vbPopFrontDouble16(1e1);
     cfg.motor_temp_max = vb.vbPopFrontDouble16(1e1);
     cfg.v_in_min = vb.vbPopFrontDouble16(1e1);
     cfg.v_in_max = vb.vbPopFrontDouble16(1e1);
     cfg.v_in_first = vb.vbPopFrontDouble16(1e1);
+    vBat = cfg.v_in_first;
     tempFets = vb.vbPopFrontDouble16(1e1);
     tempMotor = vb.vbPopFrontDouble16(1e1);
+    tempBat = vb.vbPopFrontDouble16(1e1);
     whIn = vb.vbPopFrontDouble32(1e4);
     whOut = vb.vbPopFrontDouble32(1e4);
 
+    setState(state_str(mcu_state));
+
+    // override changed signals
+    playFault();
+    emit faultChanged(getFaultTranslation());
     emit tempFetsChanged(tempFets);
     emit tempMotorChanged(tempMotor);
+    emit tempBatChanged(tempBat);
     emit whInChanged(whIn);
     emit whOutChanged(whOut);
 
@@ -452,6 +500,62 @@ void Skypuff::processSettingsV1(VByteArray &vb)
     // Start alives sequence after first get_conf
     if(!aliveTimerId)
         aliveTimerId = startTimer(aliveTimerDelay, Qt::PreciseTimer);
+}
+
+// Will play alert in a loop, until NONE received
+void Skypuff::playFault()
+{
+    if(fault == FAULT_CODE_NONE) {
+        // In case of fault gone play prev fault once
+        playlist->setPlaybackMode(QMediaPlaylist::Sequential);
+        return;
+    }
+
+    playlist->setPlaybackMode(QMediaPlaylist::Loop);
+
+    // Still playing the same fault?
+    if(playingFault == fault && player->state() == QMediaPlayer::PlayingState) {
+        // Do not interrupt playing
+        return;
+    }
+
+    playingFault = fault;
+
+    playlist->clear();
+    playlist->addMedia(QUrl("qrc:/res/sounds/Alert.mp3"));
+
+    // Known specific alerts?
+    switch (fault) {
+    case FAULT_CODE_OVER_VOLTAGE:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/Overvoltage.mp3")));
+        break;
+    default:
+        break;
+    }
+
+    player->setPlaylist(playlist);
+    player->play();
+}
+
+QString Skypuff::getFaultTranslation()
+{
+    switch (fault) {
+    case FAULT_CODE_NONE:
+        return QString();
+    case FAULT_CODE_OVER_VOLTAGE:
+        return tr("Battery overvoltage %1V").arg(vBat);
+    default:
+        return Commands::faultToStr(fault);
+    }
+}
+
+void Skypuff::setFault(const mc_fault_code newFault)
+{
+    if(fault != newFault) {
+        fault = newFault;
+        playFault();
+        emit faultChanged(getFaultTranslation());
+    }
 }
 
 // overrideChanged after new seetings to update ranges flags
@@ -529,6 +633,14 @@ void Skypuff::setTempFets(const float newTempFets)
     }
 }
 
+void Skypuff::setTempBat(const float newTempBat)
+{
+    if(tempBat != newTempBat) {
+        tempBat = newTempBat;
+        emit tempBatChanged(newTempBat);
+    }
+}
+
 void Skypuff::setTempMotor(const float newTempMotor)
 {
     if(tempMotor != newTempMotor) {
@@ -550,6 +662,19 @@ void Skypuff::setWhOut(const float newWhOut)
     if(whOut != newWhOut) {
         whOut = newWhOut;
         emit whOutChanged(newWhOut);
+    }
+}
+
+float Skypuff::getBatteryPercents()
+{
+    return 50;
+}
+
+void Skypuff::setVBat(const float newVBat)
+{
+    if(vBat != newVBat) {
+        vBat = newVBat;
+        emit batteryChanged(getBatteryPercents());
     }
 }
 

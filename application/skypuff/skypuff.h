@@ -18,6 +18,7 @@
 #define SKYPUFF_H
 
 #include <QMediaPlayer>
+#include <QMediaPlaylist>
 #include <QElapsedTimer>
 #include "vescinterface.h"
 #include "qmlable_skypuff_types.h"
@@ -62,8 +63,13 @@ class Skypuff : public QObject
     Q_PROPERTY(float power READ getPower NOTIFY powerChanged)
     Q_PROPERTY(float tempFets READ getTempFets NOTIFY tempFetsChanged)
     Q_PROPERTY(float tempMotor READ getTempMotor NOTIFY tempMotorChanged)
+    Q_PROPERTY(float tempBat READ getTempBat NOTIFY tempBatChanged)
     Q_PROPERTY(float whIn READ getWhIn NOTIFY whInChanged)
     Q_PROPERTY(float whOut READ getWhOut NOTIFY whOutChanged)
+    // Readable fault, empty if none
+    Q_PROPERTY(QString fault READ getFaultTranslation NOTIFY faultChanged)
+    Q_PROPERTY(int blinkingRedTimeout READ getBlinkingRedTimeout)
+    Q_PROPERTY(int blinkingOffTimeout READ getBlinkingOffTimeout)
 public:
     Skypuff(VescInterface *parent = 0);
 
@@ -93,14 +99,20 @@ signals:
     void powerChanged(const float power);
     void tempFetsChanged(const float tempFets);
     void tempMotorChanged(const float tempMotor);
+    void tempBatChanged(const float tempBat);
     void whInChanged(const float whIn);
     void whOutChanged(const float whOut);
+    void batteryChanged(const float percents);
+    void faultChanged(const QString& newFault);
 protected slots:
     void printReceived(QString str);
     void customAppDataReceived(QByteArray data);
     void portConnectedChanged();
     void logVescDialog(const QString & title, const QString & text);
 protected:
+    const static int blinkingRedTimeout = 400;
+    const static int blinkingOffTimeout = 100;
+
     // Parsed messages from prints
     enum MessageType {
         PARAM_TEXT,
@@ -110,14 +122,19 @@ protected:
         PARAM_PULL,
         PARAM_TEMP_FETS,
         PARAM_TEMP_MOTOR,
+        PARAM_TEMP_BAT,
         PARAM_WH_IN,
         PARAM_WH_OUT,
+        PARAM_FAULT,
+        PARAM_V_BAT,
     };
     typedef QPair<MessageType, QStringRef> MessageTypeAndPayload;
     typedef QMap<MessageType, QString> MessagesByType;
 
     VescInterface *vesc;
     QMediaPlayer *player;
+    QMediaPlaylist *playlist;
+
     int aliveTimerId;
     int aliveTimeoutTimerId;
     int getConfTimeoutTimerId;
@@ -139,8 +156,10 @@ protected:
     QString motorModeText;
     int curTac;
     float erpm, amps, power;
-    float tempFets, tempMotor, tempBattery;
+    float tempFets, tempMotor, tempBat;
     float whIn, whOut;
+    float vBat;
+    mc_fault_code fault, playingFault;
 
 
     // Tons of regexps to parse terminal prints
@@ -152,7 +171,9 @@ protected:
     QString stateText;
     QString status;
 
-    QHash<QString, int> h_states;
+    // Will convert strings to enum values
+    QHash<QString, skypuff_state> h_states;
+    QHash<QString, mc_fault_code> h_faults;
     QHash<MessageType, QString> messageTypes;
 
     // Getters
@@ -166,12 +187,18 @@ protected:
     float getPower() {return power;}
     float getTempFets() {return tempFets;}
     float getTempMotor() {return tempMotor;}
+    float getTempBat() {return tempBat;}
     float getWhIn() {return whIn;}
     float getWhOut() {return whOut;}
+    float getBatteryPercents();
+    int getBlinkingRedTimeout() {return blinkingRedTimeout;}
+    int getBlinkingOffTimeout() {return blinkingOffTimeout;}
     QString getState() {return state;}
     QString getStateText() {return stateText;}
     QString getStatus() {return status;}
     QString getMotorMode() {return motorModeText;}
+    QString getFaultTranslation();
+    void playFault();
 
     // Setters
     void setState(const QString& newState);
@@ -181,8 +208,11 @@ protected:
     void setMotor(const smooth_motor_mode newMode, const float newAmps, const float newPower);
     void setTempFets(const float newTempFets);
     void setTempMotor(const float newTempMotor);
+    void setTempBat(const float newTempBat);
     void setWhIn(const float newWhIn);
     void setWhOut(const float newWhOut);
+    void setFault(const mc_fault_code newFault);
+    void setVBat(const float newVBat);
 
     // Helpers
     void sendGetConf();
