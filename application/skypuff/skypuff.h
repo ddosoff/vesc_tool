@@ -72,6 +72,7 @@ class Skypuff : public QObject
     Q_PROPERTY(bool isBatteryWarning READ isBatteryWarning NOTIFY batteryWarningChanged)
     Q_PROPERTY(float batteryPercents READ getBatteryPercents NOTIFY batteryChanged)
     Q_PROPERTY(float batteryVolts READ getBatteryVolts NOTIFY batteryChanged)
+    Q_PROPERTY(float batteryCellVolts READ getBatteryCellVolts NOTIFY batteryChanged)
     // Readable fault, empty if none
     Q_PROPERTY(QString fault READ getFaultTranslation NOTIFY faultChanged)
 public:
@@ -201,10 +202,13 @@ protected:
 
     // Battery
     bool isBatteryScaleValid() {return cfg.v_in_max;}
-    bool isBatteryWarning();
+    bool isBatteryTooHigh();
+    bool isBatteryTooLow();
+    bool isBatteryWarning() {return isBatteryTooHigh() || isBatteryTooLow();}
     bool isBatteryBlinking();
     float getBatteryPercents();
     float getBatteryVolts() {return vBat;}
+    float getBatteryCellVolts() {return vBat / cfg.battery_cells;}
 
     QString getState() {return state;}
     QString getStateText() {return stateText;}
@@ -215,6 +219,7 @@ protected:
 
     // emit scales signals
     void scalesUpdated();
+    void clearStats();
 
     // Setters
     void setState(const QString& newState);

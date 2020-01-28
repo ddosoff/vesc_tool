@@ -97,17 +97,17 @@ Page {
             Text {
                 Layout.fillWidth: true
 
-                text: isNaN(Skypuff.drawnMeters) ? "" : qsTr("Rope: %1 m").arg(Skypuff.leftMeters.toFixed(1))
+                text: qsTr("Rope: %1 m").arg(Skypuff.leftMeters.toFixed(1))
 
                 // 15% - yellow, 5% - red
-                color: Skypuff.leftMeters / Skypuff.ropeMeters < 0.05 ? "red" : Skypuff.leftMeters / Skypuff.ropeMeters < 0.15 ? "yellow": "green"
+                color: Skypuff.leftMeters / Skypuff.ropeMeters < 0.05 ? "red" : "green"
             }
 
             Text {
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignRight
 
-                text: isNaN(Skypuff.drawnMeters) ? "" : qsTr("Drawn: %1 m").arg(Skypuff.drawnMeters.toFixed(1))
+                text: qsTr("Drawn: %1 m").arg(Skypuff.drawnMeters.toFixed(1))
             }
         }
 
@@ -182,17 +182,20 @@ Page {
 
             Text {
                 id: batText
-                text: qsTr("Battery %1V").arg(Skypuff.batteryVolts.toFixed(2))
+                text: qsTr("Battery %1V (%2V / cell)").arg(Skypuff.batteryVolts.toFixed(2)).arg(Skypuff.batteryCellVolts.toFixed(2))
                 enabled: Skypuff.isBatteryScaleValid
 
-                color: Skypuff.isBatteryWarning ? "red" : systemPalette.text
+                function getBatColor() {return Skypuff.isBatteryScaleValid ? Skypuff.isBatteryWarning ? "red" : "green" : systemPalette.text}
+
+                color: getBatColor()
+
                 SequentialAnimation on color {
                     loops: Animation.Infinite
                     running: Skypuff.isBatteryBlinking
                     ColorAnimation { easing.type: Easing.OutExpo; from: systemPalette.window; to: "red"; duration: 400 }
                     ColorAnimation { easing.type: Easing.OutExpo; from: "red"; to: systemPalette.window;  duration: 200 }
 
-                    onStopped: batText.color = Skypuff.isBatteryWarning ? "red" : systemPalette.text
+                    onStopped: batText.color = getBatColor()
                 }
             }
             ProgressBar {

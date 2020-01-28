@@ -22,12 +22,6 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
     aliveTimerId(0),
     aliveTimeoutTimerId(0),
     getConfTimeoutTimerId(0),
-    curTac(0),
-    erpm(0), amps(0), power(0),
-    tempFets(0), tempMotor(0), tempBat(0),
-    whIn(0), whOut(0),
-    vBat(0),
-    fault(FAULT_CODE_NONE), playingFault(FAULT_CODE_NONE),
     // Compile regexps once here
     reBraking("(\\d.\\.?\\d*)Kg \\((-?\\d+.?\\d*)A"),
     rePull("(\\d.\\.?\\d*)Kg \\((-?\\d+.?\\d*)A"), // absolute kg, signed amps
@@ -39,6 +33,8 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
     reMotionDetected("Motion (\\d+.\\d+)m"),
     reTakeoffTimeout("Takeoff (\\d+.\\d+)s")
 {
+    clearStats();
+
     player = new QMediaPlayer(this);
     playlist = new QMediaPlaylist(this);
     player->setPlaylist(playlist);
@@ -158,14 +154,30 @@ void Skypuff::portConnectedChanged()
         }
 
         // No more fault :)
-        setFault(FAULT_CODE_NONE);
         setState("DISCONNECTED");
 
         // Reset scales
         cfg.clearScales();
-        vBat = 0;
+        clearStats();
         scalesUpdated();
     }
+}
+
+void Skypuff::clearStats()
+{
+    vBat = 0;
+    curTac = 0;
+    erpm = 0;
+    amps = 0;
+    power = 0;
+    tempFets = 0;
+    tempMotor = 0;
+    tempBat = 0;
+    whIn = 0;
+    whOut = 0;
+
+    setFault(FAULT_CODE_NONE);
+    playingFault = FAULT_CODE_NONE;
 }
 
 void Skypuff::timerEvent(QTimerEvent *event)
@@ -465,6 +477,7 @@ void Skypuff::processSettingsV1(VByteArray &vb)
     cfg.motor_temp_max = vb.vbPopFrontDouble16(1e1);
     cfg.v_in_min = vb.vbPopFrontDouble16(1e1);
     cfg.v_in_max = vb.vbPopFrontDouble16(1e1);
+    cfg.battery_cells = (int)vb.vbPopFrontUint8();
     vBat = vb.vbPopFrontDouble16(1e2);
     tempFets = vb.vbPopFrontDouble16(1e1);
     tempMotor = vb.vbPopFrontDouble16(1e1);
@@ -475,8 +488,6 @@ void Skypuff::processSettingsV1(VByteArray &vb)
     cfg.deserializeV1(vb);
 
     setState(state_str(mcu_state));
-
-    scalesUpdated();
 
     emit settingsChanged(cfg);
 
@@ -489,10 +500,7 @@ void Skypuff::processSettingsV1(VByteArray &vb)
         vesc->disconnectPort();
     }
 
-    // Override position
-    emit posChanged(cfg.tac_steps_to_meters(curTac));
-    emit brakingRangeChanged(isBrakingRange());
-    emit brakingExtensionRangeChanged(isBrakingExtensionRange());
+    scalesUpdated();
 
     // Start alives sequence after first get_conf
     if(!aliveTimerId)
@@ -516,6 +524,11 @@ void Skypuff::scalesUpdated()
     emit batteryScalesChanged(isBatteryScaleValid());
     emit batteryWarningChanged(isBatteryWarning());
     emit batteryBlinkingChanged(isBatteryBlinking());
+
+    // Position
+    emit posChanged(cfg.tac_steps_to_meters(curTac));
+    emit brakingRangeChanged(isBrakingRange());
+    emit brakingExtensionRangeChanged(isBrakingExtensionRange());
 }
 
 // Priority to faults, play warnings only once if no fault
@@ -532,9 +545,14 @@ void Skypuff::playAudio()
         // Play some warnings?
         playlist->clear();
 
-        if(isBatteryWarning()) {
+        if(isBatteryTooHigh()) {
             playlist->addMedia(QUrl(tr("qrc:/res/sounds/Battery charged too high.mp3")));
             emit statusChanged(tr("Battery charged too high"), true);
+        }
+
+        if(isBatteryTooLow()) {
+            playlist->addMedia(QUrl(tr("qrc:/res/sounds/Battery charged too low.mp3")));
+            emit statusChanged(tr("Battery charged too low"), true);
         }
 
         if(!playlist->isEmpty())
@@ -704,14 +722,29 @@ float Skypuff::getBatteryPercents()
     return (vBat - cfg.v_in_min) / (cfg.v_in_max - cfg.v_in_min) * (float)100;
 }
 
-bool Skypuff::isBatteryWarning()
+bool Skypuff::isBatteryTooHigh()
 {
-    return isBatteryScaleValid() && getBatteryPercents() > (float)95;
+    if(!isBatteryScaleValid())
+        return false;
+
+    return getBatteryPercents() > (float)95;
+}
+
+bool Skypuff::isBatteryTooLow()
+{
+    if(!isBatteryScaleValid())
+        return false;
+
+    return getBatteryPercents() < (float)5;
 }
 
 bool Skypuff::isBatteryBlinking()
 {
-    return isBatteryScaleValid() && getBatteryPercents() > (float)97;
+    if(!isBatteryScaleValid())
+        return false;
+
+    float p = getBatteryPercents();
+    return  p  > (float)97 || p < (float)3;
 }
 
 void Skypuff::setVBat(const float newVBat)

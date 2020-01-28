@@ -62,6 +62,7 @@ public:
     float motor_max_current;
     float v_in_max, v_in_min;
     float fet_temp_max, motor_temp_max, bat_temp_max;
+    int battery_cells;
 
     QMLable_skypuff_config()
     {
@@ -71,6 +72,7 @@ public:
     void clearScales()
     {
         amps_per_kg = 0;
+        rope_length = 0;
         motor_max_current = 0;
         v_in_max = 0;
         v_in_min = 0;
