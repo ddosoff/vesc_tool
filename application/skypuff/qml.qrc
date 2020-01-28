@@ -10,5 +10,13 @@
         <file>res/RealSpinBox.qml</file>
         <file>res/sounds/Overvoltage.mp3</file>
         <file>res/sounds/Alert.mp3</file>
+        <file>res/sounds/Battery charged too high.mp3</file>
+        <file>res/sounds/Battery low.mp3</file>
+        <file>res/sounds/Battery temperature.mp3</file>
+        <file>res/sounds/Controller temperature.mp3</file>
+        <file>res/sounds/Fault code.mp3</file>
+        <file>res/sounds/Motor temperature.mp3</file>
+        <file>res/sounds/The rope will end soon.mp3</file>
+        <file>res/sounds/Трос скоро закончится.mp3</file>
     </qresource>
 </RCC>

@@ -10,7 +10,7 @@ Page {
     state: "DISCONNECTED"
 
     // Get normal text color from this palette
-    SystemPalette {id: systemPalette}
+    SystemPalette {id: systemPalette; colorGroup: SystemPalette.Active}
 
     ColumnLayout {
         anchors.fill: parent
@@ -72,7 +72,7 @@ Page {
 
                 onStatusChanged: {
                     tStatus.text = newStatus
-                    tStatus.color = systemPalette.text
+                    tStatus.color = isWarning ? "red" : systemPalette.text
 
                     statusCleaner.restart()
                     faultsBlinker.stop()
@@ -174,6 +174,33 @@ Page {
             to: 0
 
             value: Math.abs(Skypuff.power)
+        }
+
+        // Bat
+        RowLayout {
+            Layout.topMargin: 20
+
+            Text {
+                id: batText
+                text: qsTr("Battery %1V").arg(Skypuff.batteryVolts.toFixed(2))
+                enabled: Skypuff.isBatteryScaleValid
+
+                color: Skypuff.isBatteryWarning ? "red" : systemPalette.text
+                SequentialAnimation on color {
+                    loops: Animation.Infinite
+                    running: Skypuff.isBatteryBlinking
+                    ColorAnimation { easing.type: Easing.OutExpo; from: systemPalette.window; to: "red"; duration: 400 }
+                    ColorAnimation { easing.type: Easing.OutExpo; from: "red"; to: systemPalette.window;  duration: 200 }
+
+                    onStopped: batText.color = Skypuff.isBatteryWarning ? "red" : systemPalette.text
+                }
+            }
+            ProgressBar {
+                Layout.fillWidth: true
+                enabled: Skypuff.isBatteryScaleValid
+                to: 100
+                value: Skypuff.batteryPercents
+            }
         }
 
         // Temps

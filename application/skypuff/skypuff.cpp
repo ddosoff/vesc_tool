@@ -41,6 +41,7 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
 {
     player = new QMediaPlayer(this);
     playlist = new QMediaPlaylist(this);
+    player->setPlaylist(playlist);
 
     // Fill message types
     messageTypes[PARAM_TEXT] = "--";
@@ -156,10 +157,14 @@ void Skypuff::portConnectedChanged()
             aliveTimeoutTimerId = 0;
         }
 
-        // Stop playing fault alert
+        // No more fault :)
         setFault(FAULT_CODE_NONE);
-        // Inform UI
         setState("DISCONNECTED");
+
+        // Reset scales
+        cfg.clearScales();
+        vBat = 0;
+        scalesUpdated();
     }
 }
 
@@ -460,26 +465,18 @@ void Skypuff::processSettingsV1(VByteArray &vb)
     cfg.motor_temp_max = vb.vbPopFrontDouble16(1e1);
     cfg.v_in_min = vb.vbPopFrontDouble16(1e1);
     cfg.v_in_max = vb.vbPopFrontDouble16(1e1);
-    cfg.v_in_first = vb.vbPopFrontDouble16(1e1);
-    vBat = cfg.v_in_first;
+    vBat = vb.vbPopFrontDouble16(1e2);
     tempFets = vb.vbPopFrontDouble16(1e1);
     tempMotor = vb.vbPopFrontDouble16(1e1);
     tempBat = vb.vbPopFrontDouble16(1e1);
     whIn = vb.vbPopFrontDouble32(1e4);
     whOut = vb.vbPopFrontDouble32(1e4);
 
+    cfg.deserializeV1(vb);
+
     setState(state_str(mcu_state));
 
-    // override changed signals
-    playFault();
-    emit faultChanged(getFaultTranslation());
-    emit tempFetsChanged(tempFets);
-    emit tempMotorChanged(tempMotor);
-    emit tempBatChanged(tempBat);
-    emit whInChanged(whIn);
-    emit whOutChanged(whOut);
-
-    cfg.deserializeV1(vb);
+    scalesUpdated();
 
     emit settingsChanged(cfg);
 
@@ -502,12 +499,47 @@ void Skypuff::processSettingsV1(VByteArray &vb)
         aliveTimerId = startTimer(aliveTimerDelay, Qt::PreciseTimer);
 }
 
-// Will play alert in a loop, until NONE received
-void Skypuff::playFault()
+void Skypuff::scalesUpdated()
+{
+    // Some new warnings or faults?
+    playAudio();
+
+    emit faultChanged(getFaultTranslation());
+    emit tempFetsChanged(tempFets);
+    emit tempMotorChanged(tempMotor);
+    emit tempBatChanged(tempBat);
+    emit whInChanged(whIn);
+    emit whOutChanged(whOut);
+
+    // Battery
+    emit batteryChanged(getBatteryPercents());
+    emit batteryScalesChanged(isBatteryScaleValid());
+    emit batteryWarningChanged(isBatteryWarning());
+    emit batteryBlinkingChanged(isBatteryBlinking());
+}
+
+// Priority to faults, play warnings only once if no fault
+void Skypuff::playAudio()
 {
     if(fault == FAULT_CODE_NONE) {
         // In case of fault gone play prev fault once
         playlist->setPlaybackMode(QMediaPlaylist::Sequential);
+
+        // Still playing old fault?
+        if(player->state() == QMediaPlayer::PlayingState)
+            return;
+
+        // Play some warnings?
+        playlist->clear();
+
+        if(isBatteryWarning()) {
+            playlist->addMedia(QUrl(tr("qrc:/res/sounds/Battery charged too high.mp3")));
+            emit statusChanged(tr("Battery charged too high"), true);
+        }
+
+        if(!playlist->isEmpty())
+            player->play();
+
         return;
     }
 
@@ -530,10 +562,10 @@ void Skypuff::playFault()
         playlist->addMedia(QUrl(tr("qrc:/res/sounds/Overvoltage.mp3")));
         break;
     default:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/Fault code.mp3")));
         break;
     }
 
-    player->setPlaylist(playlist);
     player->play();
 }
 
@@ -553,7 +585,7 @@ void Skypuff::setFault(const mc_fault_code newFault)
 {
     if(fault != newFault) {
         fault = newFault;
-        playFault();
+        playAudio();
         emit faultChanged(getFaultTranslation());
     }
 }
@@ -667,14 +699,42 @@ void Skypuff::setWhOut(const float newWhOut)
 
 float Skypuff::getBatteryPercents()
 {
-    return 50;
+    // Please implement lipo discharge polynom approximated curve here
+    // But for now just linear function
+    return (vBat - cfg.v_in_min) / (cfg.v_in_max - cfg.v_in_min) * (float)100;
+}
+
+bool Skypuff::isBatteryWarning()
+{
+    return isBatteryScaleValid() && getBatteryPercents() > (float)95;
+}
+
+bool Skypuff::isBatteryBlinking()
+{
+    return isBatteryScaleValid() && getBatteryPercents() > (float)97;
 }
 
 void Skypuff::setVBat(const float newVBat)
 {
     if(vBat != newVBat) {
+        bool oldWarning = isBatteryWarning();
+        bool oldBlinking = isBatteryBlinking();
+
         vBat = newVBat;
         emit batteryChanged(getBatteryPercents());
+
+        bool newWarning = isBatteryWarning();
+        bool newBlinking = isBatteryBlinking();
+
+        if(oldWarning != newWarning) {
+            emit batteryWarningChanged(newWarning);
+        }
+
+        if(newWarning)
+            playAudio();
+
+        if(oldBlinking != newBlinking)
+            emit batteryBlinkingChanged(newBlinking);
     }
 }
 
