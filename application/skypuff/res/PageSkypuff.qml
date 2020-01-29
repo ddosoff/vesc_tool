@@ -249,9 +249,18 @@ Page {
 
             visible: false
 
+            function isManualDirButtonsEnabled()
+            {
+                return !Skypuff.isBrakingRange &&
+                        ["MANUAL_SLOW_SPEED_UP",
+                         "MANUAL_SLOW",
+                         "MANUAL_SLOW_BACK_SPEED_UP",
+                         "MANUAL_SLOW_BACK"].indexOf(page.state) === -1
+            }
+
             Button {
                 text: "←";
-                enabled: !Skypuff.isBrakingRange
+                enabled: rManualSlow.isManualDirButtonsEnabled()
                 onClicked: {Skypuff.sendTerminal("set manual_slow")}
             }
             Item {
@@ -259,7 +268,7 @@ Page {
             }
             Button {
                 text: "→";
-                enabled: !Skypuff.isBrakingRange
+                enabled: rManualSlow.isManualDirButtonsEnabled()
                 onClicked: {Skypuff.sendTerminal("set manual_slow_back")}
             }
         }
@@ -328,18 +337,41 @@ Page {
     Connections {
         target: Skypuff
 
+        function set_manual_state_visible() {
+            // Make MANUAL_BRAKING controls visible
+            bSetZero.visible = true
+            rManualSlow.visible = true
+
+            // Disable normal controls
+            bPrePull.visible = false
+
+            // Go back to UNWINDING or BRAKING_EXTENSION?
+            bUnwinding.state = Skypuff.isBrakingExtensionRange ? "BRAKING_EXTENSION" : "UNWINDING"
+        }
+
+        function set_manual_state_invisible() {
+            // Make MANUAL_BRAKING controls visible
+            bSetZero.visible = false
+            rManualSlow.visible = false
+
+            // Disable normal controls
+            bPrePull.visible = true
+            bPrePull.state = "PRE_PULL"
+
+            // Go back to UNWINDING or BRAKING_EXTENSION?
+            bUnwinding.state = Skypuff.isBrakingExtensionRange ? "BRAKING_EXTENSION" : "UNWINDING"
+        }
+
         function onExit(state) {
             switch(state) {
+            case "MANUAL_SLOW_SPEED_UP":
+            case "MANUAL_SLOW_BACK_SPEED_UP":
+            case "MANUAL_SLOW":
+            case "MANUAL_SLOW_BACK":
             case "MANUAL_BRAKING":
                 bStop.enabled = true
 
-                // Disable MANUAL_BRAKING elemets
-                bSetZero.visible = false
-                rManualSlow.visible = false
-
-                // Return other states visibles
-                bPrePull.visible = true
-                bPrePull.state = "PRE_PULL"
+                set_manual_state_invisible()
                 break
             case "REWINDING":
             case "UNWINDING":
@@ -368,18 +400,18 @@ Page {
         function onEnter(state) {
             switch(state) {
             case "MANUAL_BRAKING":
+                set_manual_state_visible()
                 bStop.enabled = false
-
-                // Make MANUAL_BRAKING controls visible
-                bSetZero.visible = true
-                rManualSlow.visible = true
-
-                // Disable normal controls
-                bPrePull.visible = false
-                bPrePull.state = "PRE_PULL"
-
-                bUnwinding.state = Skypuff.isBrakingExtensionRange ? "BRAKING_EXTENSION" : "UNWINDING"
                 bUnwinding.enabled = true
+                bSetZero.enabled = true
+                break
+            case "MANUAL_SLOW_SPEED_UP":
+            case "MANUAL_SLOW_BACK_SPEED_UP":
+            case "MANUAL_SLOW":
+            case "MANUAL_SLOW_BACK":
+                set_manual_state_visible()
+                bUnwinding.enabled = false
+                bSetZero.enabled = false
                 break
             case "BRAKING":
                 bUnwinding.enabled = false

@@ -33,10 +33,8 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
     reMotionDetected("Motion (\\d+.\\d+)m"),
     reTakeoffTimeout("Takeoff (\\d+.\\d+)s")
 {
-    clearStats();
-
     player = new QMediaPlayer(this);
-    playlist = new QMediaPlaylist(this);
+    playlist = new QMediaPlaylist(player);
     player->setPlaylist(playlist);
 
     // Fill message types
@@ -77,6 +75,7 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
     }
 
     setState("DISCONNECTED");
+    clearStats();
 }
 
 void Skypuff::logVescDialog(const QString & title, const QString & text)
@@ -459,7 +458,7 @@ void Skypuff::processSettingsV1(VByteArray &vb)
     }
 
     // Enough data?
-    const int v1_settings_length = 154;
+    const int v1_settings_length = 160;
     if(vb.length() < v1_settings_length) {
         vesc->emitMessageDialog(tr("Can't deserialize V1 settings"),
                                 tr("Received %1 bytes, expected %2 bytes!").arg(vb.length()).arg(v1_settings_length),
@@ -472,13 +471,17 @@ void Skypuff::processSettingsV1(VByteArray &vb)
 
     mcu_state = (skypuff_state)vb.vbPopFrontUint8();
     fault = (mc_fault_code)vb.vbPopFrontUint8();
+
     cfg.motor_max_current = vb.vbPopFrontDouble16(1e1);
     cfg.fet_temp_max = vb.vbPopFrontDouble16(1e1);
     cfg.motor_temp_max = vb.vbPopFrontDouble16(1e1);
-    cfg.v_in_min = vb.vbPopFrontDouble16(1e1);
-    cfg.v_in_max = vb.vbPopFrontDouble16(1e1);
+    cfg.v_in_min = vb.vbPopFrontDouble32(1e2);
+    cfg.v_in_max = vb.vbPopFrontDouble32(1e2);
+
     cfg.battery_cells = (int)vb.vbPopFrontUint8();
-    vBat = vb.vbPopFrontDouble16(1e2);
+    cfg.battery_type = (int)vb.vbPopFrontUint8();
+
+    vBat = vb.vbPopFrontDouble32(1e2);
     tempFets = vb.vbPopFrontDouble16(1e1);
     tempMotor = vb.vbPopFrontDouble16(1e1);
     tempBat = vb.vbPopFrontDouble16(1e1);

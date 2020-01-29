@@ -2,7 +2,7 @@
 
 bool QMLable_skypuff_config::deserializeV1(VByteArray& from)
 {
-    if(from.length() < 109)
+    if(from.length() < 4 * 25 - 2)
             return false;
 
     motor_poles = from.vbPopFrontUint8();
@@ -10,7 +10,7 @@ bool QMLable_skypuff_config::deserializeV1(VByteArray& from)
     wheel_diameter = from.vbPopFrontDouble32Auto();
 
     amps_per_kg = from.vbPopFrontDouble32Auto();
-    amps_per_sec = from.vbPopFrontDouble32Auto();
+    pull_applying_period = from.vbPopFrontInt16();
     rope_length = from.vbPopFrontInt32();
     braking_length = from.vbPopFrontInt32();
     braking_extension_length = from.vbPopFrontInt32();
@@ -53,7 +53,7 @@ QByteArray QMLable_skypuff_config::serializeV1() const
     vb.vbAppendDouble32Auto(wheel_diameter);
 
     vb.vbAppendDouble32Auto(amps_per_kg);
-    vb.vbAppendDouble32Auto(amps_per_sec);
+    vb.vbAppendInt16(pull_applying_period);
     vb.vbAppendInt32(rope_length);
     vb.vbAppendInt32(braking_length);
     vb.vbAppendInt32(braking_extension_length);
