@@ -22,6 +22,7 @@
 
 #include "app_skypuff.h"
 #include "vbytearray.h"
+#include "datatypes.h"
 
 // Settings accesible to QML with on the fly units conversions
 struct QMLable_skypuff_config : public skypuff_config, public skypuff_drive {
@@ -31,7 +32,7 @@ struct QMLable_skypuff_config : public skypuff_config, public skypuff_drive {
     Q_PROPERTY(int wheel_diameter_mm READ wheel_diameter_to_mm WRITE wheel_diameter_from_mm)
     Q_PROPERTY(float gear_ratio MEMBER gear_ratio)
     Q_PROPERTY(float amps_per_kg MEMBER amps_per_kg)
-    Q_PROPERTY(float kg_per_sec READ amps_per_sec_to_kg WRITE kg_per_sec_to_amps)
+    Q_PROPERTY(float pull_applying_seconds READ pull_applying_period_to_seconds WRITE seconds_to_pull_applying_period)
     Q_PROPERTY(float rope_length_meters READ rope_length_to_meters WRITE meters_to_rope_length)
     Q_PROPERTY(float braking_length_meters READ braking_length_to_meters WRITE meters_to_braking_length)
     Q_PROPERTY(float braking_extension_length_meters READ braking_extension_length_to_meters WRITE meters_to_braking_extension_length)
@@ -58,11 +59,31 @@ struct QMLable_skypuff_config : public skypuff_config, public skypuff_drive {
     Q_PROPERTY(float manual_slow_speed_up_kg READ manual_slow_speed_up_current_to_kg WRITE kg_to_manual_slow_speed_up_current)
     Q_PROPERTY(float manual_slow_erpm_ms READ manual_slow_erpm_to_ms WRITE ms_to_manual_slow_erpm)
 public:
-    float motor_max_current;
-    float v_in_first, v_in_max, v_in_min;
-    float fet_temp_max, motor_temp_max, bat_temp_max;
 
-    float get_power_max() {return v_in_first * motor_max_current;}
+    float motor_max_current;
+    float v_in_max, v_in_min;
+    float fet_temp_max, motor_temp_max, bat_temp_max;
+    int battery_cells;
+    int battery_type; // Temporary, until BATTERY_TYPE will be moved to datatypes.h of vesc_tool
+
+    QMLable_skypuff_config()
+    {
+        clearScales();
+    }
+
+    void clearScales()
+    {
+        amps_per_kg = 0;
+        rope_length = 0;
+        motor_max_current = 0;
+        v_in_max = 0;
+        v_in_min = 0;
+        fet_temp_max = 0;
+        motor_temp_max = 0;
+        bat_temp_max = 0;
+    }
+
+    float get_power_max() {return v_in_max * motor_max_current;}
 
     int wheel_diameter_to_mm() {return round(wheel_diameter * (float)1000);}
     void wheel_diameter_from_mm(int mm) {wheel_diameter = (float)mm / (float)1000;}
@@ -82,8 +103,8 @@ public:
     float takeoff_period_to_seconds() {return takeoff_period / (float)1000;}
     void seconds_to_takeoff_period(float secs) {takeoff_period = round(secs * (float)1000);}
 
-    float amps_per_sec_to_kg() {return amps_per_sec / amps_per_kg;}
-    void kg_per_sec_to_amps(float kg) {amps_per_sec = kg * amps_per_kg;}
+    float pull_applying_period_to_seconds() {return pull_applying_period / (float)1000;}
+    void seconds_to_pull_applying_period(float secs) {pull_applying_period = round(secs * (float)1000);}
 
     float motor_max_current_to_kg() {return motor_max_current / amps_per_kg;}
 

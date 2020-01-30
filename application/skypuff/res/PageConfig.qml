@@ -107,16 +107,21 @@ Page {
                             }
                         }
                         RowLayout {
-                            Text {text: qsTr("Kg / Sec")}
+                            Text {
+                                text: qsTr('Applying (<a href="help">secs</a>)')
+                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Smooth pull speed"),
+                                                                          qsTr("Number of seconds to apply default pull tension."),
+                                                                          false, false);
+                            }
                             Item {Layout.fillWidth: true}
                             RealSpinBox {
-                                id: kg_per_sec
+                                id: pull_applying_period
                                 editable: true
-                                from: 1
-                                to: 600
-                                value: 30
+                                from: 0.1
+                                to: 10
+                                value: 1.5
                                 decimals: 1
-                                stepSize: 1
+                                stepSize: 0.1
                             }
                         }
                         RowLayout {
@@ -545,7 +550,7 @@ Page {
             cfg.amps_per_kg = amps_per_kg.value
 
             // This part depended on values above
-            cfg.kg_per_sec = kg_per_sec.value
+            cfg.pull_applying_seconds = pull_applying_period.value
             cfg.rope_length_meters = rope_length.value
             cfg.braking_length_meters = braking_length.value
             cfg.braking_extension_length_meters = braking_extension_length.value
@@ -591,7 +596,7 @@ Page {
             wheel_diameter_mm.value = cfg.wheel_diameter_mm
             amps_per_kg.value = cfg.amps_per_kg
 
-            kg_per_sec.value = cfg.kg_per_sec
+            pull_applying_period.value = cfg.pull_applying_seconds
             rope_length.value = cfg.rope_length_meters
             braking_length.value = cfg.braking_length_meters
             braking_extension_length.value = cfg.braking_extension_length_meters

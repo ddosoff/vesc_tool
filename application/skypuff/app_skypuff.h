@@ -58,7 +58,7 @@ typedef enum
 typedef struct
 {
     float amps_per_kg;                  // Winch drive force coefficient
-    float amps_per_sec;                 // Speed to change force during smooth motor adjustments
+    int pull_applying_period;           // Milliseconds to apply pull force, amps_per_sec will be calculated from this delay
     int rope_length;                    // Winch rope length in tachometer steps (used by interface only)
     int braking_length;                 // Tachometer range of braking zone
     int braking_extension_length;       // Increase braking_length for passive winches when car drive 150m from takeoff

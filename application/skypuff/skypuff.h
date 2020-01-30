@@ -66,10 +66,15 @@ class Skypuff : public QObject
     Q_PROPERTY(float tempBat READ getTempBat NOTIFY tempBatChanged)
     Q_PROPERTY(float whIn READ getWhIn NOTIFY whInChanged)
     Q_PROPERTY(float whOut READ getWhOut NOTIFY whOutChanged)
+    // Battery
+    Q_PROPERTY(bool isBatteryScaleValid READ isBatteryScaleValid NOTIFY batteryScalesChanged)
+    Q_PROPERTY(bool isBatteryBlinking READ isBatteryBlinking NOTIFY batteryBlinkingChanged)
+    Q_PROPERTY(bool isBatteryWarning READ isBatteryWarning NOTIFY batteryWarningChanged)
+    Q_PROPERTY(float batteryPercents READ getBatteryPercents NOTIFY batteryChanged)
+    Q_PROPERTY(float batteryVolts READ getBatteryVolts NOTIFY batteryChanged)
+    Q_PROPERTY(float batteryCellVolts READ getBatteryCellVolts NOTIFY batteryChanged)
     // Readable fault, empty if none
     Q_PROPERTY(QString fault READ getFaultTranslation NOTIFY faultChanged)
-    Q_PROPERTY(int blinkingRedTimeout READ getBlinkingRedTimeout)
-    Q_PROPERTY(int blinkingOffTimeout READ getBlinkingOffTimeout)
 public:
     Skypuff(VescInterface *parent = 0);
 
@@ -89,7 +94,7 @@ signals:
     void stateChanged(const QString& newState); // Clear state
     void stateTextChanged(const QString& newStateText);
     void settingsChanged(const QMLable_skypuff_config & cfg);
-    void statusChanged(const QString &status);
+    void statusChanged(const QString &newStatus, bool isWarning = false);
     void brakingExtensionRangeChanged(const bool isBrakingExtensionRange);
     void brakingRangeChanged(const bool isBrakingRange);
     void posChanged(const float meters);
@@ -102,7 +107,13 @@ signals:
     void tempBatChanged(const float tempBat);
     void whInChanged(const float whIn);
     void whOutChanged(const float whOut);
+
+    // Battery
+    void batteryScalesChanged(const bool isValid);
+    void batteryBlinkingChanged(const bool isBlinking);
+    void batteryWarningChanged(const bool isWarning);
     void batteryChanged(const float percents);
+
     void faultChanged(const QString& newFault);
 protected slots:
     void printReceived(QString str);
@@ -110,8 +121,6 @@ protected slots:
     void portConnectedChanged();
     void logVescDialog(const QString & title, const QString & text);
 protected:
-    const static int blinkingRedTimeout = 400;
-    const static int blinkingOffTimeout = 100;
 
     // Parsed messages from prints
     enum MessageType {
@@ -190,15 +199,27 @@ protected:
     float getTempBat() {return tempBat;}
     float getWhIn() {return whIn;}
     float getWhOut() {return whOut;}
+
+    // Battery
+    bool isBatteryScaleValid() {return cfg.v_in_max;}
+    bool isBatteryTooHigh();
+    bool isBatteryTooLow();
+    bool isBatteryWarning() {return isBatteryTooHigh() || isBatteryTooLow();}
+    bool isBatteryBlinking();
     float getBatteryPercents();
-    int getBlinkingRedTimeout() {return blinkingRedTimeout;}
-    int getBlinkingOffTimeout() {return blinkingOffTimeout;}
+    float getBatteryVolts() {return vBat;}
+    float getBatteryCellVolts() {return vBat / cfg.battery_cells;}
+
     QString getState() {return state;}
     QString getStateText() {return stateText;}
     QString getStatus() {return status;}
     QString getMotorMode() {return motorModeText;}
     QString getFaultTranslation();
-    void playFault();
+    void playAudio();
+
+    // emit scales signals
+    void scalesUpdated();
+    void clearStats();
 
     // Setters
     void setState(const QString& newState);

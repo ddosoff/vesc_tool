@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.12
 import QtQuick.Controls 2.2
 import QtQuick.Extras 1.4
 import QtQuick.Layouts 1.3
@@ -10,7 +10,7 @@ Page {
     state: "DISCONNECTED"
 
     // Get normal text color from this palette
-    SystemPalette {id: systemPalette}
+    SystemPalette {id: systemPalette; colorGroup: SystemPalette.Active}
 
     ColumnLayout {
         anchors.fill: parent
@@ -39,37 +39,31 @@ Page {
             color: page.state === "MANUAL_BRAKING" ? "red" : systemPalette.text;
         }
 
-        // Status or faults and warnings text with 10 secs cleaner
+        // Status messages from skypuff with normal text color
+        // or blinking faults
         Text {
             id: tStatus
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
+
+            SequentialAnimation on color {
+                id: faultsBlinker
+                loops: Animation.Infinite
+                ColorAnimation { easing.type: Easing.OutExpo; from: systemPalette.window; to: "red"; duration: 400 }
+                ColorAnimation { easing.type: Easing.OutExpo; from: "red"; to: systemPalette.window;  duration: 200 }
+            }
 
             Timer {
                 id: statusCleaner
                 interval: 5 * 1000
 
                 onTriggered: {
-                    tStatus.text = ""
-                    tStatus.color = systemPalette.text
-                    blinker.stop()
-                }
-            }
+                    tStatus.text = Skypuff.fault
 
-            Timer {
-                id: blinker
-
-                onTriggered: {
-                    if(blinker.interval === Skypuff.blinkingRedTimeout) {
-                        tStatus.color = systemPalette.base
-                        blinker.interval = Skypuff.blinkingOffTimeout
-                        blinker.start()
-                    }
-                    else {
-                        tStatus.color = "red"
-                        blinker.interval = Skypuff.blinkingRedTimeout
-                        blinker.start()
-                    }
+                    if(Skypuff.fault)
+                        faultsBlinker.start()
+                    else
+                        faultsBlinker.stop()
                 }
             }
 
@@ -77,20 +71,20 @@ Page {
                 target: Skypuff
 
                 onStatusChanged: {
-                    tStatus.text = status
-                    tStatus.color = systemPalette.text
-                    blinker.stop()
+                    tStatus.text = newStatus
+                    tStatus.color = isWarning ? "red" : systemPalette.text
+
                     statusCleaner.restart()
+                    faultsBlinker.stop()
                 }
 
                 onFaultChanged:  {
                     if(newFault) {
                         tStatus.text = newFault
-                        tStatus.color = "red"
-                        statusCleaner.restart()
-                        blinker.interval = Skypuff.blinkingRedTimeout
-                        blinker.start()
+                        faultsBlinker.start()
                     }
+                    else
+                        statusCleaner.restart()
                 }
             }
         }
@@ -103,17 +97,17 @@ Page {
             Text {
                 Layout.fillWidth: true
 
-                text: isNaN(Skypuff.drawnMeters) ? "" : qsTr("Rope: %1 m").arg(Skypuff.leftMeters.toFixed(1))
+                text: qsTr("Rope: %1 m").arg(Skypuff.leftMeters.toFixed(1))
 
                 // 15% - yellow, 5% - red
-                color: Skypuff.leftMeters / Skypuff.ropeMeters < 0.05 ? "red" : Skypuff.leftMeters / Skypuff.ropeMeters < 0.15 ? "yellow": "green"
+                color: Skypuff.leftMeters / Skypuff.ropeMeters < 0.05 ? "red" : "green"
             }
 
             Text {
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignRight
 
-                text: isNaN(Skypuff.drawnMeters) ? "" : qsTr("Drawn: %1 m").arg(Skypuff.drawnMeters.toFixed(1))
+                text: qsTr("Drawn: %1 m").arg(Skypuff.drawnMeters.toFixed(1))
             }
         }
 
@@ -182,6 +176,36 @@ Page {
             value: Math.abs(Skypuff.power)
         }
 
+        // Bat
+        RowLayout {
+            Layout.topMargin: 20
+
+            Text {
+                id: batText
+                text: qsTr("Battery %1V (%2V / cell)").arg(Skypuff.batteryVolts.toFixed(2)).arg(Skypuff.batteryCellVolts.toFixed(2))
+                enabled: Skypuff.isBatteryScaleValid
+
+                function getBatColor() {return Skypuff.isBatteryScaleValid ? Skypuff.isBatteryWarning ? "red" : "green" : systemPalette.text}
+
+                color: getBatColor()
+
+                SequentialAnimation on color {
+                    loops: Animation.Infinite
+                    running: Skypuff.isBatteryBlinking
+                    ColorAnimation { easing.type: Easing.OutExpo; from: systemPalette.window; to: "red"; duration: 400 }
+                    ColorAnimation { easing.type: Easing.OutExpo; from: "red"; to: systemPalette.window;  duration: 200 }
+
+                    onStopped: batText.color = getBatColor()
+                }
+            }
+            ProgressBar {
+                Layout.fillWidth: true
+                enabled: Skypuff.isBatteryScaleValid
+                to: 100
+                value: Skypuff.batteryPercents
+            }
+        }
+
         // Temps
         RowLayout {
             Layout.topMargin: 20
@@ -225,9 +249,18 @@ Page {
 
             visible: false
 
+            function isManualDirButtonsEnabled()
+            {
+                return !Skypuff.isBrakingRange &&
+                        ["MANUAL_SLOW_SPEED_UP",
+                         "MANUAL_SLOW",
+                         "MANUAL_SLOW_BACK_SPEED_UP",
+                         "MANUAL_SLOW_BACK"].indexOf(page.state) === -1
+            }
+
             Button {
                 text: "←";
-                enabled: !Skypuff.isBrakingRange
+                enabled: rManualSlow.isManualDirButtonsEnabled()
                 onClicked: {Skypuff.sendTerminal("set manual_slow")}
             }
             Item {
@@ -235,7 +268,7 @@ Page {
             }
             Button {
                 text: "→";
-                enabled: !Skypuff.isBrakingRange
+                enabled: rManualSlow.isManualDirButtonsEnabled()
                 onClicked: {Skypuff.sendTerminal("set manual_slow_back")}
             }
         }
@@ -304,18 +337,41 @@ Page {
     Connections {
         target: Skypuff
 
+        function set_manual_state_visible() {
+            // Make MANUAL_BRAKING controls visible
+            bSetZero.visible = true
+            rManualSlow.visible = true
+
+            // Disable normal controls
+            bPrePull.visible = false
+
+            // Go back to UNWINDING or BRAKING_EXTENSION?
+            bUnwinding.state = Skypuff.isBrakingExtensionRange ? "BRAKING_EXTENSION" : "UNWINDING"
+        }
+
+        function set_manual_state_invisible() {
+            // Make MANUAL_BRAKING controls visible
+            bSetZero.visible = false
+            rManualSlow.visible = false
+
+            // Disable normal controls
+            bPrePull.visible = true
+            bPrePull.state = "PRE_PULL"
+
+            // Go back to UNWINDING or BRAKING_EXTENSION?
+            bUnwinding.state = Skypuff.isBrakingExtensionRange ? "BRAKING_EXTENSION" : "UNWINDING"
+        }
+
         function onExit(state) {
             switch(state) {
+            case "MANUAL_SLOW_SPEED_UP":
+            case "MANUAL_SLOW_BACK_SPEED_UP":
+            case "MANUAL_SLOW":
+            case "MANUAL_SLOW_BACK":
             case "MANUAL_BRAKING":
                 bStop.enabled = true
 
-                // Disable MANUAL_BRAKING elemets
-                bSetZero.visible = false
-                rManualSlow.visible = false
-
-                // Return other states visibles
-                bPrePull.visible = true
-                bPrePull.state = "PRE_PULL"
+                set_manual_state_invisible()
                 break
             case "REWINDING":
             case "UNWINDING":
@@ -344,18 +400,18 @@ Page {
         function onEnter(state) {
             switch(state) {
             case "MANUAL_BRAKING":
+                set_manual_state_visible()
                 bStop.enabled = false
-
-                // Make MANUAL_BRAKING controls visible
-                bSetZero.visible = true
-                rManualSlow.visible = true
-
-                // Disable normal controls
-                bPrePull.visible = false
-                bPrePull.state = "PRE_PULL"
-
-                bUnwinding.state = Skypuff.isBrakingExtensionRange ? "BRAKING_EXTENSION" : "UNWINDING"
                 bUnwinding.enabled = true
+                bSetZero.enabled = true
+                break
+            case "MANUAL_SLOW_SPEED_UP":
+            case "MANUAL_SLOW_BACK_SPEED_UP":
+            case "MANUAL_SLOW":
+            case "MANUAL_SLOW_BACK":
+                set_manual_state_visible()
+                bUnwinding.enabled = false
+                bSetZero.enabled = false
                 break
             case "BRAKING":
                 bUnwinding.enabled = false
