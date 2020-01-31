@@ -244,6 +244,24 @@ void Skypuff::sendAlive()
     aliveTimeoutTimerId = startTimer(commandTimeout, Qt::PreciseTimer);
 }
 
+QMLable_skypuff_config Skypuff::loadSettings(const QString & fileName)
+{
+    QMLable_skypuff_config c;
+    QSettings f(QUrl(fileName).toLocalFile(), QSettings::IniFormat);
+    c.loadV1(f);
+
+    return c;
+}
+
+bool Skypuff::saveSettings(const QString & fileName, const QMLable_skypuff_config& c)
+{
+    QSettings f(QUrl(fileName).toLocalFile(), QSettings::IniFormat);
+    if(f.status() != QSettings::NoError)
+        return false;
+
+    return c.saveV1(f);
+}
+
 // Will not make it too complicate with timeout
 void Skypuff::sendSettings(const QMLable_skypuff_config& cfg)
 {

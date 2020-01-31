@@ -1,6 +1,7 @@
 import QtQuick 2.0
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
+import Qt.labs.platform 1.1
 
 import Vedder.vesc.vescinterface 1.0
 import SkyPuff.vesc.winch 1.0
@@ -536,94 +537,147 @@ Page {
         }
     }
 
-    footer: Button {
-        enabled: Skypuff.state !== "DISCONNECTED"
-        text: qsTr("Save")
+    function fillAnd(fileName) {
+        var cfg = Skypuff.emptySettings()
 
-        onClicked: {
-            var cfg = Skypuff.emptySettings()
+        // This part should be first to update units conversion params
+        cfg.motor_poles = motor_poles.value
+        cfg.gear_ratio = gear_ratio.value
+        cfg.wheel_diameter_mm = wheel_diameter_mm.value
+        cfg.amps_per_kg = amps_per_kg.value
 
-            // This part should be first to update units conversion params
-            cfg.motor_poles = motor_poles.value
-            cfg.gear_ratio = gear_ratio.value
-            cfg.wheel_diameter_mm = wheel_diameter_mm.value
-            cfg.amps_per_kg = amps_per_kg.value
+        // This part depended on values above
+        cfg.pull_applying_seconds = pull_applying_period.value
+        cfg.rope_length_meters = rope_length.value
+        cfg.braking_length_meters = braking_length.value
+        cfg.braking_extension_length_meters = braking_extension_length.value
+        cfg.slowing_length_meters = slowing_length.value
 
-            // This part depended on values above
-            cfg.pull_applying_seconds = pull_applying_period.value
-            cfg.rope_length_meters = rope_length.value
-            cfg.braking_length_meters = braking_length.value
-            cfg.braking_extension_length_meters = braking_extension_length.value
-            cfg.slowing_length_meters = slowing_length.value
+        cfg.rewinding_trigger_length_meters = rewinding_trigger_length.value
+        cfg.unwinding_trigger_length_meters = unwinding_trigger_length.value
+        cfg.takeoff_trigger_length_meters = takeoff_trigger_length.value
+        cfg.slow_erpm_ms = slow_erpm.value
+        cfg.manual_slow_erpm_ms = manual_slow_erpm.value
 
-            cfg.rewinding_trigger_length_meters = rewinding_trigger_length.value
-            cfg.unwinding_trigger_length_meters = unwinding_trigger_length.value
-            cfg.takeoff_trigger_length_meters = takeoff_trigger_length.value
-            cfg.slow_erpm_ms = slow_erpm.value
-            cfg.manual_slow_erpm_ms = manual_slow_erpm.value
+        cfg.pull_kg = pull_kg.value
+        cfg.brake_kg = brake_kg.value
+        cfg.manual_brake_kg = manual_brake_kg.value
+        cfg.unwinding_kg = unwinding_kg.value
+        cfg.rewinding_kg = rewinding_kg.value
 
-            cfg.pull_kg = pull_kg.value
-            cfg.brake_kg = brake_kg.value
-            cfg.manual_brake_kg = manual_brake_kg.value
-            cfg.unwinding_kg = unwinding_kg.value
-            cfg.rewinding_kg = rewinding_kg.value
+        cfg.slow_max_kg = slow_max_kg.value
+        cfg.slowing_kg = slowing_kg.value
+        cfg.manual_slow_max_kg = manual_slow_max_kg.value
+        cfg.manual_slow_speed_up_kg = manual_slow_speed_up_kg.value
+        cfg.pre_pull_k_percents = pre_pull_k.value
 
-            cfg.slow_max_kg = slow_max_kg.value
-            cfg.slowing_kg = slowing_kg.value
-            cfg.manual_slow_max_kg = manual_slow_max_kg.value
-            cfg.manual_slow_speed_up_kg = manual_slow_speed_up_kg.value
-            cfg.pre_pull_k_percents = pre_pull_k.value
+        cfg.takeoff_pull_k_percents = takeoff_pull_k.value
+        cfg.fast_pull_k_percents = fast_pull_k.value
+        cfg.pre_pull_timeout_seconds = pre_pull_timeout.value
+        cfg.takeoff_period_seconds = takeoff_period.value
 
-            cfg.takeoff_pull_k_percents = takeoff_pull_k.value
-            cfg.fast_pull_k_percents = fast_pull_k.value
-            cfg.pre_pull_timeout_seconds = pre_pull_timeout.value
-            cfg.takeoff_period_seconds = takeoff_period.value
-
+        if(fileName)
+            Skypuff.saveSettings(fileName, cfg)
+        else
             Skypuff.sendSettings(cfg)
+    }
+
+    function applyCfg(cfg) {
+        // DIRTY: do not override nice UI defaults with empty conf
+        if(cfg.amps_per_kg < 0.1)
+            return
+
+        motor_poles.value = cfg.motor_poles
+        gear_ratio.value = cfg.gear_ratio
+        wheel_diameter_mm.value = cfg.wheel_diameter_mm
+        amps_per_kg.value = cfg.amps_per_kg
+
+        pull_applying_period.value = cfg.pull_applying_seconds
+        rope_length.value = cfg.rope_length_meters
+        braking_length.value = cfg.braking_length_meters
+        braking_extension_length.value = cfg.braking_extension_length_meters
+        slowing_length.value = cfg.slowing_length_meters
+
+        rewinding_trigger_length.value = cfg.rewinding_trigger_length_meters
+        unwinding_trigger_length.value = cfg.unwinding_trigger_length_meters
+        takeoff_trigger_length.value = cfg.takeoff_trigger_length_meters
+        slow_erpm.value = cfg.slow_erpm_ms
+        manual_slow_erpm.value = cfg.manual_slow_erpm_ms
+
+        pull_kg.value = cfg.pull_kg
+        brake_kg.value = cfg.brake_kg
+        manual_brake_kg.value = cfg.manual_brake_kg
+        unwinding_kg.value = cfg.unwinding_kg
+        rewinding_kg.value = cfg.rewinding_kg
+
+        slow_max_kg.value = cfg.slow_max_kg
+        slowing_kg.value = cfg.slowing_kg
+        manual_slow_max_kg.value = cfg.manual_slow_max_kg
+        manual_slow_speed_up_kg.value = cfg.manual_slow_speed_up_kg
+        pre_pull_k.value = cfg.pre_pull_k_percents
+
+        takeoff_pull_k.value = cfg.takeoff_pull_k_percents
+        fast_pull_k.value = cfg.fast_pull_k_percents
+        pre_pull_timeout.value = cfg.pre_pull_timeout_seconds
+        takeoff_period.value = cfg.takeoff_period_seconds
+    }
+
+    FileDialog {
+        id: fileDialog
+        title: "Please choose a settings file"
+        nameFilters: ["Skypuff settings (*.ini)"]
+        defaultSuffix: 'ini'
+        folder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
+        onAccepted: {
+            if(fileDialog.fileMode === FileDialog.OpenFile)
+                applyCfg(Skypuff.loadSettings(fileDialog.file))
+            else if(fileDialog.fileMode === FileDialog.SaveFile) {
+                fillAnd(fileDialog.file)
+            }
+        }
+    }
+
+    footer: RowLayout {
+        Button {
+            Layout.leftMargin: 10
+            Layout.bottomMargin: 5
+            text: qsTr("Open")
+            enabled: Skypuff.state !== "DISCONNECTED"
+
+            onClicked: {
+                fileDialog.fileMode = FileDialog.OpenFile
+                fileDialog.open()
+            }
+        }
+        Button {
+            Layout.leftMargin: 10
+            Layout.bottomMargin: 5
+            text: qsTr("Save as")
+            enabled: Skypuff.state !== "DISCONNECTED"
+
+            onClicked: {
+                fileDialog.file = "skypuff"
+                fileDialog.fileMode = FileDialog.SaveFile
+                fileDialog.open()
+            }
+        }
+        Item {
+            Layout.fillWidth: true
+        }
+
+        Button {
+            Layout.rightMargin: 10
+            Layout.bottomMargin: 5
+            enabled: Skypuff.state !== "DISCONNECTED"
+            text: qsTr("Send")
+
+            onClicked: fillAnd()
         }
     }
 
     Connections {
         target: Skypuff
 
-        onSettingsChanged: {
-            // DIRTY: do not override nice UI defaults with empty conf
-            if(cfg.amps_per_kg < 0.1)
-                return
-
-            motor_poles.value = cfg.motor_poles
-            gear_ratio.value = cfg.gear_ratio
-            wheel_diameter_mm.value = cfg.wheel_diameter_mm
-            amps_per_kg.value = cfg.amps_per_kg
-
-            pull_applying_period.value = cfg.pull_applying_seconds
-            rope_length.value = cfg.rope_length_meters
-            braking_length.value = cfg.braking_length_meters
-            braking_extension_length.value = cfg.braking_extension_length_meters
-            slowing_length.value = cfg.slowing_length_meters
-
-            rewinding_trigger_length.value = cfg.rewinding_trigger_length_meters
-            unwinding_trigger_length.value = cfg.unwinding_trigger_length_meters
-            takeoff_trigger_length.value = cfg.takeoff_trigger_length_meters
-            slow_erpm.value = cfg.slow_erpm_ms
-            manual_slow_erpm.value = cfg.manual_slow_erpm_ms
-
-            pull_kg.value = cfg.pull_kg
-            brake_kg.value = cfg.brake_kg
-            manual_brake_kg.value = cfg.manual_brake_kg
-            unwinding_kg.value = cfg.unwinding_kg
-            rewinding_kg.value = cfg.rewinding_kg
-
-            slow_max_kg.value = cfg.slow_max_kg
-            slowing_kg.value = cfg.slowing_kg
-            manual_slow_max_kg.value = cfg.manual_slow_max_kg
-            manual_slow_speed_up_kg.value = cfg.manual_slow_speed_up_kg
-            pre_pull_k.value = cfg.pre_pull_k_percents
-
-            takeoff_pull_k.value = cfg.takeoff_pull_k_percents
-            fast_pull_k.value = cfg.fast_pull_k_percents
-            pre_pull_timeout.value = cfg.pre_pull_timeout_seconds
-            takeoff_period.value = cfg.takeoff_period_seconds
-        }
+        onSettingsChanged: applyCfg(cfg)
     }
 }

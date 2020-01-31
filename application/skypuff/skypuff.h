@@ -83,6 +83,8 @@ public:
     // All this types conversion between C++ and QML is very strange...
     Q_INVOKABLE QMLable_skypuff_config emptySettings() {return QMLable_skypuff_config();}
     Q_INVOKABLE void sendSettings(const QMLable_skypuff_config& cfg);
+    Q_INVOKABLE QMLable_skypuff_config loadSettings(const QString & fileName);
+    Q_INVOKABLE bool saveSettings(const QString & fileName, const QMLable_skypuff_config& c);
 
 signals:
     /* It is simple to work with QML text states:
