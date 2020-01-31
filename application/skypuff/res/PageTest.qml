@@ -20,20 +20,33 @@ Page {
         anchors.fill: parent
         anchors.margins: 10
 
-        //ProgressCircle{}
+        /**
+          - Анимации закомменчены, выбери какю-нибудь
+          - Нет проверок на адекватность переданных параметров
+          - Некоторые моменты в коде дублируются
+          - Возможно, нужно подкорректировать для мобилок
+          - Переводы? хотя там нечего переводить
+          */
 
         SkypuffGauge {
-            //diameter: 800
-            //power: 137.5654
-            speedMs: 50
-            minSpeedMs: 20
-            maxSpeedMs: 120
-            ropeMeters: 500
+            speedMs: 22
+            maxSpeedMs: 30
+            ropeMeters: 333
             minRopeMeters: 0
             maxRopeMeters: 800
-            /*ropeMeters: 100
-            leftMeters: 700
-            motorMode: "Test test"*/
+            power: -2
+            maxPower: 20
+            motorKg: 36
+            minMotorKg: 0
+            maxMotorKg: 150
+            tempFets: 15
+            tempMotor: 18
+            tempBat: 20
+            whIn: 0
+            whOut: 0
+            motorMode: 'Yoba mode'
+
+            debug: true
         }
     }
 }
