@@ -837,18 +837,25 @@ Rectangle {
                               Цифры на шкале
                             */
                             tickmarkLabel:  Text {
-                                visible: styleData.value === root.maxRopeMeters || styleData.value === root.minRopeMeters
+                                function getAng(value) {
+                                    var ang = root.ropeToAng(value);
+                                    return value !== root.maxRopeMeters
+                                        ? (ang - 180 - 90)
+                                        : (ang - 90);
+                                }
 
+                                function show(value) {
+                                    var ifMax = value === root.maxRopeMeters;
+                                    var ifMin = value === root.minRopeMeters;
+                                    return ifMax || ifMin;
+                                }
+
+                                visible: this.show(styleData.value)
                                 font.pixelSize: gauge.getFontSize(0.04)
-
                                 y: gauge.getTLVY(styleData.value, root.minRopeMeters, root.maxRopeMeters, -0.3)
                                 x: gauge.getTLVX(styleData.value, root.minRopeMeters, root.maxRopeMeters, -0.3)
-
-
                                 text: styleData.value + ((styleData.value === 0) ? 'm' : '')
-
-                                rotation: styleData.value !== root.maxRopeMeters ? root.ropeToAng(styleData.value) - 180 - 90 : root.ropeToAng(styleData.value)  - 90
-
+                                rotation: this.getAng(styleData.value)
                                 color: root.gaugeFontColor
                                 antialiasing: true
                                 font.family: root.ff
@@ -885,7 +892,7 @@ Rectangle {
                 Column {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
-                    anchors.topMargin: root.gaugeHeight / 2 - root.gaugeHeight * 0.25
+                    anchors.topMargin: root.gaugeHeight / 2 - root.gaugeHeight * 0.29
                     spacing: 2
                     width: Math.max(textLeftRopeMeters.width, ropeMeters.width)
 
