@@ -25,6 +25,7 @@ ApplicationWindow {
     id: app
     visible: true
     title: "SkyPUFF"
+
     
     SwipeView {
         id: swipeView
@@ -34,6 +35,7 @@ ApplicationWindow {
         PageSkypuff {}
         PageConfig {}
         PageTerminal {}
+        PageTest {}
     }
 
 
