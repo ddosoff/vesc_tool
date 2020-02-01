@@ -315,7 +315,7 @@ Page {
                             Text {text: qsTr("Speed (M/S)")}
                             Item {Layout.fillWidth: true}
                             RealSpinBox {
-                                id: slow_erpm
+                                id: slow_ms
                                 from: 0.5
                                 to: 5
                                 decimals: 1
@@ -489,7 +489,7 @@ Page {
                             }
                             Item {Layout.fillWidth: true}
                             RealSpinBox {
-                                id: manual_slow_erpm
+                                id: manual_slow_ms
                                 from: 0.5
                                 to: 12
                                 value: 6
@@ -556,8 +556,8 @@ Page {
         cfg.rewinding_trigger_length_meters = rewinding_trigger_length.value
         cfg.unwinding_trigger_length_meters = unwinding_trigger_length.value
         cfg.takeoff_trigger_length_meters = takeoff_trigger_length.value
-        cfg.slow_erpm_ms = slow_erpm.value
-        cfg.manual_slow_erpm_ms = manual_slow_erpm.value
+        cfg.slow_erpm_ms = slow_ms.value
+        cfg.manual_slow_erpm_ms = manual_slow_ms.value
 
         cfg.pull_kg = pull_kg.value
         cfg.brake_kg = brake_kg.value
@@ -601,8 +601,8 @@ Page {
         rewinding_trigger_length.value = cfg.rewinding_trigger_length_meters
         unwinding_trigger_length.value = cfg.unwinding_trigger_length_meters
         takeoff_trigger_length.value = cfg.takeoff_trigger_length_meters
-        slow_erpm.value = cfg.slow_erpm_ms
-        manual_slow_erpm.value = cfg.manual_slow_erpm_ms
+        slow_ms.value = cfg.slow_erpm_ms
+        manual_slow_ms.value = cfg.manual_slow_erpm_ms
 
         pull_kg.value = cfg.pull_kg
         brake_kg.value = cfg.brake_kg

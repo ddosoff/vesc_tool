@@ -89,409 +89,55 @@ bool QMLable_skypuff_config::saveV1(QSettings &f) const
 
     f.beginGroup("vesc_drive");
     f.setValue("motor_poles", motor_poles);
-    f.setValue("gear_ratio", (double)gear_ratio);
+    f.setValue("gear_ratio", QString::number(gear_ratio, 'f', 6));
     f.setValue("wheel_diameter_mm", wheel_diameter_to_mm());
     f.endGroup();
 
     f.beginGroup("skypuff_drive");
-    f.setValue("amps_per_kg", (double)amps_per_kg);
-    f.setValue("pull_applying_period", (double)pull_applying_period_to_seconds());
-    f.setValue("rope_length", (double)rope_length_to_meters());
+    f.setValue("amps_per_kg", QString::number(amps_per_kg, 'f', 3));
+    f.setValue("pull_applying_period", QString::number(pull_applying_period_to_seconds(), 'f', 1));
+    f.setValue("rope_length", QString::number(rope_length_to_meters(), 'f', 1));
     f.endGroup();
 
-    /*
-    GroupBox {
-        title: qsTr("Braking zone")
-        Layout.fillWidth: true
-        Layout.margins: 10
+    f.beginGroup("braking_zone");
+    f.setValue("braking_length", QString::number(braking_length_to_meters(), 'f', 1));
+    f.setValue("braking_extension_length", QString::number(braking_extension_length_to_meters(), 'f', 1));
+    f.setValue("brake_kg", QString::number(brake_current_to_kg(), 'f', 1));
+    f.endGroup();
 
-        ColumnLayout {
-            anchors.fill: parent
+    f.beginGroup("unwinding");
+    f.setValue("unwinding_trigger_length", QString::number(unwinding_trigger_length_to_meters(), 'f', 1));
+    f.setValue("unwinding_kg", QString::number(unwinding_current_to_kg(), 'f', 1));
+    f.endGroup();
 
-            RowLayout {
-                Text {text: qsTr("Braking (meters)")}
-                Item {Layout.fillWidth: true}
-                RealSpinBox {
-                    id: braking_length
-                    editable: true
-                    from: 1
-                    to: 100
-                    value: 15
-                    stepSize: 1
-                    decimals: 1
-                }
-            }
-            RowLayout {
-                Text {
-                    text: qsTr('Extension (<a href="help">meters</a>)')
-                    onLinkActivated: VescIf.emitMessageDialog(qsTr("Braking extension length"),
-                                                              qsTr("Set this distance about 150 meters if you use winch in passive mode.<br/><br/>
-                                                                Skypuff will extend braking zone. Useful when car is driving
-                                                                from pilot to start position.<br/><br/>
-                                                                Set big value (5000m) to stop automatic unwinding mode."),
-                                                              false, false);
-                }
-                Item {Layout.fillWidth: true}
-                RealSpinBox {
-                    id: braking_extension_length
-                    editable: true
-                    from: 0.2
-                    to: 5000
-                    stepSize: 10
-                }
-            }
-            RowLayout {
-                Text {text: qsTr("Braking (KG)")}
-                Item {Layout.fillWidth: true}
-                RealSpinBox {
-                    id: brake_kg
-                    from: 0.2
-                    to: 200 // High force possible, no special mode yet
-                    value: 1
-                    decimals: 1
-                    stepSize: 0.2
-                }
-            }
-        }
-    }
+    f.beginGroup("rewinding");
+    f.setValue("rewinding_trigger_length", QString::number(rewinding_trigger_length_to_meters(), 'f', 1));
+    f.setValue("rewinding_kg", QString::number(rewinding_current_to_kg(), 'f', 1));
+    f.endGroup();
 
-    GroupBox {
-        title: qsTr("Unwinding")
-        Layout.fillWidth: true
-        Layout.margins: 10
+    f.beginGroup("slowing");
+    f.setValue("slowing_length", QString::number(slowing_length_to_meters(), 'f', 1));
+    f.setValue("slowing_kg", QString::number(slowing_current_to_kg(), 'f', 1));
+    f.setValue("slow_ms", QString::number(slow_erpm_to_ms(), 'f', 1));
+    f.setValue("slow_max_kg", QString::number(slow_max_current_to_kg(), 'f', 1));
+    f.endGroup();
 
-        ColumnLayout {
-            anchors.fill: parent
+    f.beginGroup("winch");
+    f.setValue("pull_kg", QString::number(pull_current_to_kg(),'f',1));
+    f.setValue("pre_pull_k", pre_pull_k_to_percents());
+    f.setValue("takeoff_pull_k", takeoff_pull_k_to_percents());
+    f.setValue("fast_pull_k", fast_pull_k_to_percents());
+    f.setValue("pre_pull_timeout", QString::number(pre_pull_timeout_to_seconds(), 'f', 1));
+    f.setValue("takeoff_trigger_length", QString::number(takeoff_trigger_length_to_meters(), 'f', 1));
+    f.setValue("takeoff_period", QString::number(takeoff_period_to_seconds(), 'f', 1));
+    f.endGroup();
 
-            RowLayout {
-                Text {
-                    text: qsTr('Trigger (<a href="help">meters</a>)')
-                    onLinkActivated: VescIf.emitMessageDialog(qsTr("Unwinding trigger length"),
-                                                              qsTr("The distance to switch on unwinding mode from rewinding in case rope is unwinded from takeoff.<br/><br/>
-                                                                Set this not too long."),
-                                                              false, false);
-                }
-                Item {Layout.fillWidth: true}
-                RealSpinBox {
-                    id: unwinding_trigger_length
-                    value: 0.8
-                    from: 0.1
-                    to: 10
-                    decimals: 1
-                    stepSize: 0.1
-                }
-            }
-            RowLayout {
-                Text {text: qsTr("Tension (KG)")}
-                Item {Layout.fillWidth: true}
-                RealSpinBox {
-                    id: unwinding_kg
-                    value: 3
-                    from: 0.2
-                    to: 20
-                    decimals: 1
-                    stepSize: 0.2
-                }
-            }
-        }
-    }
-
-    GroupBox {
-        title: qsTr("Rewinding")
-        Layout.fillWidth: true
-        Layout.margins: 10
-
-        ColumnLayout {
-            anchors.fill: parent
-            RowLayout {
-                Text {
-                    text: qsTr('Trigger (<a href="help">meters</a>)')
-                    onLinkActivated: VescIf.emitMessageDialog(qsTr("Rewinding trigger length"),
-                                                              qsTr("The distance to switch on rewinding mode from unwinding in case rope is winded to takeoff."),
-                                                              false, false);
-                }
-                Item {Layout.fillWidth: true}
-                RealSpinBox {
-                    id: rewinding_trigger_length
-                    value: 20
-                    from: 0.5
-                    to: 50
-                    decimals: 1
-                }
-            }
-            RowLayout {
-                Text {text: qsTr("Tension (KG)")}
-                Item {Layout.fillWidth: true}
-                RealSpinBox {
-                    id: rewinding_kg
-                    from: 0.2
-                    to: 40
-                    value: 5
-                    decimals: 1
-                    stepSize: 0.2
-                }
-            }
-        }
-    }
-
-    GroupBox {
-        title: qsTr("Slowing")
-        Layout.fillWidth: true
-        Layout.margins: 10
-
-        ColumnLayout {
-            anchors.fill: parent
-
-            RowLayout {
-                Text {text: qsTr("Length (meters)")}
-                Item {Layout.fillWidth: true}
-                RealSpinBox {
-                    id: slowing_length
-                    editable: true
-                    from: 1
-                    to: 100
-                    decimals: 1
-                }
-            }
-            RowLayout {
-                Text {
-                    text: qsTr('Braking (<a href="help">KG</a>)')
-                    onLinkActivated: VescIf.emitMessageDialog(qsTr("Slowing zone braking force"),
-                                                              qsTr("Do not set this too high to prevent rope tangling."),
-                                                              false, false);
-                }
-                Item {Layout.fillWidth: true}
-                RealSpinBox {
-                    id: slowing_kg
-                    from: 0
-                    to: 10
-                    value: 0.1
-                    decimals: 1
-                    stepSize: 0.1
-                }
-            }
-            RowLayout {
-                Text {text: qsTr("Speed (M/S)")}
-                Item {Layout.fillWidth: true}
-                RealSpinBox {
-                    id: slow_erpm
-                    from: 0.5
-                    to: 5
-                    decimals: 1
-                    stepSize: 0.2
-                }
-            }
-            RowLayout {
-                Text {
-                    text: qsTr('Max (<a href="help">KG</a>)')
-                    onLinkActivated: VescIf.emitMessageDialog(qsTr("Maximum tension"),
-                                                              qsTr("Tension to exit from slow mode."),
-                                                              false, false);
-                }
-                Item {Layout.fillWidth: true}
-                RealSpinBox {
-                    id: slow_max_kg
-                    from: 0.2
-                    to: 20
-                    value: 5
-                    decimals: 1
-                    stepSize: 0.2
-                }
-            }
-        }
-    }
-
-    GroupBox {
-        title: qsTr("Winch settings")
-        Layout.fillWidth: true
-        Layout.margins: 10
-
-        ColumnLayout {
-            anchors.fill: parent
-
-            RowLayout {
-                Text {
-                    text: qsTr('Pull (<a href="help">KG</a>)')
-                    onLinkActivated: VescIf.emitMessageDialog(qsTr("Default pull force"),
-                                                              qsTr("Usually 3/4 of the pilot weight.<br/><br/>
-                                                                This parameter could be changed before and during pull modes from the winch controll screen."),
-                                                              false, false);
-                }
-                Item {Layout.fillWidth: true}
-                RealSpinBox {
-                    id: pull_kg
-                    from: 0.1
-                    to: 600
-                    value: 100
-                    decimals: 1
-                    stepSize: 5
-                }
-            }
-            RowLayout {
-                Text {text: qsTr("Pre pull (%)")}
-                Item {Layout.fillWidth: true}
-                SpinBox {
-                    id: pre_pull_k
-                    editable: true
-                    value: 25
-                    from: 10
-                    to: 50
-                }
-            }
-            RowLayout {
-                Text {text: qsTr("Takeoff (%)")}
-                Item {Layout.fillWidth: true}
-                SpinBox {
-                    id: takeoff_pull_k
-                    editable: true
-                    value: 50
-                    from: 30
-                    to: 80
-                }
-            }
-            RowLayout {
-                Text {text: qsTr("Fast (%)")}
-                Item {Layout.fillWidth: true}
-                SpinBox {
-                    id: fast_pull_k
-                    editable: true
-                    value: 125
-                    from: 105
-                    to: 150
-                }
-            }
-            RowLayout {
-                Text {
-                    text: qsTr('Timeout (<a href="help">secs</a>)')
-                    onLinkActivated: VescIf.emitMessageDialog(qsTr("Pre pull timeout"),
-                                                              qsTr("Wait this number of seconds after pre pull, then start detecting motion."),
-                                                              false, false);
-                }
-                Item {Layout.fillWidth: true}
-                RealSpinBox {
-                    id: pre_pull_timeout
-                    from: 0.1
-                    to: 5
-                    value: 2
-                    decimals: 1
-                    stepSize: 0.2
-                }
-            }
-            RowLayout {
-                Text {
-                    text: qsTr('Takeoff (<a href="help">meters</a>)')
-                    onLinkActivated: VescIf.emitMessageDialog(qsTr("Takeoff trigger distance"),
-                                                              qsTr("After pre pull timeout is passed skypuff will detect motion. In case of motion more then this distance takeoff pull will be applied."),
-                                                              false, false);
-                }
-                Item {Layout.fillWidth: true}
-                RealSpinBox {
-                    id: takeoff_trigger_length
-                    from: 0.1
-                    to: 5000
-                    value: 2
-                    decimals: 1
-                    stepSize: 0.2
-                }
-            }
-            RowLayout {
-                Text {
-                    text: qsTr('Takeoff (<a href="help">secs</a>)')
-                    onLinkActivated: VescIf.emitMessageDialog(qsTr("Takeoff period"),
-                                                              qsTr("Number of seconds for takeoff pull."),
-                                                              false, false);
-                }
-                Item {Layout.fillWidth: true}
-                RealSpinBox {
-                    id: takeoff_period
-                    from: 0.1
-                    to: 60
-                    value: 10
-                    decimals: 1
-                    stepSize: 0.5
-                }
-            }
-
-        }
-    }
-    GroupBox {
-        title: qsTr("Manual modes")
-        Layout.fillWidth: true
-        Layout.margins: 10
-
-        ColumnLayout {
-            anchors.fill: parent
-
-            RowLayout {
-                Text {
-                    text: qsTr('Braking (<a href="help">KG</a>)')
-                    onLinkActivated: VescIf.emitMessageDialog(qsTr("Manual braking force"),
-                                                              qsTr("Brake force to apply in the manual braking mode."),
-                                                              false, false);
-                }
-                Item {Layout.fillWidth: true}
-                RealSpinBox {
-                    id: manual_brake_kg
-                    from: 0.2
-                    to: 10
-                    value: 3
-                    decimals: 1
-                    stepSize: 0.2
-                }
-            }
-            RowLayout {
-                Text {
-                    text: qsTr('Speed (<a href="help">M/S</a>)')
-                    onLinkActivated: VescIf.emitMessageDialog(qsTr("Manual slow speed"),
-                                                              qsTr("Constant speed to unwind or wind to zero."),
-                                                              false, false);
-                }
-                Item {Layout.fillWidth: true}
-                RealSpinBox {
-                    id: manual_slow_erpm
-                    from: 0.5
-                    to: 12
-                    value: 6
-                    decimals: 1
-                    stepSize: 0.2
-                }
-            }
-            RowLayout {
-                Text {
-                    text: qsTr('Speed up (<a href="help">KG</a>)')
-                    onLinkActivated: VescIf.emitMessageDialog(qsTr("Speed up force"),
-                                                              qsTr("Force to speed up from manual braking until manual constant speed is reached."),
-                                                              false, false);
-                }
-                Item {Layout.fillWidth: true}
-                RealSpinBox {
-                    id: manual_slow_speed_up_kg
-                    from: 0.2
-                    to: 20
-                    value: 2
-                    decimals: 1
-                    stepSize: 0.2
-                }
-            }
-            RowLayout {
-                Text {
-                    text: qsTr('Max (<a href="help">KG</a>)')
-                    onLinkActivated: VescIf.emitMessageDialog(qsTr("Maximum tension"),
-                                                              qsTr("Tension to exit from manual constant speed modes."),
-                                                              false, false);
-                }
-                Item {Layout.fillWidth: true}
-                RealSpinBox {
-                    id: manual_slow_max_kg
-                    from: 0.2
-                    to: 20
-                    value: 5
-                    decimals: 1
-                    stepSize: 0.2
-                }
-            }
-        }
-        */
+    f.beginGroup("manual");
+    f.setValue("manual_brake_kg", QString::number(manual_brake_current_to_kg(), 'f', 1));
+    f.setValue("manual_slow_ms", QString::number(manual_slow_erpm_to_ms(), 'f', 1));
+    f.setValue("manual_slow_speed_up_kg", QString::number(manual_slow_speed_up_current_to_kg(), 'f', 1));
+    f.setValue("manual_slow_max_kg", QString::number(manual_slow_max_current_to_kg(), 'f', 1));
+    f.endGroup();
 
     f.sync();
     return f.status() == QSettings::NoError;
@@ -509,6 +155,46 @@ bool QMLable_skypuff_config::loadV1(QSettings &f)
     amps_per_kg = f.value("amps_per_kg").toDouble();
     seconds_to_pull_applying_period(f.value("pull_applying_period").toDouble());
     meters_to_rope_length(f.value("rope_length").toDouble());
+    f.endGroup();
+
+    f.beginGroup("braking_zone");
+    meters_to_braking_length(f.value("braking_length").toDouble());
+    meters_to_braking_extension_length(f.value("braking_extension_length").toDouble());
+    kg_to_brake_current( f.value("brake_kg").toDouble());
+    f.endGroup();
+
+    f.beginGroup("unwinding");
+    meters_to_unwinding_trigger_length(f.value("unwinding_trigger_length").toDouble());
+    kg_to_unwinding_current(f.value("unwinding_kg").toDouble());
+    f.endGroup();
+
+    f.beginGroup("rewinding");
+    meters_to_rewinding_trigger_length(f.value("rewinding_trigger_length").toDouble());
+    kg_to_rewinding_current(f.value("rewinding_kg").toDouble());
+    f.endGroup();
+
+    f.beginGroup("slowing");
+    meters_to_slowing_length(f.value("slowing_length").toDouble());
+    kg_to_slowing_current(f.value("slowing_kg").toDouble());
+    ms_to_slow_erpm(f.value("slow_ms").toDouble());
+    kg_to_slow_max_current(f.value("slow_max_kg").toDouble());
+    f.endGroup();
+
+    f.beginGroup("winch");
+    kg_to_pull_current(f.value("pull_kg").toDouble());
+    percents_to_pre_pull_k(f.value("pre_pull_k").toInt());
+    percents_to_takeoff_pull_k(f.value("takeoff_pull_k").toInt());
+    percents_to_fast_pull_k(f.value("fast_pull_k").toInt());
+    seconds_to_pre_pull_timeout(f.value("pre_pull_timeout").toDouble());
+    meters_to_takeoff_trigger_length(f.value("takeoff_trigger_length").toDouble());
+    seconds_to_takeoff_period(f.value("takeoff_period").toDouble());
+    f.endGroup();
+
+    f.beginGroup("manual");
+    kg_to_manual_brake_current(f.value("manual_brake_kg").toDouble());
+    ms_to_manual_slow_erpm(f.value("manual_slow_ms").toDouble());
+    kg_to_manual_slow_speed_up_current(f.value("manual_slow_speed_up_kg").toDouble());
+    kg_to_manual_slow_max_current(f.value("manual_slow_max_kg").toDouble());
     f.endGroup();
 
     return f.status() == QSettings::NoError;
