@@ -21,9 +21,9 @@ Rectangle {
     property double minSpeedMs: maxSpeedMs * -1
 
     property double ropeMeters: 0
+    property double leftRopeMeters: maxRopeMeters - ropeMeters
     property double minRopeMeters: 0
     property double maxRopeMeters: 800
-    property double leftRopeMeters: maxRopeMeters - ropeMeters
 
     property double power: 0
     property double maxPower: 20
@@ -87,7 +87,7 @@ Rectangle {
 
     function prettyNumber(number) {
         // Проверить число
-
+        if (!number || !!isNaN(number)) return 0;
 
         return number.toFixed(0);
 
@@ -885,7 +885,7 @@ Rectangle {
                 Column {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
-                    anchors.topMargin: root.gaugeHeight / 2 - root.gaugeHeight * 0.25
+                    anchors.topMargin: root.gaugeHeight / 2 - root.gaugeHeight * 0.45
                     spacing: 2
                     width: Math.max(textLeftRopeMeters.width, ropeMeters.width)
 
@@ -896,7 +896,9 @@ Rectangle {
                         id: textLeftRopeMeters
 
                         Text {
-                            text: root.prettyNumber(root.maxRopeMeters - root.ropeMeters)
+                            text: isNaN(root.leftRopeMeters)
+                                  ? root.maxRopeMeters
+                                  : root.prettyNumber(root.leftRopeMeters)
                             font.pixelSize: Math.max(10, root.diameter * 0.04)
                             font.family: root.ff
                         }

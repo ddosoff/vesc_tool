@@ -41,6 +41,57 @@ Page {
         anchors.fill: parent
         anchors.margins: 10
 
+        Label {
+            text: qsTr("Find Skypuff")
+
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            font.pointSize: 16
+            font.bold: true
+            Layout.margins: 20
+        }
+
+        Component {
+            id: highlight
+            Rectangle {
+                width: 180; height: 20
+                color: "lightsteelblue"; radius: 5
+                y: listView.currentItem.y
+                Behavior on y {
+                    SpringAnimation {
+                        spring: 3
+                        damping: 0.2
+                    }
+                }
+            }
+        }
+
+        ListView {
+            id: listView
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            delegate: Text {
+                height: 20
+                text: addr
+            }
+            model: ListModel {
+                id: listModel
+            }
+            highlight: highlight
+            highlightFollowsCurrentItem: true
+            focus: true
+        }
+
+        Button {
+            text: "Add"
+
+            onClicked: listModel.append({addr: Math.random()})
+        }
+
+        Label {
+            text: "Index: %1".arg(listView.currentIndex)
+        }
+
         GroupBox {
             title: qsTr("Bluetooth")
             Layout.fillWidth: true

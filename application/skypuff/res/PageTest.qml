@@ -4,17 +4,16 @@ import QtQuick.Extras 1.4
 import QtQuick.Layouts 1.3
 
 import SkyPuff.vesc.winch 1.0
-
 import QtQml 2.2
 
 
 
 Page {
-    id: page
+    id: page1
     state: "DISCONNECTED"
 
     // Get normal text color from this palette
-    SystemPalette {id: systemPalette}
+    SystemPalette {id: systemPalette; colorGroup: SystemPalette.Active}
 
     ColumnLayout {
         anchors.fill: parent
@@ -29,24 +28,45 @@ Page {
           */
 
         SkypuffGauge {
-            speedMs: 22
-            maxSpeedMs: 30
-            ropeMeters: 333
-            minRopeMeters: 0
-            maxRopeMeters: 800
-            power: -2
-            maxPower: 20
-            motorKg: 36
-            minMotorKg: 0
-            maxMotorKg: 150
-            tempFets: 15
+            id: sGauhe
+            speedMs: Skypuff.speedMs
+
+            ropeMeters: Skypuff.ropeMeters
+            leftRopeMeters :Skypuff.leftMeters
+            power: Skypuff.power
+            motorKg: Skypuff.motorKg
+            motorMode: Skypuff.motorMode
+
+            maxRopeMeters: 1500
+            //maxPower: cfg.power_max
+            //maxMotorKg: cfg.motor_max_kg
+
+            /*tempFets: 15
             tempMotor: 18
             tempBat: 20
             whIn: 0
-            whOut: 0
-            motorMode: 'Yoba mode'
+            whOut: 0*/
 
-            debug: true
+            /**
+            pullForce.to = cfg.motor_max_kg
+            pullForce.stepSize = cfg.motor_max_kg / 30
+            pullForce.value = cfg.pull_kg
+
+            pbMotor.to = cfg.motor_max_kg
+            pbPower.to = cfg.power_
+*/
+
+
+            debug: false
+        }         
+    }
+    Connections {
+        target: Skypuff
+
+        onSettingsChanged: {
+            sGauhe.maxMotorKg = cfg.motor_max_kg
+            sGauhe.maxPower = cfg.power_max
         }
     }
+
 }

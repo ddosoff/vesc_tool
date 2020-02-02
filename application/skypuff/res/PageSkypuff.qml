@@ -211,7 +211,7 @@ Page {
             Layout.topMargin: 20
 
             Text {
-                text: qsTr("T Fets, Mot, Bat: %1, %2, %3").arg(Skypuff.tempFets).arg(Skypuff.tempMotor).arg(Skypuff.tempBat)
+                text: qsTr("Temps: %1, %2, %3").arg(Skypuff.tempFets).arg(Skypuff.tempMotor).arg(Skypuff.tempBat)
 
                 color: Skypuff.tempFets > 80 || Skypuff.tempMotor > 80 ? "red" : systemPalette.text;
             }
