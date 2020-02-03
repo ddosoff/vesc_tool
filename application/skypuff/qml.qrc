@@ -23,5 +23,7 @@
         <file>res/icons/bluetooth.svg</file>
         <file>res/icons/usb.svg</file>
         <file>res/icons/wifi.svg</file>
+        <file>res/ElevationEffect.qml</file>
+        <file>res/BigRoundButton.qml</file>
     </qresource>
 </RCC>

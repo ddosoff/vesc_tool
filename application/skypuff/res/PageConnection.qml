@@ -1,6 +1,7 @@
-import QtQuick 2.7
-import QtQuick.Controls 2.2
-import QtQuick.Layouts 1.3
+import QtQuick 2.12
+import QtQuick.Controls 2.12
+import QtQuick.Layouts 1.12
+import QtQuick.Controls.Material 2.12
 
 import Vedder.vesc.vescinterface 1.0
 import Vedder.vesc.bleuart 1.0
@@ -11,7 +12,7 @@ Page {
     property BleUart mBle: VescIf.bleDevice()
     property Commands mCommands: VescIf.commands()
     property ConfigParams mInfoConf: VescIf.infoConfig()
-    property alias disconnectButton: disconnectButton
+    //property alias disconnectButton: disconnectButton
 
     function setConnectButtonsEnabled(e)
     {
@@ -57,34 +58,63 @@ Page {
             Item {
                 Layout.fillWidth: true
             }
-            RoundButton {
+
+            BigRoundButton {
+                id: bBluetooth
+                icon.height: 35
+                icon.width: 35
                 icon.source: "qrc:/res/icons/bluetooth.svg"
+                Material.foreground: Material.Blue
+
+
+                BusyIndicator {
+                    z: -1
+                    anchors.centerIn: bBluetooth
+                    implicitWidth: 98
+                    implicitHeight: 98
+                    running: true
+                }
             }
-            RoundButton {
+
+            BigRoundButton {
+                id: bUsb
                 Layout.margins: 20
                 icon.source: "qrc:/res/icons/usb.svg"
+                Material.foreground: Material.Teal
+                BusyIndicator {
+                    id: busyUsb
+                    z: -1
+                    anchors.centerIn: bUsb
+                    implicitWidth: 98
+                    implicitHeight: 98
+                }
+                onClicked: busyUsb.running = !busyUsb.running
             }
-            RoundButton {
+            BigRoundButton {
                 icon.source: "qrc:/res/icons/wifi.svg"
+                Material.foreground: Material.Indigo
             }
             Item {
                 Layout.fillWidth: true
             }
         }
 
+
         ListView {
             id: listView
             Layout.fillWidth: true
             Layout.fillHeight: true
+            Layout.leftMargin: 20
+            Layout.topMargin: 10
             ScrollBar.vertical: ScrollBar {}
-            spacing: 10
+            spacing: 20
 
             delegate: Text {
                 id: wrapper
                 //width: 200; height: 55
                 horizontalAlignment: Text.AlignHCenter
                 text: addr
-                x: listView.width / 2 - width / 2
+                //x: listView.width / 2 - 200 / 2
 
                 // indent the item if it is the current item
                 states: State {
@@ -118,8 +148,19 @@ Page {
             clip: true
             highlightFollowsCurrentItem: false
             focus: true
-        }
 
+            Component.onCompleted: {
+                listModel.append({addr: "bt://45.32.34.54.34.43"})
+                listModel.append({addr: "bt://15.52.24.24.65.34"})
+                listModel.append({addr: "usb://ttyACME0"})
+                listModel.append({addr: "tcp://234.32.123.64"})
+                listView.currentIndex = -1
+            }
+        }
+    }
+}
+
+        /*
         Button {
             text: "Add"
 
@@ -158,13 +199,13 @@ Page {
                         }
                     }
 
-                    /*Button {
+                    Button {
                         text: qsTr("Pair")
 
                         onClicked: {
                             pairDialog.openDialog()
                         }
-                    }*/
+                    }
 
                     Button {
                         id: scanButton
@@ -367,8 +408,8 @@ Page {
             text: qsTr("Not connected")
             color: "red"
         }
-    }
 
+    }
     Dialog {
         id: vescDialog
         standardButtons: Dialog.Ok
@@ -430,6 +471,7 @@ Page {
         }
     }
 
+
     Timer {
         id: bleChecker
         interval: 200
@@ -466,4 +508,6 @@ Page {
             scanButton.text = text
         }
     }
+
 }
+    */
