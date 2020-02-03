@@ -20,5 +20,8 @@
         <file>res/sounds/The rope will end soon.mp3</file>
         <file>res/sounds/Трос скоро закончится.mp3</file>
         <file>res/sounds/Battery charged too low.mp3</file>
+        <file>res/icons/bluetooth.svg</file>
+        <file>res/icons/usb.svg</file>
+        <file>res/icons/wifi.svg</file>
     </qresource>
 </RCC>

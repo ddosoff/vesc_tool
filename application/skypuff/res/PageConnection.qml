@@ -33,9 +33,9 @@ Page {
         }
     }
 
-    PairingDialog {
+    /*PairingDialog {
         id: pairDialog
-    }
+    }*/
 
     ColumnLayout {
         anchors.fill: parent
@@ -48,21 +48,27 @@ Page {
             horizontalAlignment: Text.AlignHCenter
             font.pointSize: 16
             font.bold: true
-            Layout.margins: 20
+            Layout.topMargin: 20
         }
 
-        Component {
-            id: highlight
-            Rectangle {
-                width: 180; height: 20
-                color: "lightsteelblue"; radius: 5
-                y: listView.currentItem.y
-                Behavior on y {
-                    SpringAnimation {
-                        spring: 3
-                        damping: 0.2
-                    }
-                }
+        RowLayout {
+            Layout.fillWidth: true
+
+            Item {
+                Layout.fillWidth: true
+            }
+            RoundButton {
+                icon.source: "qrc:/res/icons/bluetooth.svg"
+            }
+            RoundButton {
+                Layout.margins: 20
+                icon.source: "qrc:/res/icons/usb.svg"
+            }
+            RoundButton {
+                icon.source: "qrc:/res/icons/wifi.svg"
+            }
+            Item {
+                Layout.fillWidth: true
             }
         }
 
@@ -70,22 +76,57 @@ Page {
             id: listView
             Layout.fillWidth: true
             Layout.fillHeight: true
+            ScrollBar.vertical: ScrollBar {}
+            spacing: 10
+
             delegate: Text {
-                height: 20
+                id: wrapper
+                //width: 200; height: 55
+                horizontalAlignment: Text.AlignHCenter
                 text: addr
+                x: listView.width / 2 - width / 2
+
+                // indent the item if it is the current item
+                states: State {
+                    name: "Current"
+                    when: wrapper.ListView.isCurrentItem
+                    PropertyChanges { target: wrapper; x: 20; font.bold: true }
+                }
+                transitions: Transition {
+                    NumberAnimation { properties: "x"; duration: 200 }
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: wrapper.ListView.view.currentIndex = index
+                }
             }
+
             model: ListModel {
                 id: listModel
             }
-            highlight: highlight
-            highlightFollowsCurrentItem: true
+            highlight: Rectangle {
+                width: 180; height: 20
+                color: "lightsteelblue"; radius: 5
+                y: listView.currentItem ? listView.currentItem.y : 0
+                Behavior on y {
+                    SpringAnimation {
+                        spring: 3
+                        damping: 0.2
+                    }
+                }
+            }
+            clip: true
+            highlightFollowsCurrentItem: false
             focus: true
         }
 
         Button {
             text: "Add"
 
-            onClicked: listModel.append({addr: Math.random()})
+            onClicked: {
+                listModel.append({addr: Math.random()})
+                listView.currentIndex = -1
+            }
         }
 
         Label {
@@ -117,13 +158,13 @@ Page {
                         }
                     }
 
-                    Button {
+                    /*Button {
                         text: qsTr("Pair")
 
                         onClicked: {
                             pairDialog.openDialog()
                         }
-                    }
+                    }*/
 
                     Button {
                         id: scanButton
