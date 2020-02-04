@@ -80,3 +80,122 @@ QByteArray QMLable_skypuff_config::serializeV1() const
 
     return std::move(vb);
 }
+
+bool QMLable_skypuff_config::saveV1(QSettings &f) const
+{
+    f.beginGroup("settings");
+    f.setValue("version", 1);
+    f.endGroup();
+
+    f.beginGroup("vesc_drive");
+    f.setValue("motor_poles", motor_poles);
+    f.setValue("gear_ratio", QString::number(gear_ratio, 'f', 6));
+    f.setValue("wheel_diameter_mm", wheel_diameter_to_mm());
+    f.endGroup();
+
+    f.beginGroup("skypuff_drive");
+    f.setValue("amps_per_kg", QString::number(amps_per_kg, 'f', 3));
+    f.setValue("pull_applying_period", QString::number(pull_applying_period_to_seconds(), 'f', 1));
+    f.setValue("rope_length", QString::number(rope_length_to_meters(), 'f', 1));
+    f.endGroup();
+
+    f.beginGroup("braking_zone");
+    f.setValue("braking_length", QString::number(braking_length_to_meters(), 'f', 1));
+    f.setValue("braking_extension_length", QString::number(braking_extension_length_to_meters(), 'f', 1));
+    f.setValue("brake_kg", QString::number(brake_current_to_kg(), 'f', 1));
+    f.endGroup();
+
+    f.beginGroup("unwinding");
+    f.setValue("unwinding_trigger_length", QString::number(unwinding_trigger_length_to_meters(), 'f', 1));
+    f.setValue("unwinding_kg", QString::number(unwinding_current_to_kg(), 'f', 1));
+    f.endGroup();
+
+    f.beginGroup("rewinding");
+    f.setValue("rewinding_trigger_length", QString::number(rewinding_trigger_length_to_meters(), 'f', 1));
+    f.setValue("rewinding_kg", QString::number(rewinding_current_to_kg(), 'f', 1));
+    f.endGroup();
+
+    f.beginGroup("slowing");
+    f.setValue("slowing_length", QString::number(slowing_length_to_meters(), 'f', 1));
+    f.setValue("slowing_kg", QString::number(slowing_current_to_kg(), 'f', 1));
+    f.setValue("slow_ms", QString::number(slow_erpm_to_ms(), 'f', 1));
+    f.setValue("slow_max_kg", QString::number(slow_max_current_to_kg(), 'f', 1));
+    f.endGroup();
+
+    f.beginGroup("winch");
+    f.setValue("pull_kg", QString::number(pull_current_to_kg(),'f',1));
+    f.setValue("pre_pull_k", pre_pull_k_to_percents());
+    f.setValue("takeoff_pull_k", takeoff_pull_k_to_percents());
+    f.setValue("fast_pull_k", fast_pull_k_to_percents());
+    f.setValue("pre_pull_timeout", QString::number(pre_pull_timeout_to_seconds(), 'f', 1));
+    f.setValue("takeoff_trigger_length", QString::number(takeoff_trigger_length_to_meters(), 'f', 1));
+    f.setValue("takeoff_period", QString::number(takeoff_period_to_seconds(), 'f', 1));
+    f.endGroup();
+
+    f.beginGroup("manual");
+    f.setValue("manual_brake_kg", QString::number(manual_brake_current_to_kg(), 'f', 1));
+    f.setValue("manual_slow_ms", QString::number(manual_slow_erpm_to_ms(), 'f', 1));
+    f.setValue("manual_slow_speed_up_kg", QString::number(manual_slow_speed_up_current_to_kg(), 'f', 1));
+    f.setValue("manual_slow_max_kg", QString::number(manual_slow_max_current_to_kg(), 'f', 1));
+    f.endGroup();
+
+    f.sync();
+    return f.status() == QSettings::NoError;
+}
+
+bool QMLable_skypuff_config::loadV1(QSettings &f)
+{
+    f.beginGroup("vesc_drive");
+    motor_poles = f.value("motor_poles").toInt();
+    gear_ratio = f.value("gear_ratio").toDouble();
+    wheel_diameter_from_mm(f.value("wheel_diameter_mm").toInt());
+    f.endGroup();
+
+    f.beginGroup("skypuff_drive");
+    amps_per_kg = f.value("amps_per_kg").toDouble();
+    seconds_to_pull_applying_period(f.value("pull_applying_period").toDouble());
+    meters_to_rope_length(f.value("rope_length").toDouble());
+    f.endGroup();
+
+    f.beginGroup("braking_zone");
+    meters_to_braking_length(f.value("braking_length").toDouble());
+    meters_to_braking_extension_length(f.value("braking_extension_length").toDouble());
+    kg_to_brake_current( f.value("brake_kg").toDouble());
+    f.endGroup();
+
+    f.beginGroup("unwinding");
+    meters_to_unwinding_trigger_length(f.value("unwinding_trigger_length").toDouble());
+    kg_to_unwinding_current(f.value("unwinding_kg").toDouble());
+    f.endGroup();
+
+    f.beginGroup("rewinding");
+    meters_to_rewinding_trigger_length(f.value("rewinding_trigger_length").toDouble());
+    kg_to_rewinding_current(f.value("rewinding_kg").toDouble());
+    f.endGroup();
+
+    f.beginGroup("slowing");
+    meters_to_slowing_length(f.value("slowing_length").toDouble());
+    kg_to_slowing_current(f.value("slowing_kg").toDouble());
+    ms_to_slow_erpm(f.value("slow_ms").toDouble());
+    kg_to_slow_max_current(f.value("slow_max_kg").toDouble());
+    f.endGroup();
+
+    f.beginGroup("winch");
+    kg_to_pull_current(f.value("pull_kg").toDouble());
+    percents_to_pre_pull_k(f.value("pre_pull_k").toInt());
+    percents_to_takeoff_pull_k(f.value("takeoff_pull_k").toInt());
+    percents_to_fast_pull_k(f.value("fast_pull_k").toInt());
+    seconds_to_pre_pull_timeout(f.value("pre_pull_timeout").toDouble());
+    meters_to_takeoff_trigger_length(f.value("takeoff_trigger_length").toDouble());
+    seconds_to_takeoff_period(f.value("takeoff_period").toDouble());
+    f.endGroup();
+
+    f.beginGroup("manual");
+    kg_to_manual_brake_current(f.value("manual_brake_kg").toDouble());
+    ms_to_manual_slow_erpm(f.value("manual_slow_ms").toDouble());
+    kg_to_manual_slow_speed_up_current(f.value("manual_slow_speed_up_kg").toDouble());
+    kg_to_manual_slow_max_current(f.value("manual_slow_max_kg").toDouble());
+    f.endGroup();
+
+    return f.status() == QSettings::NoError;
+}

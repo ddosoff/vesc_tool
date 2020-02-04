@@ -1,6 +1,7 @@
-import QtQuick 2.7
-import QtQuick.Controls 2.2
-import QtQuick.Layouts 1.3
+import QtQuick 2.12
+import QtQuick.Controls 2.12
+import QtQuick.Layouts 1.12
+import QtQuick.Controls.Material 2.12
 
 import Vedder.vesc.vescinterface 1.0
 import Vedder.vesc.bleuart 1.0
@@ -11,7 +12,7 @@ Page {
     property BleUart mBle: VescIf.bleDevice()
     property Commands mCommands: VescIf.commands()
     property ConfigParams mInfoConf: VescIf.infoConfig()
-    property alias disconnectButton: disconnectButton
+    //property alias disconnectButton: disconnectButton
 
     function setConnectButtonsEnabled(e)
     {
@@ -33,13 +34,145 @@ Page {
         }
     }
 
-    PairingDialog {
+    /*PairingDialog {
         id: pairDialog
-    }
+    }*/
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 10
+
+        Label {
+            text: qsTr("Find Skypuff")
+
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            font.pointSize: 16
+            font.bold: true
+            Layout.topMargin: 20
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+
+            Item {
+                Layout.fillWidth: true
+            }
+
+            BigRoundButton {
+                id: bBluetooth
+                icon.height: 35
+                icon.width: 35
+                icon.source: "qrc:/res/icons/bluetooth.svg"
+                Material.foreground: Material.Blue
+
+
+                BusyIndicator {
+                    z: -1
+                    anchors.centerIn: bBluetooth
+                    implicitWidth: 98
+                    implicitHeight: 98
+                    running: true
+                }
+            }
+
+            BigRoundButton {
+                id: bUsb
+                Layout.margins: 20
+                icon.source: "qrc:/res/icons/usb.svg"
+                Material.foreground: Material.Teal
+                BusyIndicator {
+                    id: busyUsb
+                    z: -1
+                    anchors.centerIn: bUsb
+                    implicitWidth: 98
+                    implicitHeight: 98
+                }
+                onClicked: busyUsb.running = !busyUsb.running
+            }
+            BigRoundButton {
+                icon.source: "qrc:/res/icons/wifi.svg"
+                Material.foreground: Material.Indigo
+            }
+            Item {
+                Layout.fillWidth: true
+            }
+        }
+
+
+        ListView {
+            id: listView
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.leftMargin: 20
+            Layout.topMargin: 10
+            ScrollBar.vertical: ScrollBar {}
+            spacing: 20
+
+            delegate: Text {
+                id: wrapper
+                //width: 200; height: 55
+                horizontalAlignment: Text.AlignHCenter
+                text: addr
+                //x: listView.width / 2 - 200 / 2
+
+                // indent the item if it is the current item
+                states: State {
+                    name: "Current"
+                    when: wrapper.ListView.isCurrentItem
+                    PropertyChanges { target: wrapper; x: 20; font.bold: true }
+                }
+                transitions: Transition {
+                    NumberAnimation { properties: "x"; duration: 200 }
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: wrapper.ListView.view.currentIndex = index
+                }
+            }
+
+            model: ListModel {
+                id: listModel
+            }
+            highlight: Rectangle {
+                width: 180; height: 20
+                color: "lightsteelblue"; radius: 5
+                y: listView.currentItem ? listView.currentItem.y : 0
+                Behavior on y {
+                    SpringAnimation {
+                        spring: 3
+                        damping: 0.2
+                    }
+                }
+            }
+            clip: true
+            highlightFollowsCurrentItem: false
+            focus: true
+
+            Component.onCompleted: {
+                listModel.append({addr: "bt://45.32.34.54.34.43"})
+                listModel.append({addr: "bt://15.52.24.24.65.34"})
+                listModel.append({addr: "usb://ttyACME0"})
+                listModel.append({addr: "tcp://234.32.123.64"})
+                listView.currentIndex = -1
+            }
+        }
+    }
+}
+
+        /*
+        Button {
+            text: "Add"
+
+            onClicked: {
+                listModel.append({addr: Math.random()})
+                listView.currentIndex = -1
+            }
+        }
+
+        Label {
+            text: "Index: %1".arg(listView.currentIndex)
+        }
 
         GroupBox {
             title: qsTr("Bluetooth")
@@ -275,8 +408,8 @@ Page {
             text: qsTr("Not connected")
             color: "red"
         }
-    }
 
+    }
     Dialog {
         id: vescDialog
         standardButtons: Dialog.Ok
@@ -338,6 +471,7 @@ Page {
         }
     }
 
+
     Timer {
         id: bleChecker
         interval: 200
@@ -374,4 +508,6 @@ Page {
             scanButton.text = text
         }
     }
+
 }
+    */
