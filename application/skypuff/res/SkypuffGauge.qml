@@ -46,7 +46,7 @@ Rectangle {
             Colors
     ********************/
 
-    property real baseOpacity: 0.4 // На все цвета шкалы накладывается opacity
+    property real baseOpacity: 0.4 // Opacity is superimposed on all colors of the scale.
     property string gaugeColor: '#C7CFD9'
     property string ropeColor: '#733E32'
     property string motorKgColor: 'orange'
@@ -71,10 +71,10 @@ Rectangle {
        ? parent.height
        : parent.width
 
-    property string borderColor: '#515151'      // Цвет границ
-    property string color: '#efeded'            // Цвет основного фона
-    property int diagLAnc: 55                   // Угол диагональных линий от 12ти часов
-    property string ff: 'Roboto'                // Шрифт
+    property string borderColor: '#515151'      // Color of all borders
+    property string color: '#efeded'            // Main backgroundColor
+    property int diagLAnc: 55                   // Angle of diagonal lines from 12 hours
+    property string ff: 'Roboto'                // Font family
 
     /********************
             Gauge
@@ -86,11 +86,10 @@ Rectangle {
 
 
     function prettyNumber(number) {
-        // Проверить число
+        // TODO: need to check this number
         if (!number || !!isNaN(number)) return 0;
 
         return number.toFixed(0);
-
     }
 
     function showStatsInConsole() {
@@ -109,98 +108,84 @@ Rectangle {
                     .arg(whOut));
     }
 
+    /**
+      Convert rope's value to angl
+      180 - (125 - 55) = 110. Working range with default diagLAnc
+    */
     function ropeToAng(value) {
-        // 180 - (125 - 55) = 110. рабочий диапазон при дефолтном diagLAnc: -55 до 55
-
-        // Если шкала начинается с отрицательного значения
+        // If the scale starts with a negative value
         var deltaForNegativeMinRope = root.minRopeMeters < 0 ? Math.abs(root.minRopeMeters) : 0;
 
-        // Если шкала начинается с положительного значения
+        // If the scale starts with a positive value
         var deltaForPositiveMinRope = root.minRopeMeters > 0 ? -1 * root.minRopeMeters : 0;
 
-        // Рабочий диапазон нижнего бара в градусах
+        // Working range of top bar
         var diapAng = 180 - (dl2.rotation - dl1.rotation);
 
-        // Диапазон веревки
+        // Range of rope
         var diapRope = root.maxRopeMeters - root.minRopeMeters;
         var delta = diapAng / diapRope;
 
         var res = (value + deltaForNegativeMinRope + deltaForPositiveMinRope) * delta;
 
-        // При 0 все распидарасит, поэтому небольшой костыль в 0,1
+        // 0.1 - is a little fix for canvas context.arc
         return (value === minRopeMeters ? res + 0.1 : res)  - dl1.rotation;
     }
 
+    /**
+      Convert speed's value to angl
+    */
     function speedToAng(value) {
-        // 180 - (125 - 55) = 110. рабочий диапазон при дефолтном diagLAnc: 125 - 235
-
-        // Если шкала начинается с отрицательного значения
         var deltaForNegativeMinSpeed = root.minSpeedMs < 0 ? Math.abs(root.minSpeedMs) : 0;
-
-        // Если шкала начинается с положительного значения
         var deltaForPositiveMinSpeed = root.minSpeedMs > 0 ? -1 * root.minSpeedMs : 0;
 
-        // Рабочий диапазон нижнего бара в градусах
+        // Working range of bottom bar
         var diapAng = 180 - (dl2.rotation - dl1.rotation);
 
-        // Диапазон скорости
+        // Range of speed
         var diapSpeed = root.maxSpeedMs - root.minSpeedMs;
         var delta = diapAng / diapSpeed;
 
         return (dl2.rotation + diapAng) - (value + deltaForNegativeMinSpeed + deltaForPositiveMinSpeed) * delta;
     }
 
+    /**
+      Convert kg's value to angl
+    */
     function kgToAng(value) {
-        // -125 -55
-
-        // Если шкала начинается с отрицательного значения
         var deltaForNegativeValue = root.minMotorKg < 0 ? Math.abs(root.minMotorKg) : 0;
-
-        // Если шкала начинается с положительного значения
         var deltaForPositiveValue = root.minMotorKg > 0 ? -1 * root.minMotorKg : 0;
 
-        // Рабочий диапазон нижнего бара в градусах
+        // Working range of left bar
         var diapAng = 180 - (180 - (dl2.rotation - dl1.rotation));
 
-        // Диапазон скорости
+        // Range of kg
         var diapKg = root.maxMotorKg - root.minMotorKg;
         var delta = diapAng / diapKg;
-
-        // 20 - регулировка
         var res =  (value + deltaForNegativeValue + deltaForPositiveValue);
 
         return (value === root.minMotorKg ? res + 0.1 : res) * delta + (dl1.rotation - 90);
     }
 
 
+    /**
+      Convert power's value to angl
+    */
     function powerToAng(value) {
-        // 55 - 125
-
-        // Если шкала начинается с отрицательного значения
         var deltaForNegativeValue = root.minPower < 0 ? Math.abs(root.minPower) : 0;
-
-        // Если шкала начинается с положительного значения
         var deltaForPositiveValue = root.minPower > 0 ? -1 * root.minPower : 0;
 
-        // Рабочий диапазон нижнего бара в градусах
+        // Working range of right bar
         var diapAng = 180 - (180 - (dl2.rotation - dl1.rotation));
 
-        // Диапазон скорости
+        // Range of power
         var diapPower = root.maxPower - root.minPower;
         var delta = diapAng / diapPower;
-
-        // 20 - регулировка
         var res =  (dl2.rotation - 90) - (value + deltaForNegativeValue + deltaForPositiveValue) * delta;
 
-        // При 0 все распидарасит, поэтому небольшой костыль в 0,1
+        // 0.1 - is a little fix for canvas context.arc
         return (value === root.minPower ? res + 0.1 : res)
     }
-
-
-    /*gradient: Gradient {
-        GradientStop { position: 0.0; color: '#5b365f' }
-        GradientStop { position: 1.0; color: '#ce566a' }
-    } */
 
     Column {
         anchors.fill: parent
@@ -265,7 +250,7 @@ Rectangle {
 
 
                 /**
-                  Все 4 шкалы
+                  All 4 scales
                   */
                 Item {
                     id: progressBars
@@ -283,6 +268,7 @@ Rectangle {
                     property real powerStartAng: 0
                     property real powerEndAng: powerToAng(root.power);
 
+                    // Animation
                     /*Behavior on ropeEndAng {
                            id: animationRopeEndAng
                            enabled: true
@@ -354,7 +340,7 @@ Rectangle {
                                 );
                                 context.fill();
 
-                                /********** Верхний спидометр ***********/
+                                /********** Top ***********/
 
                                 var topEnd = (Math.PI * (parent.ropeEndAng - 90)) / 180
                                 var topStart = (Math.PI * (parent.ropeStartAng + 90)) / 180
@@ -374,7 +360,7 @@ Rectangle {
                                 context.strokeStyle = root.ropeColor
                                 context.stroke();
 
-                                /********** Нижний спидометр ***********/
+                                /********** Bottom ***********/
 
                                 var bottomStart = (Math.PI * (parent.speedStartAng - 90)) / 180
                                 var bottomEnd = (Math.PI * (parent.speedEndAng - 90)) / 180
@@ -394,7 +380,7 @@ Rectangle {
                                 context.strokeStyle = root.speedMs > 0 ? root.speedPositiveColor : root.speedNegativeColor;
                                 context.stroke();
 
-                                /********** Левый спидометр ***********/
+                                /********** Left ***********/
 
                                 var leftEnd = (Math.PI * (parent.motorKgStartAng + 180)) / 180
                                 var leftStart = (Math.PI * (parent.motorKgEndAng - 180)) / 180
@@ -413,7 +399,7 @@ Rectangle {
                                 context.strokeStyle = root.motorKgColor;
                                 context.stroke();
 
-                                /********** Правый спидометр ***********/
+                                /********** Right ***********/
 
                                 var rightEnd = (Math.PI * (parent.powerEndAng)) / 180
                                 var rightStart = (Math.PI * (parent.powerStartAng)) / 180
@@ -544,7 +530,7 @@ Rectangle {
                         return 0;
                     }
 
-                    // k - процент шкалы, который метим красным
+                    // k - percentage of the scale that is marked in red
                     function getTLColor(value, max, k = 20) {
                         return value >= (max - (max * k / 100))
                                 ? root.gaugeAlarmFontColor
@@ -557,7 +543,7 @@ Rectangle {
 
 
                     /**
-                      Шкала для кг
+                      KG
                     */
                     CircularGauge {
                         id: kgGauge
@@ -581,18 +567,16 @@ Rectangle {
 
 
                             /**
-                              Точка по центру
+                              Center point
                             */
                             foreground: Item {
                                 visible: false
                             }
 
                             /**
-                              Цифры на шкале
+                              Numbers on the scale
                             */
                             tickmarkLabel:  Text {
-                                // k - коэффициент для отступа
-
                                 function getText() {
                                     return styleData.value + ((styleData.value === root.minMotorKg) ? 'kg' : '');
                                 }
@@ -608,14 +592,14 @@ Rectangle {
                             }
 
                             /**
-                              Мелкие деления
+                              Small tickmark
                             */
                             minorTickmark: Rectangle {
                                 visible: false
                             }
 
                             /**
-                              Деления
+                              Tickmark
                             */
                             tickmark: Rectangle {
                                 antialiasing: true
@@ -629,7 +613,7 @@ Rectangle {
                             }
 
                             /**
-                              Стрелка
+                              Needle
                             */
                             needle: Rectangle {
                                 antialiasing: true
@@ -641,7 +625,7 @@ Rectangle {
                     }
 
                     /**
-                      Шкала для power
+                      Power
                     */
                     CircularGauge {
                         id: powerGauge
@@ -661,9 +645,6 @@ Rectangle {
                             labelInset: root.gaugeHeight
                             labelStepSize: root.powerLabelStepSize
 
-                            /**
-                              Точка по центру
-                            */
                             foreground: Item {
                                 Rectangle {
                                     width: 10
@@ -675,9 +656,6 @@ Rectangle {
                                 }
                             }
 
-                            /**
-                              Цифры на шкале
-                            */
                             tickmarkLabel:  Text {
                                 font.pixelSize: gauge.getFontSize()
                                 y: gauge.getTLHY(styleData.value, root.minPower, root.maxPower)
@@ -689,16 +667,10 @@ Rectangle {
                                 font.family: root.ff
                             }
 
-                            /**
-                              Мелкие деления
-                            */
                             minorTickmark: Rectangle {
                                 visible: false
                             }
 
-                            /**
-                              Деления
-                            */
                             tickmark: Rectangle {
                                 antialiasing: true
                                 implicitWidth: outerRadius * ((styleData.value === root.maxPower || styleData.value === root.minPower)
@@ -710,9 +682,6 @@ Rectangle {
                                 color: gauge.getTLColor(Math.abs(styleData.value), root.maxPower)
                             }
 
-                            /**
-                              Стрелка
-                            */
                             needle: Rectangle {
                                 antialiasing: true
                                 width: outerRadius * 0.015
@@ -723,7 +692,7 @@ Rectangle {
                     }
 
                     /**
-                      Шкала для speedMs
+                      Speed
                     */
                     CircularGauge {
                         id: speedMsGauge
@@ -743,18 +712,12 @@ Rectangle {
                             labelInset: root.gaugeHeight / 2
                             labelStepSize: root.maxSpeedMs
 
-                            /**
-                              Точка по центру
-                            */
                             foreground: Item {
                                 Rectangle {
                                     visible: false
                                 }
                             }
 
-                            /**
-                              Цифры на шкале
-                            */
                             tickmarkLabel:  Text {
                                 visible: styleData.value === root.maxSpeedMs || styleData.value === root.minSpeedMs
 
@@ -773,16 +736,10 @@ Rectangle {
                                 font.family: root.ff
                             }
 
-                            /**
-                              Мелкие деления
-                            */
                             minorTickmark: Rectangle {
                                 visible: false
                             }
 
-                            /**
-                              Деления
-                            */
                             tickmark: Rectangle {
                                 antialiasing: true
                                 implicitWidth: outerRadius * ((styleData.value === root.maxSpeedMs || styleData.value === root.minSpeedMs)
@@ -794,9 +751,6 @@ Rectangle {
                                 color: root.gaugeFontColor
                             }
 
-                            /**
-                              Стрелка
-                            */
                             needle: Rectangle {
                                 visible: false
                             }
@@ -804,7 +758,7 @@ Rectangle {
                     }
 
                     /**
-                      Шкала для rope
+                      Rope
                     */
                     CircularGauge {
                         id: ropeMetersGauge
@@ -824,18 +778,12 @@ Rectangle {
                             labelInset: root.gaugeHeight / 2
                             labelStepSize: root.maxRopeMeters
 
-                            /**
-                              Точка по центру
-                            */
                             foreground: Item {
                                 Rectangle {
                                     visible: false
                                 }
                             }
 
-                            /**
-                              Цифры на шкале
-                            */
                             tickmarkLabel:  Text {
                                 visible: styleData.value === root.maxRopeMeters || styleData.value === root.minRopeMeters
 
@@ -854,23 +802,14 @@ Rectangle {
                                 font.family: root.ff
                             }
 
-                            /**
-                              Мелкие деления
-                            */
                             minorTickmark: Rectangle {
                                 visible: false
                             }
 
-                            /**
-                              Деления
-                            */
                             tickmark: Rectangle {
                                 visible: false
                             }
 
-                            /**
-                              Стрелка
-                            */
                             needle: Rectangle {
                                 visible: false
                             }
@@ -880,7 +819,7 @@ Rectangle {
 
 
                 /**
-                  Значения ropeMeters и leftRopeMeters
+                  Values of ropeMeters and leftRopeMeters
                   */
                 Column {
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -938,7 +877,7 @@ Rectangle {
                 }
 
                 /**
-                  Значение speedMs
+                  Value of speedMs
                   */
                 Grid {
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -960,7 +899,7 @@ Rectangle {
                 }
 
                 /**
-                  Режим мотора
+                  Motor mode
                   */
                 Text {
                     text: root.motorMode
@@ -973,7 +912,7 @@ Rectangle {
                 }
 
                 /**
-                  Значение motorKg
+                  Value of motorKg
                   */
                 Grid {
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -996,7 +935,7 @@ Rectangle {
                 }
 
                 /**
-                  Значение power
+                  Value of power
                   */
                 Grid {
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -1019,7 +958,7 @@ Rectangle {
                 }
 
                 /**
-                  Надпись 'Power'
+                  Title 'Power'
                   */
                 Text {
                     text: 'Power'
@@ -1039,13 +978,10 @@ Rectangle {
             height: 200
             anchors.horizontalCenter: parent.horizontalCenter
 
-
             Grid {
                 visible: root.debug
                 columns: 2
                 anchors.fill: parent
-
-
 
                 Column {
                     spacing: 10
