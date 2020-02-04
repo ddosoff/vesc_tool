@@ -9,6 +9,7 @@ import Vedder.vesc.commands 1.0
 import Vedder.vesc.configparams 1.0
 
 Page {
+    id: page
     property BleUart mBle: VescIf.bleDevice()
     property Commands mCommands: VescIf.commands()
     property ConfigParams mInfoConf: VescIf.infoConfig()
@@ -49,11 +50,13 @@ Page {
             horizontalAlignment: Text.AlignHCenter
             font.pointSize: 16
             font.bold: true
-            Layout.topMargin: 20
+            Layout.topMargin: 15
         }
 
+        // Methods buttons
         RowLayout {
             Layout.fillWidth: true
+            Layout.topMargin: 10
 
             Item {
                 Layout.fillWidth: true
@@ -61,73 +64,70 @@ Page {
 
             BigRoundButton {
                 id: bBluetooth
-                icon.height: 35
-                icon.width: 35
                 icon.source: "qrc:/res/icons/bluetooth.svg"
                 Material.foreground: Material.Blue
-
-
-                BusyIndicator {
-                    z: -1
-                    anchors.centerIn: bBluetooth
-                    implicitWidth: 98
-                    implicitHeight: 98
-                    running: true
-                }
+                onClicked: bBluetooth.busy = !bBluetooth.busy
             }
 
             BigRoundButton {
                 id: bUsb
-                Layout.margins: 20
+                //Layout.margins: parent.width / 20
                 icon.source: "qrc:/res/icons/usb.svg"
+                iconPercent: 40
                 Material.foreground: Material.Teal
-                BusyIndicator {
-                    id: busyUsb
-                    z: -1
-                    anchors.centerIn: bUsb
-                    implicitWidth: 98
-                    implicitHeight: 98
-                }
-                onClicked: busyUsb.running = !busyUsb.running
             }
             BigRoundButton {
+                id: bWifi
                 icon.source: "qrc:/res/icons/wifi.svg"
                 Material.foreground: Material.Indigo
             }
             Item {
                 Layout.fillWidth: true
             }
-        }
 
+            Component.onCompleted: {
+                bBluetooth.size = page.width / 4
+                bUsb.size = bBluetooth.size
+                bWifi.size = bBluetooth.size
+            }
+        }
 
         ListView {
             id: listView
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.leftMargin: 20
-            Layout.topMargin: 10
+            Layout.topMargin: 20
             ScrollBar.vertical: ScrollBar {}
-            spacing: 20
 
-            delegate: Text {
-                id: wrapper
-                //width: 200; height: 55
-                horizontalAlignment: Text.AlignHCenter
-                text: addr
-                //x: listView.width / 2 - 200 / 2
-
+            delegate: Item {
+                id: delegateItem
+                width: listView.width
+                clip: true
+                Text {
+                    id: tW
+                    anchors.fill: parent
+                    horizontalAlignment: Text.AlignHCenter
+                    text: addr
+                    //x: listView.width / 2 - 200 / 2
+                }
                 // indent the item if it is the current item
                 states: State {
                     name: "Current"
-                    when: wrapper.ListView.isCurrentItem
-                    PropertyChanges { target: wrapper; x: 20; font.bold: true }
+                    when: delegateItem.ListView.isCurrentItem
+                    PropertyChanges { target: tW; x: 20; font.bold: true }
                 }
-                transitions: Transition {
+                /*transitions: Transition {
                     NumberAnimation { properties: "x"; duration: 200 }
-                }
+                }*/
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: wrapper.ListView.view.currentIndex = index
+                    onClicked: delegateItem.ListView.view.currentIndex = index
+                }
+
+                ListView.onAdd: SequentialAnimation {
+                    PropertyAction { target: delegateItem; property: "height"; value: 0 }
+                    NumberAnimation { target: delegateItem; property: "height"; to: tW.implicitHeight * 2; duration: 400; easing.type: Easing.InOutQuad }
                 }
             }
 
