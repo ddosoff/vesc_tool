@@ -205,6 +205,58 @@ Page {
                 value: Skypuff.batteryPercents
             }
         }
+        RowLayout {
+            Layout.topMargin: 20
+
+
+            SkypuffGauge {
+                id: sGauge
+
+
+                motorMode: Skypuff.motorMode
+
+                motorKg: isNaN(Skypuff.motorKg) ? 0 : Math.abs(Skypuff.motorKg)
+
+                onMotorKgChanged: console.log(Skypuff.motorKg)
+                Item {
+                    Timer {
+                        interval: 500; running: true; repeat: true
+                        onTriggered: console.log(Skypuff.motorKg, typeof Skypuff.motorKg)
+                    }
+                }
+
+                /*speedMs: Skypuff.speedMs
+
+                power: Skypuff.power
+
+                /
+
+
+
+                //maxRopeMeters: 1500
+                //maxPower: cfg.power_max
+                //maxMotorKg: cfg.motor_max_kg
+
+                /*tempFets: 15
+                tempMotor: 18
+                tempBat: 20
+                whIn: 0
+                whOut: 0*/
+
+                /**
+                pullForce.to = cfg.motor_max_kg
+                pullForce.stepSize = cfg.motor_max_kg / 30
+                pullForce.value = cfg.pull_kg
+
+                pbMotor.to = cfg.motor_max_kg
+                pbPower.to = cfg.power_
+    */
+
+
+                debug: false
+            }
+
+        }
 
         // Temps
         RowLayout {
@@ -465,6 +517,8 @@ Page {
             pullForce.to = cfg.motor_max_kg
             pullForce.stepSize = cfg.motor_max_kg / 30
             pullForce.value = cfg.pull_kg
+
+            sGauge.maxMotorKg = cfg.motor_max_kg / 30
 
             pbMotor.to = cfg.motor_max_kg
             pbPower.to = cfg.power_max

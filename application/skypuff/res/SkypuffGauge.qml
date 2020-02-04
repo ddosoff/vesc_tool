@@ -5,9 +5,18 @@ import QtQuick.Extras 1.4
 
 import QtQml 2.2
 
+import QtQuick.Controls.Material 2.12
+
 
 import QtGraphicalEffects 1.0;
 import QtQuick.Layouts 1.1
+
+import QtQuick 2.12
+
+import QtQuick.Layouts 1.12
+import QtQuick.Controls.Material 2.12
+
+import SkyPuff.vesc.winch 1.0
 
 Rectangle {
     id:root
@@ -16,31 +25,39 @@ Rectangle {
     /********************
             Params
     ********************/
-    property double speedMs: 0
-    property double maxSpeedMs: 30
-    property double minSpeedMs: maxSpeedMs * -1
+    property real speedMs: 0
 
-    property double ropeMeters: 0
-    property double leftRopeMeters: maxRopeMeters - ropeMeters
-    property double minRopeMeters: 0
-    property double maxRopeMeters: 800
+    property real maxSpeedMs: 30
+    property real minSpeedMs: maxSpeedMs * -1
 
-    property double power: 0
-    property double maxPower: 20
-    property double minPower: maxPower * -1
+    property real ropeMeters: 0
+    property real leftRopeMeters: maxRopeMeters - ropeMeters
+    property real minRopeMeters: 0
+    property real maxRopeMeters: 800
 
-    property double motorKg: 20
-    property double minMotorKg: 0
-    property double maxMotorKg: 150
+    property real power: 0
+    property real maxPower: 20
+    property real minPower: maxPower * -1
 
-    property double tempFets: 0
-    property double tempMotor: 0
-    property double tempBat: 0
+    property real motorKg
+    property real minMotorKg: 0
+    property real maxMotorKg
 
-    property double whIn: 0
-    property double whOut: 0
+    property real tempFets: 0
+    property real tempMotor: 0
+    property real tempBat: 0
 
-    property string motorMode: 'Test mode'
+    property real whIn: 0
+    property real whOut: 0
+
+    property string motorMode: ''
+
+    /*speedMs: Skypuff.speedMs
+    ropeMeters: Skypuff.drawnMeters
+    leftRopeMeters: Skypuff.leftMeters
+    power: Skypuff.power
+    motorKg: Skypuff.motorKg
+    motorMode: Skypuff.motorMode/
 
     /********************
             Colors
@@ -48,21 +65,29 @@ Rectangle {
 
     property real baseOpacity: 0.4 // Opacity is superimposed on all colors of the scale.
     property string gaugeColor: '#C7CFD9'
-    property string ropeColor: '#733E32'
+    property string ropeColor: '#795548'
     property string motorKgColor: 'orange'
-    property string powerPositiveColor: 'green'
-    property string powerNegativeColor: 'red'
-    property string speedPositiveColor: 'steelblue'
-    property string speedNegativeColor: 'red'
+
+    property string powerColor: '#009688'
+    property string powerDangerColor: 'red'
+    property real powerDangerColorPercent: 0.8
+
+    property string speedColor: '#673AB7'
+    property string speedDangerColor: 'red'
+    property real speedDangerColorPercent: 0.8
     property string innerColor: '#efeded'
 
     property string gaugeAlarmFontColor: '#8e1616'
     property string gaugeFontColor: '#515151'
 
-
-
-
     property bool debug: false
+
+
+
+
+    onMotorModeChanged: { console.log(root.motorMode) }
+    onMotorKgChanged: { console.log(root.motorKg) }
+    onMaxMotorKgChanged: { console.log(root.maxMotorKg) }
 
     /********************
         Default view
@@ -79,18 +104,20 @@ Rectangle {
     /********************
             Gauge
     ********************/
-    property double gaugeHeight: diameter * 0.09;
+    property real gaugeHeight: diameter * 0.09;
     property int animationDuration: 100
     property int motorKgLabelStepSize: 30
     property int powerLabelStepSize: 10
 
 
-    function prettyNumber(number) {
+    function prettyNumber(number, tf = 1) {
         // TODO: need to check this number
         if (!number || !!isNaN(number)) return 0;
 
-        return number.toFixed(0);
+        return number.toFixed(tf);
     }
+
+
 
     function showStatsInConsole() {
         console.log(qsTr('MotorMode: %1').arg(motorMode));
@@ -195,17 +222,10 @@ Rectangle {
             height: diameter
 
             Component.onCompleted: {
-                power = prettyNumber(power);
-                speedMs = prettyNumber(speedMs);
-                motorKg = prettyNumber(motorKg);
-                tempFets = prettyNumber(tempFets);
-                tempMotor = prettyNumber(tempMotor);
-                tempBat = prettyNumber(tempBat);
-                whIn = prettyNumber(whIn);
-                whOut = prettyNumber(whOut);
-                ropeMeters = prettyNumber(ropeMeters);
-                leftRopeMeters = prettyNumber(leftRopeMeters);
-                showStatsInConsole();
+
+                console.log('motorKg: ' + prettyNumber(root.motorKg, 3), 'maxMotorKg: ' + prettyNumber(root.maxMotorKg, 3))
+
+
             }
 
             Rectangle {
@@ -377,7 +397,11 @@ Rectangle {
 
                                 context.globalCompositeOperation = 'source-atop';
                                 context.lineWidth = 200;
-                                context.strokeStyle = root.speedMs > 0 ? root.speedPositiveColor : root.speedNegativeColor;
+                                context.strokeStyle =
+                                    (root.speedMs < root.maxSpeedMs * root.speedDangerColorPercent
+                                    && root.speedMs > root.minSpeedMs * root.speedDangerColorPercent)
+                                        ? root.speedColor
+                                        : root.speedDangerColor;
                                 context.stroke();
 
                                 /********** Left ***********/
@@ -415,7 +439,11 @@ Rectangle {
                                 );
 
                                 context.lineWidth = root.gaugeHeight * 0.7
-                                context.strokeStyle = root.power > 0 ? root.powerPositiveColor : root.powerNegativeColor;
+                                context.strokeStyle =
+                                    (root.power < root.maxPower * root.powerDangerColorPercent
+                                    && root.power > root.minPower * root.powerDangerColorPercent)
+                                        ? root.powerColor
+                                        : root.powerDangerColor;
                                 context.stroke()
                             }
                         }
@@ -909,6 +937,7 @@ Rectangle {
                     anchors.topMargin: root.gaugeHeight * 2.4
                     font.pixelSize: Math.max(10, root.diameter * 0.045)
                     font.family: root.ff
+
                 }
 
                 /**
@@ -944,7 +973,7 @@ Rectangle {
                     spacing: 5
 
                     Text {
-                        text: root.prettyNumber(root.power)
+                        text: root.prettyNumber(root.power, 1)
                         font.pixelSize: Math.max(10, root.diameter * 0.055)
                         font.family: root.ff
                     }
