@@ -106,7 +106,7 @@ Item {
     property bool boldValues: false
     property bool enableAnimation: true
     property int animationDuration: 100
-    property int animationType: Easing.easeOutExpo
+    property int animationType: Easing.OutExpo
 
     property real motorKgLabelStepSize: (maxMotorKg - minMotorKg) / 5
     property real powerLabelStepSize: (maxPower - minPower) / 4
@@ -339,9 +339,9 @@ Item {
 
                     Canvas {
                         id: canvas
-                        opacity: root.baseOpacity;
-                        antialiasing: true;
-                        contextType: '2d';
+                        opacity: root.baseOpacity
+                        antialiasing: true
+                        contextType: '2d'
                         anchors.fill: parent
                         onPaint: {
                             if (context) {
@@ -369,8 +369,8 @@ Item {
 
                                 /********** Top ***********/
 
-                                var topEnd = (Math.PI * (parent.ropeEndAng - 90)) / 180
-                                var topStart = (Math.PI * (parent.ropeStartAng + 90)) / 180
+                                var topEnd = (Math.PI * (parent.ropeEndAng - 90)) / 180;
+                                var topStart = (Math.PI * (parent.ropeStartAng + 90)) / 180;
 
                                 context.beginPath();
                                 context.arc(
@@ -383,7 +383,7 @@ Item {
                                 );
 
                                 context.globalCompositeOperation = 'source-atop';
-                                context.lineWidth = 200
+                                context.lineWidth = 200;
 
                                 var ropeColors = parent.getColors(
                                     root.ropeMeters,
@@ -402,8 +402,8 @@ Item {
 
                                 /********** Bottom ***********/
 
-                                var bottomStart = (Math.PI * (parent.speedStartAng - 90)) / 180
-                                var bottomEnd = (Math.PI * (parent.speedEndAng - 90)) / 180
+                                var bottomStart = (Math.PI * (parent.speedStartAng - 90)) / 180;
+                                var bottomEnd = (Math.PI * (parent.speedEndAng - 90)) / 180;
 
                                 context.beginPath();
                                 context.arc(
@@ -435,8 +435,8 @@ Item {
 
                                 /********** Left ***********/
 
-                                var leftEnd = (Math.PI * (parent.motorKgStartAng + 180)) / 180
-                                var leftStart = (Math.PI * (parent.motorKgEndAng - 180)) / 180
+                                var leftEnd = (Math.PI * (parent.motorKgStartAng + 180)) / 180;
+                                var leftStart = (Math.PI * (parent.motorKgEndAng - 180)) / 180;
 
                                 context.beginPath();
                                 context.arc(
@@ -448,7 +448,7 @@ Item {
                                     true
                                 );
 
-                                context.lineWidth = root.gaugeHeight * 0.7
+                                context.lineWidth = root.gaugeHeight * 0.7;
 
                                 var kgColors = parent.getColors(
                                     root.motorKg,
@@ -467,8 +467,8 @@ Item {
 
                                 /********** Right ***********/
 
-                                var rightEnd = (Math.PI * (parent.powerEndAng)) / 180
-                                var rightStart = (Math.PI * (parent.powerStartAng)) / 180
+                                var rightEnd = (Math.PI * (parent.powerEndAng)) / 180;
+                                var rightStart = (Math.PI * (parent.powerStartAng)) / 180;
 
                                 context.beginPath();
                                 context.arc(
@@ -480,7 +480,7 @@ Item {
                                     parent.powerEndAng < 0
                                 );
 
-                                context.lineWidth = root.gaugeHeight * 0.7
+                                context.lineWidth = root.gaugeHeight * 0.7;
 
                                 var powerColors = parent.getColors(
                                     root.power,
@@ -499,26 +499,25 @@ Item {
                                 context.stroke();
                             }
                         }
-                        onWidthChanged:  { requestPaint (); }
-                        onHeightChanged: { requestPaint (); }
+                        onWidthChanged:  { requestPaint(); }
+                        onHeightChanged: { requestPaint(); }
                     }
 
                     Canvas {
                         //opacity: 0.5
-                        antialiasing: true;
-                        contextType: '2d';
+                        antialiasing: true
+                        contextType: '2d'
                         anchors.fill: parent
                         onPaint: {
                             if (context) {
                                 context.reset ();
-
                                 context.beginPath();
 
                                 var centreX = baseLayer.width / 2;
                                 var centreY = baseLayer.height / 2;
 
-                                var topEnd = (Math.PI * (90 - dl1.rotation)) / 180
-                                var topStart = (Math.PI * (90 - dl2.rotation)) / 180
+                                var topEnd = (Math.PI * (90 - dl1.rotation)) / 180;
+                                var topStart = (Math.PI * (90 - dl2.rotation)) / 180;
 
                                 context.beginPath();
                                 context.moveTo(centreX, centreY);
@@ -532,11 +531,11 @@ Item {
                                 );
 
                                 context.lineTo(centreX, centreY);
-                                context.fillStyle = root.innerColor
+                                context.fillStyle = root.innerColor;
                                 context.fill()
 
-                                topEnd = (Math.PI * (90 + dl2.rotation)) / 180
-                                topStart = (Math.PI * (90 + dl1.rotation)) / 180
+                                topEnd = (Math.PI * (90 + dl2.rotation)) / 180;
+                                topStart = (Math.PI * (90 + dl1.rotation)) / 180;
 
                                 context.beginPath();
                                 context.moveTo(centreX, centreY);
@@ -550,19 +549,19 @@ Item {
                                 );
 
                                 context.lineTo(centreX, centreY);
-                                context.fillStyle = root.innerColor
-                                context.fill()
+                                context.fillStyle = root.innerColor;
+                                context.fill();
                             }
                         }
                     }
                 }
 
                 Item {
-                    id: circleInner;
+                    id: circleInner
 
                     anchors {
-                        fill: parent;
-                        margins: gaugeHeight;
+                        fill: parent
+                        margins: gaugeHeight
                         centerIn: parent
                     }
                 }
@@ -570,8 +569,8 @@ Item {
                 Item {
                     id: gauge
                     anchors {
-                        fill: parent;
-                        margins: gaugeHeight * 0.1;
+                        fill: parent
+                        margins: gaugeHeight * 0.1
                     }
 
                     function getTLHY(value, min, max, k = 0.2) {
@@ -621,7 +620,6 @@ Item {
                         return Math.max(10, root.diameter * k);
                     }
 
-
                     /**
                       KG
                     */
@@ -629,8 +627,8 @@ Item {
                         id: kgGauge
 
                         anchors {
-                            fill: parent;
-                            margins: 0;
+                            fill: parent
+                            margins: 0
                         }
 
                         minimumValue: root.minMotorKg
@@ -664,7 +662,7 @@ Item {
                             */
                             tickmarkLabel:  Text {
                                 function getText() {
-                                    var val = root.prettyNumber(styleData.value, root.maxMotorKg > 1 ? 0 : 2)
+                                    var val = root.prettyNumber(styleData.value, root.maxMotorKg > 1 ? 0 : 2);
                                     return val + ((styleData.value === root.minMotorKg) ? 'kg' : '');
                                 }
 
@@ -672,7 +670,7 @@ Item {
                                 y: gauge.getTLHY(styleData.value, root.minMotorKg, root.maxMotorKg)
                                 x: gauge.getTLHX(styleData.value, root.minMotorKg, root.maxMotorKg)
                                 color: gauge.getTLColor(styleData.value, root.maxMotorKg)
-                                text: this.getText();
+                                text: this.getText()
                                 rotation: root.kgToAng(styleData.value)
                                 antialiasing: true
                                 font.family: root.ff
@@ -726,8 +724,8 @@ Item {
                         id: powerGauge
 
                         anchors {
-                            fill: parent;
-                            margins: 0;
+                            fill: parent
+                            margins: 0
                         }
 
                         minimumValue: root.minPower
@@ -802,8 +800,8 @@ Item {
                         id: speedMsGauge
 
                         anchors {
-                            fill: parent;
-                            margins: 0;
+                            fill: parent
+                            margins: 0
                         }
 
                         minimumValue: root.minSpeedMs
@@ -877,8 +875,8 @@ Item {
                         id: ropeMetersGauge
 
                         anchors {
-                            fill: parent;
-                            margins: 0;
+                            fill: parent
+                            margins: 0
                         }
 
                         minimumValue: root.minRopeMeters
@@ -945,7 +943,6 @@ Item {
                         }
                     }
                 }
-
 
                 /**
                   Values of ropeMeters and leftRopeMeters
@@ -1112,8 +1109,6 @@ Item {
             }
         }
 
-
-
         Rectangle {
             width: parent.width
             height: 200
@@ -1142,7 +1137,7 @@ Item {
                             value: root.ropeMeters
 
                             onValueChanged: {
-                                var res = ropeToAng(value)
+                                var res = ropeToAng(value);
                                 root.ropeMeters = value;
                             }
                         }
@@ -1160,7 +1155,7 @@ Item {
                             id: sliderSpeed
                             minimumValue: root.minSpeedMs
                             maximumValue: root.maxSpeedMs
-                            value: root.speedMs;
+                            value: root.speedMs
 
                             onValueChanged: {
                                 var res = speedToAng(value);
@@ -1184,7 +1179,7 @@ Item {
                             id: sliderKg
                             minimumValue: root.minMotorKg
                             maximumValue: root.maxMotorKg
-                            value: root.motorKg;
+                            value: root.motorKg
 
                             onValueChanged: {
                                 var res = kgToAng(value);
@@ -1205,7 +1200,7 @@ Item {
                             id: sliderPower
                             minimumValue: root.minPower
                             maximumValue: root.maxPower
-                            value: root.power;
+                            value: root.power
 
                             onValueChanged: {
                                 var res = powerToAng(value);

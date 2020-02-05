@@ -276,7 +276,6 @@ Page {
                 id: sGauge
                 debug: false
                 maxSpeedMs: 10
-                anchors.horizontalCenter: page.horizontalCenter
             }
 
             Connections {
