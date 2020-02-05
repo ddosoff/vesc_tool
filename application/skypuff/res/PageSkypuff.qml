@@ -89,7 +89,7 @@ Page {
             }
         }
 
-        // Rope
+        /*// Rope
         RowLayout {
             Layout.fillWidth: true
             Layout.topMargin: 20
@@ -204,7 +204,7 @@ Page {
                 to: 100
                 value: Skypuff.batteryPercents
             }
-        }
+        }*/
         RowLayout {
             Layout.topMargin: 20
 
@@ -212,16 +212,27 @@ Page {
             SkypuffGauge {
                 id: sGauge
 
-
                 motorMode: Skypuff.motorMode
 
-                motorKg: isNaN(Skypuff.motorKg) ? 0 : Math.abs(Skypuff.motorKg)
+                motorKg: 0
+                maxMotorKg: 0.5
+                debug: true
 
-                onMotorKgChanged: console.log(Skypuff.motorKg)
+
+                //onMotorKgChanged: console.log(Skypuff.motorKg)
                 Item {
                     Timer {
-                        interval: 500; running: true; repeat: true
-                        onTriggered: console.log(Skypuff.motorKg, typeof Skypuff.motorKg)
+                        interval: 3000; running: true; repeat: true
+                        onTriggered:  {
+                            function randomFloat(min, max) {
+                                return min + (max - min) * Math.random();
+                            }
+                            sGauge.motorKg = randomFloat(0, sGauge.maxMotorKg)
+                            sGauge.power = randomFloat(sGauge.minPower, sGauge.maxPower)
+                            sGauge.ropeMeters = randomFloat(sGauge.minRopeMeters, sGauge.maxRopeMeters)
+                            sGauge.speedMs = randomFloat(sGauge.minSpeedMs, sGauge.maxSpeedMs)
+                            //console.log(Skypuff.motorKg, typeof Skypuff.motorKg)
+                        }
                     }
                 }
 
@@ -252,8 +263,6 @@ Page {
                 pbPower.to = cfg.power_
     */
 
-
-                debug: false
             }
 
         }
@@ -518,8 +527,8 @@ Page {
             pullForce.stepSize = cfg.motor_max_kg / 30
             pullForce.value = cfg.pull_kg
 
-            sGauge.maxMotorKg = cfg.motor_max_kg / 30
-
+            //sGauge.maxMotorKg = cfg.motor_max_kg / 30
+            sGauge.maxMotorKg = 0.2
             pbMotor.to = cfg.motor_max_kg
             pbPower.to = cfg.power_max
         }

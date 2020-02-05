@@ -82,11 +82,18 @@ Rectangle {
 
     property bool debug: false
 
+    property int angK: 1000
 
 
 
     onMotorModeChanged: { console.log(root.motorMode) }
-    onMotorKgChanged: { console.log(root.motorKg) }
+    onMotorKgChanged: {
+        console.log(root.motorKg);
+        if (root.motorKg > root.maxMotorKg) {
+            console.log('motorKg > maxMotorKg !!!')
+        }
+
+    }
     onMaxMotorKgChanged: { console.log(root.maxMotorKg) }
 
     /********************
@@ -105,14 +112,23 @@ Rectangle {
             Gauge
     ********************/
     property real gaugeHeight: diameter * 0.09;
+
+    property bool enableAnimation: true
     property int animationDuration: 100
-    property int motorKgLabelStepSize: 30
-    property int powerLabelStepSize: 10
+    property int animationType: Easing.easeOutExpo
+
+    property real motorKgLabelStepSize: (maxMotorKg - minMotorKg) / 5
+    property real powerLabelStepSize: (maxPower - minPower) / 4
+
 
 
     function prettyNumber(number, tf = 1) {
         // TODO: need to check this number
         if (!number || !!isNaN(number)) return 0;
+
+        if (Math.abs(number) < 1 && number !== 0 && tf === 1) {
+            tf = 2;
+        }
 
         return number.toFixed(tf);
     }
@@ -176,10 +192,13 @@ Rectangle {
         return (dl2.rotation + diapAng) - (value + deltaForNegativeMinSpeed + deltaForPositiveMinSpeed) * delta;
     }
 
+
     /**
       Convert kg's value to angl
     */
     function kgToAng(value) {
+        // for little values
+        value = value * root.angK;
         var deltaForNegativeValue = root.minMotorKg < 0 ? Math.abs(root.minMotorKg) : 0;
         var deltaForPositiveValue = root.minMotorKg > 0 ? -1 * root.minMotorKg : 0;
 
@@ -187,7 +206,7 @@ Rectangle {
         var diapAng = 180 - (180 - (dl2.rotation - dl1.rotation));
 
         // Range of kg
-        var diapKg = root.maxMotorKg - root.minMotorKg;
+        var diapKg = (root.maxMotorKg - root.minMotorKg) * root.angK;
         var delta = diapAng / diapKg;
         var res =  (value + deltaForNegativeValue + deltaForPositiveValue);
 
@@ -222,10 +241,7 @@ Rectangle {
             height: diameter
 
             Component.onCompleted: {
-
                 console.log('motorKg: ' + prettyNumber(root.motorKg, 3), 'maxMotorKg: ' + prettyNumber(root.maxMotorKg, 3))
-
-
             }
 
             Rectangle {
@@ -277,53 +293,53 @@ Rectangle {
                     anchors.fill: parent
 
                     property real ropeStartAng: dl2.rotation
-                    property real ropeEndAng: ropeToAng(root.ropeMeters)
+                    property real ropeEndAng: ropeToAng(Math.min(root.ropeMeters, root.maxRopeMeters))
 
                     property real speedStartAng: speedToAng(0)
-                    property real speedEndAng: speedToAng(root.speedMs);
+                    property real speedEndAng: speedToAng(Math.min(root.speedMs, root.maxSpeedMs));
 
                     property real motorKgStartAng: dl1.rotation - 90
-                    property real motorKgEndAng: kgToAng(root.motorKg);
+                    property real motorKgEndAng: kgToAng(Math.min(root.motorKg, root.maxMotorKg));
 
                     property real powerStartAng: 0
-                    property real powerEndAng: powerToAng(root.power);
+                    property real powerEndAng: powerToAng(Math.min(root.power, root.maxPower));
 
                     // Animation
-                    /*Behavior on ropeEndAng {
-                           id: animationRopeEndAng
-                           enabled: true
-                           NumberAnimation {
-                               duration: root.animationDuration
-                               easing.type: Easing.InOutCubic
-                           }
-                        }
+                    Behavior on ropeEndAng {
+                       id: animationRopeEndAng
+                       enabled: root.enableAnimation
+                       NumberAnimation {
+                           duration: root.animationDuration
+                           easing.type: root.animationType
+                       }
+                    }
 
                     Behavior on speedEndAng {
                        id: animationSpeedEndAng
-                       enabled: true
+                       enabled: root.enableAnimation
                        NumberAnimation {
                            duration: root.animationDuration
-                           easing.type: Easing.InOutCubic
+                           easing.type: root.animationType
                        }
                     }
 
                     Behavior on motorKgEndAng {
                        id: animationMotorKgEndAng
-                       enabled: true
+                       enabled: root.enableAnimation
                        NumberAnimation {
                            duration: root.animationDuration
-                           easing.type: Easing.InOutCubic
+                           easing.type: root.animationType
                        }
                     }
 
                     Behavior on powerEndAng {
                        id: animationPowerEndAng
-                       enabled: true
+                       enabled: root.enableAnimation
                        NumberAnimation {
                            duration: root.animationDuration
-                           easing.type: Easing.InOutCubic
+                           easing.type: root.animationType
                        }
-                    }*/
+                    }
 
                     onRopeEndAngChanged: canvas.requestPaint()
                     onSpeedEndAngChanged: canvas.requestPaint()
@@ -392,7 +408,7 @@ Rectangle {
                                     baseLayer.radius,
                                     bottomStart,
                                     bottomEnd,
-                                    root.speedMs > 0
+                                    parent.speedEndAng < 180
                                 );
 
                                 context.globalCompositeOperation = 'source-atop';
@@ -435,7 +451,7 @@ Rectangle {
                                     baseLayer.radius - root.gaugeHeight * 0.4,
                                     rightStart,
                                     rightEnd,
-                                    root.power > 0
+                                    parent.powerEndAng < 0
                                 );
 
                                 context.lineWidth = root.gaugeHeight * 0.7
@@ -585,14 +601,20 @@ Rectangle {
                         maximumValue: root.maxMotorKg
                         value: root.motorKg
 
-
+                        Behavior on value {
+                           id: animationValueKg
+                           enabled: root.enableAnimation
+                           NumberAnimation {
+                               duration: root.animationDuration
+                               easing.type: root.animationType
+                           }
+                        }
 
                         style: CircularGaugeStyle {
                             minimumValueAngle: -dl2.rotation
                             maximumValueAngle: -dl1.rotation
-                            labelInset: root.gaugeHeight
+                            labelInset: root.gaugeHeight + root.gaugeHeight * 0.2
                             labelStepSize: root.motorKgLabelStepSize
-
 
                             /**
                               Center point
@@ -606,7 +628,8 @@ Rectangle {
                             */
                             tickmarkLabel:  Text {
                                 function getText() {
-                                    return styleData.value + ((styleData.value === root.minMotorKg) ? 'kg' : '');
+                                    var val = root.prettyNumber(styleData.value, root.maxMotorKg > 1 ? 0 : 2)
+                                    return val + ((styleData.value === root.minMotorKg) ? 'kg' : '');
                                 }
 
                                 font.pixelSize: gauge.getFontSize()
@@ -623,7 +646,15 @@ Rectangle {
                               Small tickmark
                             */
                             minorTickmark: Rectangle {
-                                visible: false
+                                antialiasing: true
+                                visible: root.maxMotorKg <= 50
+                                implicitWidth: outerRadius * ((styleData.value === root.maxMotorKg || styleData.value === root.minMotorKg)
+                                    ? 0.005
+                                    : 0.01)
+                                implicitHeight:  (styleData.value === root.maxMotorKg || styleData.value === root.minMotorKg)
+                                    ? root.gaugeHeight
+                                    : implicitWidth * (styleData.value % (root.motorKgLabelStepSize) ? 3 : 6)
+                                color: gauge.getTLColor(styleData.value, root.maxMotorKg)
                             }
 
                             /**
@@ -666,6 +697,15 @@ Rectangle {
                         minimumValue: root.minPower
                         maximumValue: root.maxPower
                         value: root.power
+
+                        Behavior on value {
+                           id: animationValuePower
+                           enabled: root.enableAnimation
+                           NumberAnimation {
+                               duration: root.animationDuration
+                               easing.type: root.animationType
+                           }
+                        }
 
                         style: CircularGaugeStyle {
                             minimumValueAngle: dl2.rotation
@@ -734,6 +774,15 @@ Rectangle {
                         maximumValue: root.maxSpeedMs
                         value: root.speedMs
 
+                        Behavior on value {
+                           id: animationValueSpeed
+                           enabled: root.enableAnimation
+                           NumberAnimation {
+                               duration: root.animationDuration
+                               easing.type: root.animationType
+                           }
+                        }
+
                         style: CircularGaugeStyle {
                             minimumValueAngle: root.speedToAng(root.minSpeedMs)
                             maximumValueAngle: root.speedToAng(root.maxSpeedMs)
@@ -799,6 +848,15 @@ Rectangle {
                         minimumValue: root.minRopeMeters
                         maximumValue: root.maxRopeMeters
                         value: root.ropeMeters
+
+                        Behavior on value {
+                           id: animationValueRope
+                           enabled: root.enableAnimation
+                           NumberAnimation {
+                               duration: root.animationDuration
+                               easing.type: root.animationType
+                           }
+                        }
 
                         style: CircularGaugeStyle {
                             minimumValueAngle: root.ropeToAng(root.minRopeMeters)
