@@ -47,12 +47,12 @@ Page {
             text: qsTr("Find Skypuff")
 
             Layout.fillWidth: true
-            Layout.topMargin: 30
-            Layout.bottomMargin: 20
+            Layout.topMargin: bBluetooth.size / 3
+            Layout.bottomMargin: bBluetooth.size / 4
 
             horizontalAlignment: Text.AlignHCenter
 
-            font.pointSize: 32
+            font.pixelSize: bBluetooth.size / 3
             font.bold: true
         }
 
