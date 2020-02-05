@@ -462,6 +462,7 @@ Item {
                                     'black'
                                 );
 
+                                motoKgTxt1.color = motoKgTxt2.color = kgColors.textColor;
                                 context.strokeStyle = kgColors.color;
                                 context.stroke();
 
@@ -1053,6 +1054,7 @@ Item {
                     spacing: 5
 
                     Text {
+                        id: motoKgTxt1
                         text: root.prettyNumber(root.motorKg)
                         font.pixelSize: Math.max(10, root.diameter * 0.055)
                         font.family: root.ff
@@ -1060,6 +1062,7 @@ Item {
                     }
 
                     Text {
+                        id: motoKgTxt2
                         text: 'kg'
                         opacity: 0.8
                         font.pixelSize: Math.max(10, root.diameter * 0.055)
