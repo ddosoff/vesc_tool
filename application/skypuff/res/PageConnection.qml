@@ -2,6 +2,7 @@ import QtQuick 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 import QtQuick.Controls.Material 2.12
+import QtGraphicalEffects 1.0
 
 import Vedder.vesc.vescinterface 1.0
 import Vedder.vesc.bleuart 1.0
@@ -41,22 +42,23 @@ Page {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 10
 
         Label {
             text: qsTr("Find Skypuff")
 
             Layout.fillWidth: true
+            Layout.topMargin: 30
+            Layout.bottomMargin: 20
+
             horizontalAlignment: Text.AlignHCenter
-            font.pointSize: 16
+
+            font.pointSize: 32
             font.bold: true
-            Layout.topMargin: 15
         }
 
         // Methods buttons
         RowLayout {
             Layout.fillWidth: true
-            Layout.topMargin: 10
 
             Item {
                 Layout.fillWidth: true
@@ -66,7 +68,14 @@ Page {
                 id: bBluetooth
                 icon.source: "qrc:/res/icons/bluetooth.svg"
                 Material.foreground: Material.Blue
-                onClicked: bBluetooth.busy = !bBluetooth.busy
+                onClicked: {
+                    if(!busy) {
+                        listModel.clearByType('bt')
+                        mBle.startScan()
+                        busy = true;
+                    }
+                }
+                Component.onCompleted: clicked()
             }
 
             BigRoundButton {
@@ -96,83 +105,153 @@ Page {
             id: listView
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.leftMargin: 20
             Layout.topMargin: 20
             ScrollBar.vertical: ScrollBar {}
+            clip: true
+            //highlightFollowsCurrentItem: false
+            //focus: true
 
             delegate: Item {
                 id: delegateItem
                 width: listView.width
                 clip: true
-                Text {
-                    id: tW
+                /*Rectangle {
                     anchors.fill: parent
-                    horizontalAlignment: Text.AlignHCenter
-                    text: addr
-                    //x: listView.width / 2 - 200 / 2
-                }
-                // indent the item if it is the current item
-                states: State {
-                    name: "Current"
-                    when: delegateItem.ListView.isCurrentItem
-                    PropertyChanges { target: tW; x: 20; font.bold: true }
-                }
-                /*transitions: Transition {
-                    NumberAnimation { properties: "x"; duration: 200 }
+                    color: "#aaddaa"
+                    visible: isVesc
                 }*/
+
+                Image {
+                    id: connectionType
+                    anchors {
+                        left: parent.left
+                        leftMargin: 5
+                        verticalCenter: parent.verticalCenter
+                    }
+
+                    smooth: true
+
+                    source: type === "bt" ? "qrc:/res/icons/bluetooth.svg" :
+                            type === "usb" ? "qrc:/res/icons/usb.svg" :
+                            "qrc:/res/icons/wifi.svg"
+
+                    sourceSize.width: type === "bt" ? bBluetooth.icon.width :
+                                      type === "usb" ? bUsb.icon.width :
+                                      bWifi.icon.width
+                    sourceSize.height: type === "bt" ? bBluetooth.icon.height :
+                                                       type === "usb" ? bUsb.icon.height :
+                                                       bWifi.icon.height
+
+                    visible: false
+
+                }
+                ColorOverlay {
+                    anchors.fill: connectionType
+                    source: connectionType
+                    color: Material.color(Material.Blue)
+
+                    RotationAnimation on rotation {
+                        id: connectionTypeRotator
+                        from: 0;
+                        to: 360;
+                        duration: 1100
+                        running: false
+                    }
+                }
+
+                Text {
+                    anchors {
+                        left: connectionType.right
+                        leftMargin: 10
+                        verticalCenter: parent.verticalCenter;
+                    }
+                    id: tName
+                    text: name
+                    font.pixelSize: 15
+                }
+
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: delegateItem.ListView.view.currentIndex = index
+                    onClicked: connectionTypeRotator.running = true
                 }
 
                 ListView.onAdd: SequentialAnimation {
                     PropertyAction { target: delegateItem; property: "height"; value: 0 }
-                    NumberAnimation { target: delegateItem; property: "height"; to: tW.implicitHeight * 2; duration: 400; easing.type: Easing.InOutQuad }
+                    NumberAnimation { target: delegateItem; property: "height"; to: tName.contentHeight + 20; duration: 700; easing.type: Easing.InOutQuad }
                 }
             }
 
             model: ListModel {
                 id: listModel
-            }
-            highlight: Rectangle {
-                width: 180; height: 20
-                color: "lightsteelblue"; radius: 5
-                y: listView.currentItem ? listView.currentItem.y : 0
-                Behavior on y {
-                    SpringAnimation {
-                        spring: 3
-                        damping: 0.2
+
+                function find(type, addr) {
+                    for(var i = 0; i < count; i++) {
+                        var e = get(i);
+                        if(e.addr === addr && e.type === type)
+                            return i
+                    }
+                    return -1
+                }
+
+                function clearByType(t) {
+                    for(var i = 0; i < count; i++) {
+                        var e = get(i);
+                        if(e.type === t) {
+                            remove(i)
+                            i--
+                        }
                     }
                 }
             }
-            clip: true
-            highlightFollowsCurrentItem: false
-            focus: true
 
-            Component.onCompleted: {
-                listModel.append({addr: "bt://45.32.34.54.34.43"})
-                listModel.append({addr: "bt://15.52.24.24.65.34"})
-                listModel.append({addr: "usb://ttyACME0"})
-                listModel.append({addr: "tcp://234.32.123.64"})
-                listView.currentIndex = -1
-            }
         }
     }
+
+    /*footer: Label {
+        verticalAlignment: Text.AlignVCenter;
+        x: 5;
+        height: contentHeight + 8
+        text: qsTr("Not connected")
+    }*/
+
+    // Bluetooth
+    Connections {
+        target: mBle
+
+
+        onScanDone: {
+            if (done) {
+                bBluetooth.busy = false
+            }
+
+            for (var addr in devs) {
+                if(listModel.find("bt", addr) !== -1) {
+                    // TODO: replace
+                    continue
+                }
+
+                var name = devs[addr]
+                var name2 = name + " [" + addr + "]"
+                var setName = VescIf.getBleName(addr)
+                if (setName.length > 0) {
+                    setName += " [" + addr + "]"
+                    listModel.insert(0, {type: "bt", name: setName, addr: addr, isVesc: true})
+                } else if (name.indexOf("VESC") !== -1) {
+                    listModel.insert(0, {type: "bt", name: name2, addr: addr, isVesc: true})
+                } else {
+                    listModel.append({type: "bt", name: name2, addr: addr, isVesc: false})
+                }
+            }
+        }
+
+        onBleError: {
+            VescIf.emitMessageDialog("BLE Error", info, false, false)
+        }
+    }
+
 }
 
         /*
-        Button {
-            text: "Add"
-
-            onClicked: {
-                listModel.append({addr: Math.random()})
-                listView.currentIndex = -1
-            }
-        }
-
-        Label {
-            text: "Index: %1".arg(listView.currentIndex)
-        }
 
         GroupBox {
             title: qsTr("Bluetooth")
