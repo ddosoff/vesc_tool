@@ -22,6 +22,7 @@ QT += network
 QT += printsupport
 QT += quick
 QT += multimedia
+QT += svg
 
 TARGET = application
 TEMPLATE = app

@@ -35,7 +35,7 @@ RoundButton {
             properties: "opacity"; duration: 2000;
             from: 0.4
             to: 0
-            onFinished: busyIndicator.running = false
+            onFinished: {busyIndicator.running = false; control.enabled = true }
         }
 
         states: [
@@ -45,6 +45,11 @@ RoundButton {
                     target: busyIndicator;
                     restoreEntryValues: false
                     running: true
+                }
+                PropertyChanges {
+                    target: control;
+                    restoreEntryValues: false
+                    enabled: false
                 }
                 PropertyChanges {
                     target: busyOn;
