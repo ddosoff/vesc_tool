@@ -11,22 +11,13 @@ import QtQuick.Controls.Material 2.12
 import QtGraphicalEffects 1.0;
 import QtQuick.Layouts 1.1
 
-import QtQuick 2.12
 
-import QtQuick.Layouts 1.12
-import QtQuick.Controls.Material 2.12
 
-import SkyPuff.vesc.winch 1.0
-
-Rectangle {
+Item {
     id:root
-    anchors.fill: parent
+    SystemPalette {id: systemPalette; colorGroup: SystemPalette.Active}
 
-    /********************
-            Params
-    ********************/
     property real speedMs: 0
-
     property real maxSpeedMs: 30
     property real minSpeedMs: maxSpeedMs * -1
 
@@ -41,7 +32,7 @@ Rectangle {
 
     property real motorKg
     property real minMotorKg: 0
-    property real maxMotorKg
+    property real maxMotorKg: 15
 
     property real tempFets: 0
     property real tempMotor: 0
@@ -50,51 +41,51 @@ Rectangle {
     property real whIn: 0
     property real whOut: 0
 
-    property string motorMode: ''
-
-    /*speedMs: Skypuff.speedMs
-    ropeMeters: Skypuff.drawnMeters
-    leftRopeMeters: Skypuff.leftMeters
-    power: Skypuff.power
-    motorKg: Skypuff.motorKg
-    motorMode: Skypuff.motorMode/
+    property string motorMode: 'Not Connected'
 
     /********************
             Colors
     ********************/
 
-    property real baseOpacity: 0.4 // Opacity is superimposed on all colors of the scale.
-    property string gaugeColor: '#C7CFD9'
-    property string ropeColor: '#795548'
-    property string motorKgColor: 'orange'
-
-    property string powerColor: '#009688'
-    property string powerDangerColor: 'red'
-    property real powerDangerColorPercent: 0.8
-
-    property string speedColor: '#673AB7'
-    property string speedDangerColor: 'red'
-    property real speedDangerColorPercent: 0.8
+    property real baseOpacity: 0.4  // Opacity is superimposed on all colors of the scale.
     property string innerColor: '#efeded'
-
-    property string gaugeAlarmFontColor: '#8e1616'
+    property string gaugeDangerFontColor: '#8e1616' // Color of danger ranges
     property string gaugeFontColor: '#515151'
+    property string gaugeColor: '#C7CFD9'
 
-    property bool debug: false
+    // Default for all scales
+    property string warningColor: '#FF5722'
+    property string dangerColor: 'red'
+    property real warningColorPercent: 0.70
+    property real dangerColorPercent: 0.85
 
-    property int angK: 1000
+    // Rope
+    property string ropeColor: '#9C27B0'
+    property string ropeWarningColor: root.warningColor
+    property string ropeDangerColor: root.dangerColor
+    property real ropeWarningColorPercent: root.warningColorPercent
+    property real ropeDangerColorPercent: root.dangerColorPercent
 
+    // MotorKg
+    property string motorKgColor: '#3F51B5'
+    property string motorKgWarningColor: root.warningColor
+    property string motorKgDangerColor: root.dangerColor
+    property real motorKgWarningColorPercent: root.warningColorPercent
+    property real motorKgDangerColorPercent: root.dangerColorPercent
 
+    // Power
+    property string powerColor: '#009688'
+    property string powerWarningColor: root.warningColor
+    property string powerDangerColor: root.dangerColor
+    property real powerWarningColorPercent: root.warningColorPercent
+    property real powerDangerColorPercent: root.dangerColorPercent
 
-    onMotorModeChanged: { console.log(root.motorMode) }
-    onMotorKgChanged: {
-        console.log(root.motorKg);
-        if (root.motorKg > root.maxMotorKg) {
-            console.log('motorKg > maxMotorKg !!!')
-        }
-
-    }
-    onMaxMotorKgChanged: { console.log(root.maxMotorKg) }
+    // Speed
+    property string speedColor: '#2196F3'
+    property string speedWarningColor: root.warningColor
+    property string speedDangerColor: root.dangerColor
+    property real speedWarningColorPercent: root.warningColorPercent
+    property real speedDangerColorPercent: root.dangerColorPercent
 
     /********************
         Default view
@@ -112,7 +103,7 @@ Rectangle {
             Gauge
     ********************/
     property real gaugeHeight: diameter * 0.09;
-
+    property bool boldValues: false
     property bool enableAnimation: true
     property int animationDuration: 100
     property int animationType: Easing.easeOutExpo
@@ -120,6 +111,11 @@ Rectangle {
     property real motorKgLabelStepSize: (maxMotorKg - minMotorKg) / 5
     property real powerLabelStepSize: (maxPower - minPower) / 4
 
+    /********************
+         Do not touch
+    ********************/
+    property bool debug: false
+    property int angK: 1000
 
 
     function prettyNumber(number, tf = 1) {
@@ -133,29 +129,12 @@ Rectangle {
         return number.toFixed(tf);
     }
 
-
-
-    function showStatsInConsole() {
-        console.log(qsTr('MotorMode: %1').arg(motorMode));
-        console.log(qsTr('Power: %1w').arg(power));
-        console.log(qsTr('SpeedMs: %1ms').arg(speedMs));
-        console.log(qsTr('RopeMeters %1m, leftMeters: %2m')
-                    .arg(ropeMeters)
-                    .arg(leftRopeMeters));
-        console.log(qsTr('TempFets %1C, TempMotor: %2C, TempBat: %3C')
-                    .arg(tempFets)
-                    .arg(tempMotor)
-                    .arg(tempBat));
-        console.log(qsTr('WhIn %1, WhOut: %2')
-                    .arg(whIn)
-                    .arg(whOut));
-    }
-
     /**
       Convert rope's value to angl
       180 - (125 - 55) = 110. Working range with default diagLAnc
     */
     function ropeToAng(value) {
+        value = value * root.angK
         // If the scale starts with a negative value
         var deltaForNegativeMinRope = root.minRopeMeters < 0 ? Math.abs(root.minRopeMeters) : 0;
 
@@ -163,10 +142,10 @@ Rectangle {
         var deltaForPositiveMinRope = root.minRopeMeters > 0 ? -1 * root.minRopeMeters : 0;
 
         // Working range of top bar
-        var diapAng = 180 - (dl2.rotation - dl1.rotation);
+        var diapAng = 180 - (dl2.rotation - dl1.rotation) ;
 
         // Range of rope
-        var diapRope = root.maxRopeMeters - root.minRopeMeters;
+        var diapRope = (root.maxRopeMeters - root.minRopeMeters) * root.angK;
         var delta = diapAng / diapRope;
 
         var res = (value + deltaForNegativeMinRope + deltaForPositiveMinRope) * delta;
@@ -240,14 +219,10 @@ Rectangle {
             width: diameter
             height: diameter
 
-            Component.onCompleted: {
-                console.log('motorKg: ' + prettyNumber(root.motorKg, 3), 'maxMotorKg: ' + prettyNumber(root.maxMotorKg, 3))
-            }
+            Component.onCompleted: {}
 
             Rectangle {
                 id: baseLayer
-
-                anchors.fill: parent
                 width: root.diameter
                 height: root.diameter
                 radius: root.diameter / 2
@@ -346,6 +321,22 @@ Rectangle {
                     onMotorKgEndAngChanged: canvas.requestPaint()
                     onPowerEndAngChanged: canvas.requestPaint()
 
+                    function getColors(value, min, max, wcp, dcp, wc, dc, c, tc) {
+                        var warningZone = wcp * max;
+                        var dangerZone = dcp * max;
+
+                        var color = c;
+                        var textColor = tc;
+
+                        if (Math.abs(value) >= warningZone && Math.abs(value) < dangerZone) {
+                            textColor = color = wc;
+                        } else if (Math.abs(value) >= dangerZone) {
+                            textColor = color = dc;
+                        }
+
+                        return { color, textColor };
+                    }
+
                     Canvas {
                         id: canvas
                         opacity: root.baseOpacity;
@@ -393,7 +384,20 @@ Rectangle {
 
                                 context.globalCompositeOperation = 'source-atop';
                                 context.lineWidth = 200
-                                context.strokeStyle = root.ropeColor
+
+                                var ropeColors = parent.getColors(
+                                    root.ropeMeters,
+                                    root.minRopeMeters,
+                                    root.maxRopeMeters,
+                                    root.ropeWarningColorPercent,
+                                    root.ropeDangerColorPercent,
+                                    root.ropeWarningColor,
+                                    root.ropeDangerColor,
+                                    root.ropeColor,
+                                    'black'
+                                );
+
+                                context.strokeStyle = ropeColors.color;
                                 context.stroke();
 
                                 /********** Bottom ***********/
@@ -413,11 +417,20 @@ Rectangle {
 
                                 context.globalCompositeOperation = 'source-atop';
                                 context.lineWidth = 200;
-                                context.strokeStyle =
-                                    (root.speedMs < root.maxSpeedMs * root.speedDangerColorPercent
-                                    && root.speedMs > root.minSpeedMs * root.speedDangerColorPercent)
-                                        ? root.speedColor
-                                        : root.speedDangerColor;
+
+                                var speedColors = parent.getColors(
+                                    root.speedMs,
+                                    root.minSpeedMs,
+                                    root.maxSpeedMs,
+                                    root.speedWarningColorPercent,
+                                    root.speedDangerColorPercent,
+                                    root.speedWarningColor,
+                                    root.speedDangerColor,
+                                    root.speedColor,
+                                    'black'
+                                );
+
+                                context.strokeStyle = speedColors.color;
                                 context.stroke();
 
                                 /********** Left ***********/
@@ -436,7 +449,20 @@ Rectangle {
                                 );
 
                                 context.lineWidth = root.gaugeHeight * 0.7
-                                context.strokeStyle = root.motorKgColor;
+
+                                var kgColors = parent.getColors(
+                                    root.motorKg,
+                                    root.minMotorKg,
+                                    root.maxMotorKg,
+                                    root.motorKgWarningColorPercent,
+                                    root.motorKgDangerColorPercent,
+                                    root.motorKgWarningColor,
+                                    root.motorKgDangerColor,
+                                    root.motorKgColor,
+                                    'black'
+                                );
+
+                                context.strokeStyle = kgColors.color;
                                 context.stroke();
 
                                 /********** Right ***********/
@@ -455,12 +481,22 @@ Rectangle {
                                 );
 
                                 context.lineWidth = root.gaugeHeight * 0.7
-                                context.strokeStyle =
-                                    (root.power < root.maxPower * root.powerDangerColorPercent
-                                    && root.power > root.minPower * root.powerDangerColorPercent)
-                                        ? root.powerColor
-                                        : root.powerDangerColor;
-                                context.stroke()
+
+                                var powerColors = parent.getColors(
+                                    root.power,
+                                    root.minPower,
+                                    root.maxPower,
+                                    root.powerWarningColorPercent,
+                                    root.powerDangerColorPercent,
+                                    root.powerWarningColor,
+                                    root.powerDangerColor,
+                                    root.powerColor,
+                                    'black'
+                                );
+
+                                powerTxt2.color = powerTxt1.color = powerColors.textColor;
+                                context.strokeStyle = powerColors.color;
+                                context.stroke();
                             }
                         }
                         onWidthChanged:  { requestPaint (); }
@@ -577,7 +613,7 @@ Rectangle {
                     // k - percentage of the scale that is marked in red
                     function getTLColor(value, max, k = 20) {
                         return value >= (max - (max * k / 100))
-                                ? root.gaugeAlarmFontColor
+                                ? root.gaugeDangerFontColor
                                 : root.gaugeFontColor;
                     }
 
@@ -613,7 +649,7 @@ Rectangle {
                         style: CircularGaugeStyle {
                             minimumValueAngle: -dl2.rotation
                             maximumValueAngle: -dl1.rotation
-                            labelInset: root.gaugeHeight + root.gaugeHeight * 0.2
+                            labelInset: root.gaugeHeight
                             labelStepSize: root.motorKgLabelStepSize
 
                             /**
@@ -917,7 +953,7 @@ Rectangle {
                 Column {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
-                    anchors.topMargin: root.gaugeHeight / 2 - root.gaugeHeight * 0.45
+                    anchors.topMargin: root.gaugeHeight / 2 - root.gaugeHeight * 0.3
                     spacing: 2
                     width: Math.max(textLeftRopeMeters.width, ropeMeters.width)
 
@@ -933,12 +969,14 @@ Rectangle {
                                   : root.prettyNumber(root.leftRopeMeters)
                             font.pixelSize: Math.max(10, root.diameter * 0.04)
                             font.family: root.ff
+                            font.bold: root.boldValues
                         }
 
                         Text {
                             text: 'm'
                             font.pixelSize: Math.max(10, root.diameter * 0.04)
                             font.family: root.ff
+                            font.bold: root.boldValues
                         }
                     }
 
@@ -959,12 +997,14 @@ Rectangle {
                             text: root.prettyNumber(root.ropeMeters)
                             font.pixelSize: Math.max(10, root.diameter * 0.04)
                             font.family: root.ff
+                            font.bold: root.boldValues
                         }
 
                         Text {
                             text: 'm'
                             font.pixelSize: Math.max(10, root.diameter * 0.04)
                             font.family: root.ff
+                            font.bold: root.boldValues
                         }
                     }
                 }
@@ -982,12 +1022,14 @@ Rectangle {
                         text: root.prettyNumber(root.speedMs)
                         font.pixelSize: Math.max(10, root.diameter * 0.04)
                         font.family: root.ff
+                        font.bold: root.boldValues
                     }
 
                     Text {
                         text: 'ms'
                         font.pixelSize: Math.max(10, root.diameter * 0.04)
                         font.family: root.ff
+                        font.bold: root.boldValues
                     }
                 }
 
@@ -1000,9 +1042,8 @@ Rectangle {
 
                     anchors.top: parent.top
                     anchors.topMargin: root.gaugeHeight * 2.4
-                    font.pixelSize: Math.max(10, root.diameter * 0.045)
+                    font.pixelSize: Math.max(10, root.diameter * 0.055)
                     font.family: root.ff
-
                 }
 
                 /**
@@ -1018,6 +1059,7 @@ Rectangle {
                         text: root.prettyNumber(root.motorKg)
                         font.pixelSize: Math.max(10, root.diameter * 0.055)
                         font.family: root.ff
+                        font.bold: root.boldValues
                     }
 
                     Text {
@@ -1025,6 +1067,7 @@ Rectangle {
                         opacity: 0.8
                         font.pixelSize: Math.max(10, root.diameter * 0.055)
                         font.family: root.ff
+                        font.bold: root.boldValues
                     }
                 }
 
@@ -1038,16 +1081,20 @@ Rectangle {
                     spacing: 5
 
                     Text {
+                        id: powerTxt1
                         text: root.prettyNumber(root.power, 1)
                         font.pixelSize: Math.max(10, root.diameter * 0.055)
                         font.family: root.ff
+                        font.bold: root.boldValues
                     }
 
                     Text {
+                        id: powerTxt2
                         text: 'kw'
                         opacity: 0.8
                         font.pixelSize: Math.max(10, root.diameter * 0.055)
                         font.family: root.ff
+                        font.bold: root.boldValues
                     }
                 }
 
