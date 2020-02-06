@@ -11,7 +11,6 @@
         <file>res/sounds/Overvoltage.mp3</file>
         <file>res/sounds/Alert.mp3</file>
         <file>res/SkypuffGauge.qml</file>
-        <file>res/PageTest.qml</file>
         <file>res/sounds/Battery charged too high.mp3</file>
         <file>res/sounds/Battery temperature.mp3</file>
         <file>res/sounds/Controller temperature.mp3</file>
