@@ -819,3 +819,27 @@ void Skypuff::setStatus(const QString& mcuStatus)
 
     emit statusChanged(s);
 }
+
+QVariantList Skypuff::serialPortsToQml()
+{
+    QVariantList res;
+    QVariantMap v;
+
+    auto ports = vesc->listSerialPorts();
+    for(auto it = ports.constBegin(); it != ports.constEnd(); it++) {
+        if((*it).name.isEmpty())
+            v["name"] = (*it).systemPath;
+        else
+            v["name"] = (*it).name + " [ " + (*it).systemPath + " ]";
+        v["addr"] = (*it).systemPath;
+        v["isVesc"] = (*it).isVesc;
+        res.append(v);
+    }
+
+    return res;
+}
+
+bool Skypuff::connectSerial(QString port, int baudrate)
+{
+    return vesc->connectSerial(port, baudrate);
+}

@@ -9,6 +9,8 @@ import Vedder.vesc.bleuart 1.0
 import Vedder.vesc.commands 1.0
 import Vedder.vesc.configparams 1.0
 
+import SkyPuff.vesc.winch 1.0
+
 Page {
     id: page
     property BleUart mBle: VescIf.bleDevice()
@@ -126,6 +128,19 @@ Page {
                 icon.source: "qrc:/res/icons/usb.svg"
                 iconPercent: 40
                 Material.foreground: Material.Teal
+
+                onClicked: {
+                    listModel.clearByType('usb')
+                    var ports = Skypuff.serialPortsToQml();
+                    for(var i = 0; i < ports.length; i++) {
+                        if(ports[i].isVesc) {
+                            listModel.insert(0, {type: "usb", name: ports[i].name, addr: ports[i].addr, isVesc: true})
+                        } else {
+                            listModel.append({type: "usb", name: ports[i].name, addr: ports[i].addr, isVesc: false})
+                        }
+                    }
+                }
+                Component.onCompleted: clicked()
             }
             BigRoundButton {
                 id: bWifi
@@ -164,6 +179,8 @@ Page {
                     visible: isVesc
                 }*/
 
+                opacity: isVesc ? 1 : 0.4
+
                 Image {
                     id: connectionType
                     anchors {
@@ -178,12 +195,8 @@ Page {
                             type === "usb" ? "qrc:/res/icons/usb.svg" :
                             "qrc:/res/icons/wifi.svg"
 
-                    sourceSize.width: type === "bt" ? bBluetooth.icon.width :
-                                      type === "usb" ? bUsb.icon.width :
-                                      bWifi.icon.width
-                    sourceSize.height: type === "bt" ? bBluetooth.icon.height :
-                                                       type === "usb" ? bUsb.icon.height :
-                                                       bWifi.icon.height
+                    sourceSize.width: bUsb.icon.width
+                    sourceSize.height: bBluetooth.icon.height
 
                     visible: false
 
@@ -191,7 +204,9 @@ Page {
                 ColorOverlay {
                     anchors.fill: connectionType
                     source: connectionType
-                    color: Material.color(Material.Blue)
+                    color: type === "bt" ? Material.color(Material.Blue) :
+                           type === "usb" ? Material.color(Material.Teal) :
+                                            Material.Indigo
 
                     RotationAnimator on rotation {
                         id: connectionAnime
@@ -222,6 +237,9 @@ Page {
                         switch(type) {
                         case 'bt':
                             VescIf.connectBle(addr)
+                            break
+                        case 'usb':
+                            Skypuff.connectSerial(addr)
                             break
                         default:
                             console.log('Connection type', type, 'not implemented')
