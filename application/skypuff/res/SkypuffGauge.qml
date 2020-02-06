@@ -110,7 +110,7 @@ Item {
     property int animationDuration: 100
     property int animationType: Easing.OutExpo
 
-    property real motorKgLabelStepSize: (maxMotorKg - minMotorKg) / 5
+    property real motorKgLabelStepSize: 5
     property real powerLabelStepSize: (maxPower - minPower) / 4
 
     /********************
@@ -118,6 +118,16 @@ Item {
     ********************/
     property bool debug: false
     property int angK: 1000
+
+    onMaxMotorKgChanged: {
+        root.maxMotorKg = Math.ceil(parseInt(root.maxMotorKg, 10) / 10) * 10;
+        if (root.maxMotorKg > 20) {
+            var  k = 10000 % root.maxMotorKg === 0 && root.maxMotorKg <= 50 ? 10 : 5;
+            root.motorKgLabelStepSize = Math.ceil(parseInt(root.maxMotorKg, 10) / k / 10 ) * 10;
+        } else {
+            root.motorKgLabelStepSize = root.maxMotorKg / 5;
+        }
+    }
 
 
     function prettyNumber(number, tf = 1) {
@@ -270,7 +280,7 @@ Item {
                     anchors.fill: parent
 
                     property real ropeStartAng: dl2.rotation
-                    property real ropeEndAng: ropeToAng(Math.min(root.ropeMeters, root.maxRopeMeters))
+                    property real ropeEndAng: ropeToAng(Math.max(root.maxRopeMeters - root.ropeMeters, root.minRopeMeters))
 
                     property real speedStartAng: speedToAng(0)
                     property real speedEndAng: speedToAng(Math.min(root.speedMs, root.maxSpeedMs));
@@ -964,9 +974,7 @@ Item {
                         id: textLeftRopeMeters
 
                         Text {
-                            text: isNaN(root.leftRopeMeters)
-                                  ? root.maxRopeMeters
-                                  : root.prettyNumber(root.leftRopeMeters)
+                            text: root.prettyNumber(root.leftRopeMeters)
                             font.pixelSize: Math.max(10, root.diameter * 0.04)
                             font.family: root.ff
                             font.bold: root.boldValues
@@ -1189,6 +1197,36 @@ Item {
                             onValueChanged: {
                                 var res = kgToAng(value);
                                 root.motorKg = value;
+                            }
+                        }
+                    }
+
+                    Column {
+                        spacing: 5
+
+                        Text {
+                            text: 'MaxKg'
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        Slider {
+
+                            minimumValue: 0
+                            maximumValue: 200
+                            value: root.maxMotorKg
+
+                            onValueChanged: {
+                                root.maxMotorKg = value;
+                            }
+                        }
+                        Slider {
+
+                            minimumValue: 1
+                            maximumValue: 20
+                            value: root.motorKgLabelStepSize
+
+                            onValueChanged: {
+                                root.motorKgLabelStepSize = value;
                             }
                         }
                     }
