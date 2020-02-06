@@ -9,6 +9,8 @@ import Vedder.vesc.bleuart 1.0
 import Vedder.vesc.commands 1.0
 import Vedder.vesc.configparams 1.0
 
+import SkyPuff.vesc.winch 1.0
+
 Page {
     id: page
     property BleUart mBle: VescIf.bleDevice()
@@ -33,6 +35,50 @@ Page {
             disconnectButton.enabled = false
             statusMessage.text = qsTr("Not connected")
             statusMessage.color = "red"
+        }
+    }
+
+    Dialog {
+        id: vescDialog
+        standardButtons: Dialog.Ok
+        modal: true
+        focus: true
+        closePolicy: Popup.CloseOnEscape
+
+        width: parent.width - 20
+        height: Math.min(implicitHeight, parent.height - 40)
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        parent: ApplicationWindow.overlay
+
+        ScrollView {
+            anchors.fill: parent
+            clip: true
+            contentWidth: parent.width - 20
+
+            Text {
+                id: vescDialogLabel
+                linkColor: "lightblue"
+                verticalAlignment: Text.AlignVCenter
+                anchors.fill: parent
+                wrapMode: Text.WordWrap
+                textFormat: Text.RichText
+                onLinkActivated: {
+                    Qt.openUrlExternally(link)
+                }
+            }
+        }
+
+        Connections {
+            target: VescIf
+
+            // Display modal dialog with errors from VESC interface
+            onMessageDialog: {
+                vescDialog.title = title
+                vescDialogLabel.text = (richText ? "<style>a:link { color: lightblue; }</style>" : "") + msg
+                vescDialogLabel.textFormat = richText ? Text.RichText : Text.AutoText
+                vescDialog.open()
+            }
         }
     }
 
@@ -63,7 +109,6 @@ Page {
             Item {
                 Layout.fillWidth: true
             }
-
             BigRoundButton {
                 id: bBluetooth
                 icon.source: "qrc:/res/icons/bluetooth.svg"
@@ -77,13 +122,25 @@ Page {
                 }
                 Component.onCompleted: clicked()
             }
-
             BigRoundButton {
                 id: bUsb
                 //Layout.margins: parent.width / 20
                 icon.source: "qrc:/res/icons/usb.svg"
                 iconPercent: 40
                 Material.foreground: Material.Teal
+
+                onClicked: {
+                    listModel.clearByType('usb')
+                    var ports = Skypuff.serialPortsToQml();
+                    for(var i = 0; i < ports.length; i++) {
+                        if(ports[i].isVesc) {
+                            listModel.insert(0, {type: "usb", name: ports[i].name, addr: ports[i].addr, isVesc: true})
+                        } else {
+                            listModel.append({type: "usb", name: ports[i].name, addr: ports[i].addr, isVesc: false})
+                        }
+                    }
+                }
+                Component.onCompleted: clicked()
             }
             BigRoundButton {
                 id: bWifi
@@ -94,6 +151,7 @@ Page {
                 Layout.fillWidth: true
             }
 
+            // To prevent binding loop
             Component.onCompleted: {
                 bBluetooth.size = page.width / 4
                 bUsb.size = bBluetooth.size
@@ -121,6 +179,8 @@ Page {
                     visible: isVesc
                 }*/
 
+                opacity: isVesc ? 1 : 0.4
+
                 Image {
                     id: connectionType
                     anchors {
@@ -135,12 +195,8 @@ Page {
                             type === "usb" ? "qrc:/res/icons/usb.svg" :
                             "qrc:/res/icons/wifi.svg"
 
-                    sourceSize.width: type === "bt" ? bBluetooth.icon.width :
-                                      type === "usb" ? bUsb.icon.width :
-                                      bWifi.icon.width
-                    sourceSize.height: type === "bt" ? bBluetooth.icon.height :
-                                                       type === "usb" ? bUsb.icon.height :
-                                                       bWifi.icon.height
+                    sourceSize.width: bUsb.icon.width
+                    sourceSize.height: bBluetooth.icon.height
 
                     visible: false
 
@@ -148,14 +204,17 @@ Page {
                 ColorOverlay {
                     anchors.fill: connectionType
                     source: connectionType
-                    color: Material.color(Material.Blue)
+                    color: type === "bt" ? Material.color(Material.Blue) :
+                           type === "usb" ? Material.color(Material.Teal) :
+                                            Material.Indigo
 
-                    RotationAnimation on rotation {
-                        id: connectionTypeRotator
+                    RotationAnimator on rotation {
+                        id: connectionAnime
                         from: 0;
                         to: 360;
                         duration: 1100
                         running: false
+                        easing.type: Easing.InQuad
                     }
                 }
 
@@ -172,12 +231,25 @@ Page {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: connectionTypeRotator.running = true
+                    onClicked: {
+                        connectionAnime.running = true
+
+                        switch(type) {
+                        case 'bt':
+                            VescIf.connectBle(addr)
+                            break
+                        case 'usb':
+                            Skypuff.connectSerial(addr)
+                            break
+                        default:
+                            console.log('Connection type', type, 'not implemented')
+                        }
+                    }
                 }
 
                 ListView.onAdd: SequentialAnimation {
                     PropertyAction { target: delegateItem; property: "height"; value: 0 }
-                    NumberAnimation { target: delegateItem; property: "height"; to: tName.contentHeight + 20; duration: 700; easing.type: Easing.InOutQuad }
+                    NumberAnimation { target: delegateItem; property: "height"; to: tName.contentHeight + 30; duration: 700; easing.type: Easing.InOutQuad }
                 }
             }
 

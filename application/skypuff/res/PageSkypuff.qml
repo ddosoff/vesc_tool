@@ -17,75 +17,15 @@ Page {
         anchors.fill: parent
         anchors.margins: 10
 
-        RowLayout {
+        BigRoundButton {
+            id: bStop
+            text: qsTr("Stop")
+            Layout.fillWidth: true
+            enabled: false
 
-            BigRoundButton {
-                id: bSetZero
-                text: qsTr("Set zero here")
+            Material.background: '#EF9A9A'
 
-                Layout.fillWidth: true
-                visible: false
-                Material.background: '#A5D6A7'
-
-                onClicked: {Skypuff.sendTerminal("set_zero")}
-            }
-
-            BigRoundButton {
-                id: bPrePull
-
-                Layout.fillWidth: true
-                enabled: false
-                Material.background: '#A5D6A7'
-
-                state: "PRE_PULL"
-                states: [
-                    State {name: "PRE_PULL"; PropertyChanges {target: bPrePull;text: qsTr("Pre Pull")}},
-                    State {name: "TAKEOFF_PULL"; PropertyChanges {target: bPrePull;text: qsTr("Takeoff Pull")}},
-                    State {name: "PULL"; PropertyChanges {target: bPrePull;text: qsTr("Pull")}},
-                    State {name: "FAST_PULL"; PropertyChanges {target: bPrePull;text: qsTr("Fast Pull")}}
-                ]
-
-                onClicked: {Skypuff.sendTerminal("set %1".arg(state))}
-            }
-
-
-            BigRoundButton {
-                id: bUnwinding
-                text: qsTr("Unwinding")
-
-                Layout.fillWidth: true
-                enabled: false
-                Material.background: '#A5D6A7'
-
-                state: "UNWINDING"
-                states: [
-                    State {name: "UNWINDING"; PropertyChanges {target: bUnwinding; text: qsTr("Unwinding")}},
-                    State {name: "BRAKING_EXTENSION"; PropertyChanges {target: bUnwinding; text: qsTr("Brake")}}
-                ]
-
-                onClicked: {
-                    Skypuff.sendTerminal("set %1".arg(bUnwinding.state))
-                }
-
-                Connections {
-                    target: Skypuff
-
-                    onBrakingExtensionRangeChanged: {
-                        // Brake if possible
-                        switch(Skypuff.state) {
-                        case "MANUAL_BRAKING":
-                            bUnwinding.state = isBrakingExtensionRange ? "BRAKING_EXTENSION" : "UNWINDING"
-                            break
-                        case "UNWINDING":
-                        case "REWINDING":
-                            bUnwinding.enabled = isBrakingExtensionRange
-                            break
-                        }
-                    }
-                }
-            }
-
-
+            onClicked: {Skypuff.sendTerminal("set MANUAL_BRAKING")}
         }
 
         Label {
@@ -267,16 +207,16 @@ Page {
                 value: Skypuff.batteryPercents
             }
         }*/
-        RowLayout {
+
+        SkypuffGauge {
+            id: sGauge
+
             Layout.topMargin: 20
-            Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
+            Layout.preferredHeight: parent.width / 2
 
-
-            SkypuffGauge {
-                id: sGauge
-                debug: false
-                maxSpeedMs: 10
-            }
+            debug: false
+            maxSpeedMs: 10
 
             Connections {
                 target: Skypuff
@@ -292,7 +232,35 @@ Page {
                 onSettingsChanged: {
                     sGauge.maxMotorKg = cfg.motor_max_kg
                 }
+            }
+        }
 
+        RowLayout {
+            Layout.topMargin: 20
+
+            Text {
+                id: batText
+                text: qsTr("Battery %1V (%2V / cell)").arg(Skypuff.batteryVolts.toFixed(2)).arg(Skypuff.batteryCellVolts.toFixed(2))
+                enabled: Skypuff.isBatteryScaleValid
+
+                function getBatColor() {return Skypuff.isBatteryScaleValid ? Skypuff.isBatteryWarning ? "red" : "green" : systemPalette.text}
+
+                color: getBatColor()
+
+                SequentialAnimation on color {
+                    loops: Animation.Infinite
+                    running: Skypuff.isBatteryBlinking
+                    ColorAnimation { easing.type: Easing.OutExpo; from: systemPalette.window; to: "red"; duration: 400 }
+                    ColorAnimation { easing.type: Easing.OutExpo; from: "red"; to: systemPalette.window;  duration: 200 }
+
+                    onStopped: batText.color = getBatColor()
+                }
+            }
+            ProgressBar {
+                Layout.fillWidth: true
+                enabled: Skypuff.isBatteryScaleValid
+                to: 100
+                value: Skypuff.batteryPercents
             }
         }
 
@@ -318,13 +286,9 @@ Page {
         }
 
 
-
+        // Pull force SpinBox and ManualSlow arrows
         RowLayout {
-            id: rManualSlow
-
-            visible: true
-
-            function isManualDirButtonsEnabled() {
+            function isManualSlowButtonsEnabled() {
                 return !Skypuff.isBrakingRange &&
                         ["MANUAL_SLOW_SPEED_UP",
                          "MANUAL_SLOW",
@@ -332,10 +296,19 @@ Page {
                          "MANUAL_SLOW_BACK"].indexOf(page.state) === -1
             }
 
+            function isManualSlowButtonsVisible() {
+                return ["MANUAL_BRAKING",
+                        "MANUAL_SLOW_SPEED_UP",
+                        "MANUAL_SLOW",
+                        "MANUAL_SLOW_BACK_SPEED_UP",
+                        "MANUAL_SLOW_BACK"].indexOf(page.state) !== -1
+            }
+
             RoundButton {
                 id: rManualSlowBack
                 text: "←";
-                enabled: rManualSlow.isManualDirButtonsEnabled()
+                enabled: parent.isManualSlowButtonsEnabled()
+                visible: parent.isManualSlowButtonsVisible()
                 onClicked: {Skypuff.sendTerminal("set manual_slow")}
                 Material.background: '#A5D6A7'
             }
@@ -368,23 +341,79 @@ Page {
             RoundButton {
                 id: rManualSlowForward
                 text: "→";
-                enabled: rManualSlow.isManualDirButtonsEnabled()
+                enabled: parent.isManualSlowButtonsEnabled()
+                visible: parent.isManualSlowButtonsVisible()
                 onClicked: {Skypuff.sendTerminal("set manual_slow_back")}
                 Material.background: '#A5D6A7'
             }
         }
 
-        BigRoundButton {
-            id: bStop
-            text: qsTr("Stop")
-            Layout.fillWidth: true
-            enabled: false
+        RowLayout {
+            BigRoundButton {
+                id: bSetZero
+                text: qsTr("Set zero here")
 
-            Material.background: '#EF9A9A'
+                Layout.fillWidth: true
+                visible: false
+                Material.background: '#A5D6A7'
 
-            onClicked: {Skypuff.sendTerminal("set MANUAL_BRAKING")}
+                onClicked: {Skypuff.sendTerminal("set_zero")}
+            }
+
+            BigRoundButton {
+                id: bPrePull
+
+                Layout.fillWidth: true
+                enabled: false
+                Material.background: '#A5D6A7'
+
+                state: "PRE_PULL"
+                states: [
+                    State {name: "PRE_PULL"; PropertyChanges {target: bPrePull;text: qsTr("Pre Pull")}},
+                    State {name: "TAKEOFF_PULL"; PropertyChanges {target: bPrePull;text: qsTr("Takeoff Pull")}},
+                    State {name: "PULL"; PropertyChanges {target: bPrePull;text: qsTr("Pull")}},
+                    State {name: "FAST_PULL"; PropertyChanges {target: bPrePull;text: qsTr("Fast Pull")}}
+                ]
+
+                onClicked: {Skypuff.sendTerminal("set %1".arg(state))}
+            }
+
+            BigRoundButton {
+                id: bUnwinding
+                text: qsTr("Unwinding")
+
+                Layout.fillWidth: true
+                enabled: false
+                Material.background: '#A5D6A7'
+
+                state: "UNWINDING"
+                states: [
+                    State {name: "UNWINDING"; PropertyChanges {target: bUnwinding; text: qsTr("Unwinding")}},
+                    State {name: "BRAKING_EXTENSION"; PropertyChanges {target: bUnwinding; text: qsTr("Brake")}}
+                ]
+
+                onClicked: {
+                    Skypuff.sendTerminal("set %1".arg(bUnwinding.state))
+                }
+
+                Connections {
+                    target: Skypuff
+
+                    onBrakingExtensionRangeChanged: {
+                        // Brake if possible
+                        switch(Skypuff.state) {
+                        case "MANUAL_BRAKING":
+                            bUnwinding.state = isBrakingExtensionRange ? "BRAKING_EXTENSION" : "UNWINDING"
+                            break
+                        case "UNWINDING":
+                        case "REWINDING":
+                            bUnwinding.enabled = isBrakingExtensionRange
+                            break
+                        }
+                    }
+                }
+            }
         }
-
     }
 
 
