@@ -3,6 +3,7 @@ import QtQuick.Controls 2.2
 import QtQuick.Extras 1.4
 import QtQuick.Layouts 1.3
 import QtQuick.Controls.Material 2.12
+import QtGraphicalEffects 1.0
 
 import SkyPuff.vesc.winch 1.0
 
@@ -91,151 +92,208 @@ Page {
             }
         }
 
-        // Rope
+        RowLayout {
+
+
+
+            SkypuffGauge {
+                id: sGauge
+
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: 10
+                Layout.fillWidth: true
+                x: 250
+
+                Layout.preferredHeight: Math.min(parent.width, 400)
+
+                debug: false
+                maxSpeedMs: 10
+
+                Connections {
+                    target: Skypuff
+
+                    onMotorModeChanged: { sGauge.motorMode = Skypuff.motorMode }
+                    onMotorKgChanged: { sGauge.motorKg = Math.abs(Skypuff.motorKg) }
+                    onSpeedMsChanged: { sGauge.speedMs = Skypuff.speedMs }
+                    onPowerChanged: { sGauge.power = Skypuff.power }
+                    onLeftMetersChanged: { sGauge.leftRopeMeters = Skypuff.leftMeters.toFixed(1) }
+                    onDrawnMetersChanged: { sGauge.ropeMeters = Skypuff.drawnMeters }
+                    onRopeMetersChanged: { sGauge.maxRopeMeters = Skypuff.ropeMeters.toFixed() }
+
+                    onSettingsChanged: {
+                        sGauge.maxMotorKg = cfg.motor_max_kg
+                    }
+                }
+            }
+
+
+
+            /*ColumnLayout {
+                anchors.top:  parent.top
+                Layout.preferredWidth: parent.width * 0.1
+                Layout.topMargin: 10
+
+
+
+
+            }*/
+
+
+        }
+
+
+
+
+        RowLayout {
+            id: mainBar
+            width: page.width
+            Layout.topMargin: 15
+            RowLayout {
+                id: mainBarTemp
+
+                RowLayout {
+                    Rectangle {
+                        width: 18
+                        Image {
+
+                            id: tfetsIco
+                            smooth: true
+
+                            source: "qrc:/res/icons/motor.svg"
+
+                            sourceSize.width: 20
+                            sourceSize.height: 27
+
+                            visible: false
+
+                        }
+                        ColorOverlay {
+                            anchors.fill: tfetsIco
+                            source: tfetsIco
+                            color: Material.color(Material.Blue)
+                        }
+                    }
+
+                    Rectangle {
+                        width: 40
+
+                        Text {
+                            text: Skypuff.tempMotor.toFixed(1)
+                            color: Skypuff.tempMotor > 80 ? "red" : systemPalette.text;
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Rectangle {
+                        width: 20
+                        Image {
+                            id: tmotIco
+                            smooth: true
+
+                            source: "qrc:/res/icons/mcu1.svg"
+
+                            sourceSize.width: 20
+                            sourceSize.height: 18
+
+                            visible: false
+
+                        }
+                        ColorOverlay {
+                            anchors.fill: tmotIco
+                            source: tmotIco
+                            color: Material.color(Material.Blue)
+                        }
+                    }
+
+                    Rectangle {
+                        width: 40
+
+                        Text {
+                            text: Skypuff.tempFets.toFixed(1)
+                            color: Skypuff.tempFets > 80 ? "red" : systemPalette.text;
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Rectangle {
+                        width: 20
+                        Image {
+                            id: tbatIco
+                            smooth: true
+
+                            source: "qrc:/res/icons/battery.svg"
+
+                            sourceSize.width: 20
+                            sourceSize.height: 19
+
+                            visible: false
+
+                        }
+                        ColorOverlay {
+                            anchors.fill: tbatIco
+                            source: tbatIco
+                            color: Material.color(Material.Blue)
+                        }
+                    }
+
+                    Rectangle {
+                        width: 40
+
+                        Text {
+                            text: Skypuff.tempBat.toFixed(1)
+                            color: Skypuff.tempBat > 80 ? "red" : systemPalette.text;
+                        }
+                    }
+                }
+            }
+
+            RowLayout {
+                Layout.topMargin: 16
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                Text {
+                    Layout.topMargin: 2
+                    //width: 40
+                    text: '15.6'
+                    color: Skypuff.tempFets > 80 ? "red" : systemPalette.text;
+                }
+
+
+                Text {
+                    ///width: 40
+                    font.bold: true
+                    text: '<<'
+                    color: 'red';
+                }
+
+                Rectangle {
+                    id: lol
+                    width: 50
+                    height: 20
+                    color: 'red'
+                }
+
+                Text {
+                    Layout.topMargin: 2
+                    //width: 40
+                    text: '33%'
+                    color: Skypuff.tempFets > 80 ? "red" : systemPalette.text;
+                }
+
+            }
+
+
+
+
+
+        }
+
+
         /*RowLayout {
-            Layout.fillWidth: true
-            Layout.topMargin: 20
-
-            Text {
-                Layout.fillWidth: true
-
-                text: qsTr("Rope: %1 m").arg(Skypuff.leftMeters.toFixed(1))
-
-                // 15% - yellow, 5% - red
-                color: Skypuff.leftMeters / Skypuff.ropeMeters < 0.05 ? "red" : "green"
-            }
-
-            Text {
-                Layout.fillWidth: true
-                horizontalAlignment: Text.AlignRight
-
-                text: qsTr("Drawn: %1 m").arg(Skypuff.drawnMeters.toFixed(1))
-            }
-        }*/
-/*
-        ProgressBar {
-            id: pRopeLeft
-            Layout.fillWidth: true
-
-            from: 0
-            to: Skypuff.ropeMeters
-
-            value: Skypuff.leftMeters
-        }
-
-        // Speed
-        Text {
-            Layout.fillWidth: true
-            Layout.topMargin: 10
-
-            text: isNaN(Skypuff.drawnMeters) ? "" : qsTr("Speed: %1 m/s").arg(Skypuff.speedMs.toFixed(1))
-
-            color: Skypuff.speedMs > 20 ? "red" : systemPalette.text;
-        }
-
-        ProgressBar {
-            Layout.fillWidth: true
-
-            from: 0
-            to: 25
-
-            value: Math.abs(Skypuff.speedMs)
-        }
-
-        // Motor
-        Text {
-            Layout.fillWidth: true
-            Layout.topMargin: 10
-
-            text: qsTr("%1: %2 Kg").arg(Skypuff.motorMode).arg(Math.abs(Skypuff.motorKg).toFixed(1))
-        }
-
-        ProgressBar {
-            id: pbMotor
-            Layout.fillWidth: true
-
-            from: 0
-            to: 0
-
-            value: Math.abs(Skypuff.motorKg)
-        }
-
-        // Power
-        Text {
-            Layout.fillWidth: true
-            Layout.topMargin: 10
-
-            text: qsTr("Power: %1 W").arg(Skypuff.power.toFixed(1))
-        }
-
-        ProgressBar {
-            id: pbPower
-            Layout.fillWidth: true
-
-            from: 0
-            to: 0
-
-            value: Math.abs(Skypuff.power)
-        }
-
-        // Bat
-        RowLayout {
-            Layout.topMargin: 20
-
-            Text {
-                id: batText
-                text: qsTr("Battery %1V (%2V / cell)").arg(Skypuff.batteryVolts.toFixed(2)).arg(Skypuff.batteryCellVolts.toFixed(2))
-                enabled: Skypuff.isBatteryScaleValid
-
-                function getBatColor() {return Skypuff.isBatteryScaleValid ? Skypuff.isBatteryWarning ? "red" : "green" : systemPalette.text}
-
-                color: getBatColor()
-
-                SequentialAnimation on color {
-                    loops: Animation.Infinite
-                    running: Skypuff.isBatteryBlinking
-                    ColorAnimation { easing.type: Easing.OutExpo; from: systemPalette.window; to: "red"; duration: 400 }
-                    ColorAnimation { easing.type: Easing.OutExpo; from: "red"; to: systemPalette.window;  duration: 200 }
-
-                    onStopped: batText.color = getBatColor()
-                }
-            }
-            ProgressBar {
-                Layout.fillWidth: true
-                enabled: Skypuff.isBatteryScaleValid
-                to: 100
-                value: Skypuff.batteryPercents
-            }
-        }*/
-
-        SkypuffGauge {
-            id: sGauge
-
-            Layout.topMargin: 20
-            Layout.fillWidth: true
-            Layout.preferredHeight: parent.width / 2
-
-            debug: false
-            maxSpeedMs: 10
-
-            Connections {
-                target: Skypuff
-
-                onMotorModeChanged: { sGauge.motorMode = Skypuff.motorMode }
-                onMotorKgChanged: { sGauge.motorKg = Math.abs(Skypuff.motorKg) }
-                onSpeedMsChanged: { sGauge.speedMs = Skypuff.speedMs }
-                onPowerChanged: { sGauge.power = Skypuff.power }
-                onLeftMetersChanged: { sGauge.leftRopeMeters = Skypuff.leftMeters.toFixed(1) }
-                onDrawnMetersChanged: { sGauge.ropeMeters = Skypuff.drawnMeters }
-                onRopeMetersChanged: { sGauge.maxRopeMeters = Skypuff.ropeMeters.toFixed() }
-
-                onSettingsChanged: {
-                    sGauge.maxMotorKg = cfg.motor_max_kg
-                }
-            }
-        }
-
-        RowLayout {
             Layout.topMargin: 20
 
             Text {
@@ -279,7 +337,7 @@ Page {
             Text {
                 text: qsTr("In/out: %1 / %2 Wh").arg(Skypuff.whIn.toFixed(3)).arg(Skypuff.whOut.toFixed(3))
             }
-        }
+        }*/
 
         Item {
             Layout.fillHeight: true
