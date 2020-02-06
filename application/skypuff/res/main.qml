@@ -35,7 +35,6 @@ ApplicationWindow {
         PageSkypuff {}
         PageConfig {}
         PageTerminal {}
-        PageTest {}
     }
 
 
