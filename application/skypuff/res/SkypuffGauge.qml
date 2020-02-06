@@ -47,9 +47,9 @@ Item {
             Colors
     ********************/
 
-    property real baseOpacity: 0.4  // Opacity is superimposed on all colors of the scale.
+    property real baseOpacity: 0.4  // Opacity is to all colors of the scale
     property string innerColor: '#efeded'
-    property string gaugeDangerFontColor: '#8e1616' // Color of danger ranges
+    property string gaugeDangerFontColor: '#8e1616' // Color for danger ranges
     property string gaugeFontColor: '#515151'
     property string gaugeColor: '#C7CFD9'
 
@@ -90,9 +90,11 @@ Item {
     /********************
         Default view
     ********************/
-    property int diameter: parent.width > parent.height
-       ? parent.height
-       : parent.width
+
+    // Use minimum value
+    property int diameter: width < height ? width : height
+    implicitWidth: 200
+    implicitHeight: 200
 
     property string borderColor: '#515151'      // Color of all borders
     property string color: '#efeded'            // Main backgroundColor
@@ -1116,9 +1118,9 @@ Item {
             width: parent.width
             height: 200
             anchors.horizontalCenter: parent.horizontalCenter
+            visible: root.debug
 
             Grid {
-                visible: root.debug
                 columns: 2
                 anchors.fill: parent
 
