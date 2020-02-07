@@ -1,11 +1,11 @@
 VT_VERSION = 0.95
 DEFINES += VT_VERSION=$$VT_VERSION
 
-#VT_ANDROID_VERSION_ARMV7 = 56
-VT_ANDROID_VERSION_ARM64 = 57
-#VT_ANDROID_VERSION_X86 = 58
+#VT_ANDROID_VERSION_ARMV7 = 1
+VT_ANDROID_VERSION_ARM64 = 100
+#VT_ANDROID_VERSION_X86 = 3
 
-#VT_ANDROID_VERSION = $$VT_ANDROID_VERSION_X86
+VT_ANDROID_VERSION = $$VT_ANDROID_VERSION_ARM64
 
 # Ubuntu 18.04 (should work on raspbian buster too)
 # sudo apt install qml-module-qt-labs-folderlistmodel qml-module-qtquick-extras qml-module-qtquick-controls2 qt5-default libqt5quickcontrols2-5 qtquickcontrols2-5-dev qtcreator qtcreator-doc libqt5serialport5-dev build-essential qml-module-qt3d qt3d5-dev qtdeclarative5-dev qtconnectivity5-dev qtmultimedia5-dev
@@ -24,7 +24,7 @@ QT += quick
 QT += multimedia
 QT += svg
 
-TARGET = application
+TARGET = skypuff
 TEMPLATE = app
 
 # Serial port available
@@ -41,7 +41,13 @@ contains(DEFINES, HAS_BLUETOOTH) {
     QT += bluetooth
 }
 
-android: QT += androidextras
+android: {
+    QT += androidextras
+    manifest.input = $$PWD/android/AndroidManifest.xml.in
+    manifest.output = $$PWD/android/AndroidManifest.xml
+    QMAKE_SUBSTITUTES += manifest
+}
+
 
 INCLUDEPATH += ../..
 
@@ -67,3 +73,15 @@ RESOURCES += \
     qml.qrc \
     ../../res_config.qrc \
 
+DISTFILES += \
+    android/AndroidManifest.xml \
+    android/AndroidManifest.xml.in \
+    android/gradle/wrapper/gradle-wrapper.jar \
+    android/gradlew \
+    android/res/values/libs.xml \
+    android/build.gradle \
+    android/gradle/wrapper/gradle-wrapper.properties \
+    android/src/com/vedder/vesc/VForegroundService.java \
+    android/src/com/vedder/vesc/Utils.java
+
+ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android

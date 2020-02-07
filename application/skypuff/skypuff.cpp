@@ -736,13 +736,6 @@ void Skypuff::setWhOut(const float newWhOut)
     }
 }
 
-float Skypuff::getBatteryPercents()
-{
-    // Please implement lipo discharge polynom approximated curve here
-    // But for now just linear function
-    return (vBat - cfg.v_in_min) / (cfg.v_in_max - cfg.v_in_min) * (float)100;
-}
-
 bool Skypuff::isBatteryTooHigh()
 {
     if(!isBatteryScaleValid())
