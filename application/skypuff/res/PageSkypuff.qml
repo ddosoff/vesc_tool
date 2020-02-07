@@ -186,7 +186,7 @@ Page {
                     Image {
                         id: tmotIco
                         smooth: true
-                        source: "qrc:/res/icons/mcu1.svg"
+                        source: "qrc:/res/icons/mcu.svg"
                         sourceSize.width: 20
                         sourceSize.height: 18
                         visible: false
