@@ -131,7 +131,6 @@ Item {
         } else {
             root.motorKgLabelStepSize = root.maxMotorKg / 5;
         }
-        console.log(root.maxMotorKg)
     }
 
     function prettyNumber(number, tf = 1) {
