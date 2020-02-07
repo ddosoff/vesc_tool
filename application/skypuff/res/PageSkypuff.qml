@@ -109,7 +109,7 @@ Page {
 
                 SkypuffGauge {
                     id: sGauge
-                    debug: false
+                    //debug: true
                     maxSpeedMs: 20
                     Layout.fillWidth: true
 
@@ -312,7 +312,7 @@ Page {
 
                     height: 10
                     width: 2
-                    border.color: 'black'
+                    border.color: 'grey'
 
                 }
             }
