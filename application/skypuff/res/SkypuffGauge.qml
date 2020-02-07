@@ -32,7 +32,7 @@ Item {
 
     property real motorKg
     property real minMotorKg: 0
-    property real maxMotorKg: 15
+    property real maxMotorKg: 51
 
     property real tempFets: 0
     property real tempMotor: 0
@@ -120,6 +120,10 @@ Item {
     property int angK: 1000
 
     onMaxMotorKgChanged: {
+        setMaxMotorKg();
+    }
+
+    function setMaxMotorKg() {
         root.maxMotorKg = Math.ceil(parseInt(root.maxMotorKg, 10) / 10) * 10;
         if (root.maxMotorKg > 20) {
             var  k = 10000 % root.maxMotorKg === 0 && root.maxMotorKg <= 50 ? 10 : 5;
@@ -127,8 +131,8 @@ Item {
         } else {
             root.motorKgLabelStepSize = root.maxMotorKg / 5;
         }
+        console.log(root.maxMotorKg)
     }
-
 
     function prettyNumber(number, tf = 1) {
         // TODO: need to check this number
@@ -231,7 +235,9 @@ Item {
             width: diameter
             height: diameter
 
-            Component.onCompleted: {}
+            Component.onCompleted: {
+                setMaxMotorKg();
+            }
 
             Rectangle {
                 id: baseLayer
