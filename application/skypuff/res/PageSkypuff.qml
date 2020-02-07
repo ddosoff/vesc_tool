@@ -34,7 +34,7 @@ Page {
             text: Skypuff.stateText
 
             Layout.fillWidth: true
-            Layout.topMargin: 30
+            Layout.topMargin: 10
             horizontalAlignment: Text.AlignHCenter
             font.pointSize: 16
             font.bold: true
@@ -92,12 +92,6 @@ Page {
             }
         }
 
-
-
-
-
-
-
         GridLayout {
             rowSpacing: 5
             columnSpacing: 5
@@ -116,10 +110,10 @@ Page {
                 SkypuffGauge {
                     id: sGauge
                     debug: false
-                    maxSpeedMs: 10
+                    maxSpeedMs: 20
                     Layout.fillWidth: true
 
-                    Layout.preferredHeight: page.width * 0.8
+                    Layout.preferredHeight: page.width * 0.85
                     motorMode: Skypuff.motorMode
 
                     Connections {
@@ -135,6 +129,7 @@ Page {
 
                         onSettingsChanged: {
                             sGauge.maxMotorKg = cfg.motor_max_kg
+                            sGauge.maxPower = cfg.power_max
                         }
                     }
                 }
@@ -150,14 +145,15 @@ Page {
 
             RowLayout {
                 Item {
-                    width: 18
-                    height: 25
+                    width: 20
+                    height: 30
                     Image {
                         id: tfetsIco
                         smooth: true
                         source: "qrc:/res/icons/motor.svg"
-                        sourceSize.width: 20
-                        sourceSize.height: 27
+                        sourceSize.width: 26
+                        sourceSize.height: 34
+                        y: -1
                         visible: false
 
                     }
@@ -256,11 +252,10 @@ Page {
             Item {
                 Layout.fillWidth: true
             }
-
             Text {
                 Layout.topMargin: 2
                 //width: 40
-                text: Skypuff.whIn.toFixed(1)
+                text: "%1 Wh".arg(Skypuff.whIn.toFixed(1))
                 color: systemPalette.text;
             }
 
@@ -272,12 +267,12 @@ Page {
 
             Rectangle {
                 id: lol
-                width: 50
-                height: 20
-                border.color: 'red'
+                width: tBat.width + 20
+                height: 30
+                border.color: 'grey'
 
 
-                ProgressBar {
+                /*ProgressBar {
                     width: parent.width
                     height: parent.height
 
@@ -294,12 +289,34 @@ Page {
                         implicitWidth: parent.width
                         implicitHeight: parent.height
                     }
-                    Text {
-                        anchors.centerIn: parent
-                        text: Skypuff.batteryPercents.toFixed(1) + '%'
-                    }
+                }*/
+                Rectangle {
+                    anchors.left: lol.left
+                    anchors.leftMargin: 1
+                    anchors.verticalCenter: lol.verticalCenter
+
+                    height: lol.height-2
+                    color: "lightgreen"
+                    width: lol.width * Skypuff.batteryPercents / 100
+                }
+
+                Text {
+                    id: tBat
+                    anchors.centerIn: parent
+                    text: qsTr("%1V (%2 / cell)").arg(Skypuff.batteryVolts.toFixed(2)).arg(Skypuff.batteryCellVolts.toFixed(2))
+                }
+
+                Rectangle {
+                    anchors.left: lol.right
+                    anchors.verticalCenter: lol.verticalCenter
+
+                    height: 10
+                    width: 2
+                    border.color: 'black'
+
                 }
             }
+
 
             Text {
                 font.bold: true
@@ -309,18 +326,12 @@ Page {
 
             Text {
                 Layout.topMargin: 2
-                text: Skypuff.whOut.toFixed(1)
-            }
-
-
-            Text {
-                text: qsTr("Battery %1V (%2V / cell)").arg(Skypuff.batteryVolts.toFixed(2)).arg(Skypuff.batteryCellVolts.toFixed(2))
+                text: "%1 Wh".arg(Skypuff.whOut.toFixed(1))
             }
 
             Item {
                 Layout.fillWidth: true
             }
-
         }
 
 
