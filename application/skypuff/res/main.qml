@@ -25,7 +25,6 @@ ApplicationWindow {
     id: app
     visible: true
     title: "SkyPUFF"
-
     
     SwipeView {
         id: swipeView
@@ -37,7 +36,7 @@ ApplicationWindow {
         PageTerminal {}
     }
 
-
+    // Save window size per app restarts
     Settings {
         property alias width: app.width
         property alias height: app.height
