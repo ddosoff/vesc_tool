@@ -32,7 +32,7 @@ Item {
 
     property real motorKg
     property real minMotorKg: 0
-    property real maxMotorKg: 15
+    property real maxMotorKg: 51
 
     property real tempFets: 0
     property real tempMotor: 0
@@ -110,7 +110,7 @@ Item {
     property int animationDuration: 100
     property int animationType: Easing.OutExpo
 
-    property real motorKgLabelStepSize: (maxMotorKg - minMotorKg) / 5
+    property real motorKgLabelStepSize: 5
     property real powerLabelStepSize: (maxPower - minPower) / 4
 
     /********************
@@ -119,6 +119,19 @@ Item {
     property bool debug: false
     property int angK: 1000
 
+    onMaxMotorKgChanged: {
+        setMaxMotorKg();
+    }
+
+    function setMaxMotorKg() {
+        root.maxMotorKg = Math.ceil(parseInt(root.maxMotorKg, 10) / 10) * 10;
+        if (root.maxMotorKg > 20) {
+            var  k = 10000 % root.maxMotorKg === 0 && root.maxMotorKg <= 50 ? 10 : 5;
+            root.motorKgLabelStepSize = Math.ceil(parseInt(root.maxMotorKg, 10) / k / 10 ) * 10;
+        } else {
+            root.motorKgLabelStepSize = root.maxMotorKg / 5;
+        }
+    }
 
     function prettyNumber(number, tf = 1) {
         // TODO: need to check this number
@@ -221,7 +234,9 @@ Item {
             width: diameter
             height: diameter
 
-            Component.onCompleted: {}
+            Component.onCompleted: {
+                setMaxMotorKg();
+            }
 
             Rectangle {
                 id: baseLayer
@@ -270,7 +285,7 @@ Item {
                     anchors.fill: parent
 
                     property real ropeStartAng: dl2.rotation
-                    property real ropeEndAng: ropeToAng(Math.min(root.ropeMeters, root.maxRopeMeters))
+                    property real ropeEndAng: ropeToAng(Math.max(root.maxRopeMeters - root.ropeMeters, root.minRopeMeters))
 
                     property real speedStartAng: speedToAng(0)
                     property real speedEndAng: speedToAng(Math.min(root.speedMs, root.maxSpeedMs));
@@ -339,6 +354,10 @@ Item {
                         return { color, textColor };
                     }
 
+                    function convertAngToRadian(ang) {
+                        return (Math.PI * ang) / 180;
+                    }
+
                     Canvas {
                         id: canvas
                         opacity: root.baseOpacity
@@ -352,7 +371,8 @@ Item {
                                 var centreX = baseLayer.width / 2;
                                 var centreY = baseLayer.height / 2;
 
-                                /** ФОН */
+                                /********** BG ***********/
+
                                 context.globalCompositeOperation = 'source-over';
                                 context.fillStyle = root.gaugeColor;
                                 context.beginPath();
@@ -371,8 +391,8 @@ Item {
 
                                 /********** Top ***********/
 
-                                var topEnd = (Math.PI * (parent.ropeEndAng - 90)) / 180;
-                                var topStart = (Math.PI * (parent.ropeStartAng + 90)) / 180;
+                                var topEnd = parent.convertAngToRadian(parent.ropeEndAng - 90);
+                                var topStart = parent.convertAngToRadian(parent.ropeStartAng + 90);
 
                                 context.beginPath();
                                 context.arc(
@@ -404,8 +424,8 @@ Item {
 
                                 /********** Bottom ***********/
 
-                                var bottomStart = (Math.PI * (parent.speedStartAng - 90)) / 180;
-                                var bottomEnd = (Math.PI * (parent.speedEndAng - 90)) / 180;
+                                var bottomStart = parent.convertAngToRadian(parent.speedStartAng - 90);
+                                var bottomEnd = parent.convertAngToRadian(parent.speedEndAng - 90);
 
                                 context.beginPath();
                                 context.arc(
@@ -437,8 +457,8 @@ Item {
 
                                 /********** Left ***********/
 
-                                var leftEnd = (Math.PI * (parent.motorKgStartAng + 180)) / 180;
-                                var leftStart = (Math.PI * (parent.motorKgEndAng - 180)) / 180;
+                                var leftEnd = parent.convertAngToRadian(parent.motorKgStartAng + 180);
+                                var leftStart = parent.convertAngToRadian(parent.motorKgEndAng - 180);
 
                                 context.beginPath();
                                 context.arc(
@@ -470,8 +490,8 @@ Item {
 
                                 /********** Right ***********/
 
-                                var rightEnd = (Math.PI * (parent.powerEndAng)) / 180;
-                                var rightStart = (Math.PI * (parent.powerStartAng)) / 180;
+                                var rightEnd = parent.convertAngToRadian(parent.powerEndAng);
+                                var rightStart = parent.convertAngToRadian(parent.powerStartAng);
 
                                 context.beginPath();
                                 context.arc(
@@ -519,8 +539,8 @@ Item {
                                 var centreX = baseLayer.width / 2;
                                 var centreY = baseLayer.height / 2;
 
-                                var topEnd = (Math.PI * (90 - dl1.rotation)) / 180;
-                                var topStart = (Math.PI * (90 - dl2.rotation)) / 180;
+                                var topEnd = parent.convertAngToRadian(90 - dl1.rotation);
+                                var topStart = parent.convertAngToRadian(90 - dl2.rotation);
 
                                 context.beginPath();
                                 context.moveTo(centreX, centreY);
@@ -537,8 +557,8 @@ Item {
                                 context.fillStyle = root.innerColor;
                                 context.fill()
 
-                                topEnd = (Math.PI * (90 + dl2.rotation)) / 180;
-                                topStart = (Math.PI * (90 + dl1.rotation)) / 180;
+                                topEnd = parent.convertAngToRadian(90 + dl2.rotation);
+                                topStart = parent.convertAngToRadian(90 + dl1.rotation);
 
                                 context.beginPath();
                                 context.moveTo(centreX, centreY);
@@ -964,9 +984,7 @@ Item {
                         id: textLeftRopeMeters
 
                         Text {
-                            text: isNaN(root.leftRopeMeters)
-                                  ? root.maxRopeMeters
-                                  : root.prettyNumber(root.leftRopeMeters)
+                            text: root.prettyNumber(root.leftRopeMeters)
                             font.pixelSize: Math.max(10, root.diameter * 0.04)
                             font.family: root.ff
                             font.bold: root.boldValues
@@ -1189,6 +1207,36 @@ Item {
                             onValueChanged: {
                                 var res = kgToAng(value);
                                 root.motorKg = value;
+                            }
+                        }
+                    }
+
+                    Column {
+                        spacing: 5
+
+                        Text {
+                            text: 'MaxKg'
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        Slider {
+
+                            minimumValue: 0
+                            maximumValue: 200
+                            value: root.maxMotorKg
+
+                            onValueChanged: {
+                                root.maxMotorKg = value;
+                            }
+                        }
+                        Slider {
+
+                            minimumValue: 1
+                            maximumValue: 20
+                            value: root.motorKgLabelStepSize
+
+                            onValueChanged: {
+                                root.motorKgLabelStepSize = value;
                             }
                         }
                     }

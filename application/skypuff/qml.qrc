@@ -11,7 +11,6 @@
         <file>res/sounds/Overvoltage.mp3</file>
         <file>res/sounds/Alert.mp3</file>
         <file>res/SkypuffGauge.qml</file>
-        <file>res/PageTest.qml</file>
         <file>res/sounds/Battery charged too high.mp3</file>
         <file>res/sounds/Battery temperature.mp3</file>
         <file>res/sounds/Controller temperature.mp3</file>
@@ -25,5 +24,9 @@
         <file>res/icons/wifi.svg</file>
         <file>res/ElevationEffect.qml</file>
         <file>res/BigRoundButton.qml</file>
+        <file>res/icons/motor.svg</file>
+        <file>res/icons/mcu.svg</file>
+        <file>res/icons/battery.svg</file>
+        <file>res/icons/mcu1.svg</file>
     </qresource>
 </RCC>
