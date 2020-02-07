@@ -121,6 +121,13 @@ Item {
 
     onMaxMotorKgChanged: {
         setMaxMotorKg();
+
+        //setMaxPower();
+    }
+
+    onMaxPowerChanged: {
+        root.minPower = root.maxPower * -1
+        root.powerLabelStepSize = (root.maxPower - root.minPower) / 4;
     }
 
     function setMaxMotorKg() {
@@ -132,6 +139,20 @@ Item {
             root.motorKgLabelStepSize = root.maxMotorKg / 5;
         }
     }
+
+    /*
+    function setMaxPower() {
+        root.maxPower = Math.ceil(parseInt(root.maxPower, 10) / 10) * 10;
+
+        console.log(root.maxPower, root.powerLabelStepSize);
+        if (root.maxPower > 20) {
+            var  k = 10000 % root.maxPower === 0 && root.maxPower <= 50 ? 10 : 5;
+            root.powerLabelStepSize = Math.ceil(parseInt(root.maxPower, 10) / k / 10 ) * 10;
+        } else {
+            root.powerLabelStepSize = root.maxPower / 5;
+        }
+    }
+    */
 
     function prettyNumber(number, tf = 1) {
         if (!number || !!isNaN(number)) return 0;
@@ -295,7 +316,9 @@ Item {
                     property real motorKgEndAng: kgToAng(Math.min(root.motorKg, root.maxMotorKg));
 
                     property real powerStartAng: 0
-                    property real powerEndAng: powerToAng(Math.min(root.power, root.maxPower));
+                    property real powerEndAng: powerToAng(root.power > 0
+                                                  ? Math.min(root.power, root.maxPower)
+                                                  : Math.max(root.power, root.minPower));
 
                     // Animation
                     Behavior on ropeEndAng {
@@ -781,6 +804,24 @@ Item {
                                 }
                             }
 
+                            /*minorTickmark: Rectangle {
+                                antialiasing: true
+                                visible: root.maxPower <= 5
+                                implicitWidth: outerRadius * ((styleData.value === root.maxPower || styleData.value === root.minPower)
+                                    ? 0.005
+                                    : 0.01)
+                                implicitHeight:  (styleData.value === root.maxPower || styleData.value === root.minPower)
+                                    ? root.gaugeHeight
+                                    : implicitWidth * (styleData.value % (root.powerLabelStepSize) ? 3 : 6)
+                                color: gauge.getTLColor(styleData.value, root.maxPower)
+                            }
+
+                            */
+
+                            minorTickmark: Rectangle {
+                                visible: false
+                            }
+
                             tickmarkLabel:  Text {
                                 font.pixelSize: gauge.getFontSize()
                                 y: gauge.getTLHY(styleData.value, root.minPower, root.maxPower)
@@ -792,9 +833,6 @@ Item {
                                 font.family: root.ff
                             }
 
-                            minorTickmark: Rectangle {
-                                visible: false
-                            }
 
                             tickmark: Rectangle {
                                 antialiasing: true

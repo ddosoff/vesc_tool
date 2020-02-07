@@ -129,7 +129,7 @@ Page {
 
                         onSettingsChanged: {
                             sGauge.maxMotorKg = cfg.motor_max_kg
-                            sGauge.maxPower = cfg.power_max
+                            sGauge.maxPower = (cfg.power_max / 1000).toFixed(0)
                         }
                     }
                 }
