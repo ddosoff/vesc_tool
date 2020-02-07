@@ -259,12 +259,11 @@ Page {
             Text {
                 Layout.topMargin: 2
                 //width: 40
-                text: qsTr("%1/%2").arg(Skypuff.whIn.toFixed(1)).arg(Skypuff.whOut.toFixed(1))
+                text: Skypuff.whIn.toFixed(1)
                 color: systemPalette.text;
             }
 
             Text {
-                ///width: 40
                 font.bold: true
                 text: '<<'
                 color: 'red';
@@ -294,15 +293,29 @@ Page {
                         implicitWidth: parent.width
                         implicitHeight: parent.height
                     }
+                    Text {
+                        anchors.centerIn: parent
+                        text: Skypuff.batteryPercents.toFixed(1) + '%'
+                    }
                 }
             }
 
             Text {
-                Layout.topMargin: 2
-                //width: 40
-                text: Skypuff.batteryPercents.toFixed(1) + '%'
-                color: systemPalette.text;
+                font.bold: true
+                text: '<<'
+                color: 'red';
             }
+
+            Text {
+                Layout.topMargin: 2
+                text: Skypuff.whOut.toFixed(1)
+            }
+
+
+            Text {
+                text: qsTr("Battery %1V (%2V / cell)").arg(Skypuff.batteryVolts.toFixed(2)).arg(Skypuff.batteryCellVolts.toFixed(2))
+            }
+
             Item {
                 Layout.fillWidth: true
             }
