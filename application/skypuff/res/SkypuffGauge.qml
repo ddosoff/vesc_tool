@@ -134,14 +134,15 @@ Item {
     }
 
     function prettyNumber(number, tf = 1) {
-        // TODO: need to check this number
         if (!number || !!isNaN(number)) return 0;
 
         if (Math.abs(number) < 1 && number !== 0 && tf === 1) {
             tf = 2;
+        } else if (Number.isInteger(number) && tf === 1) {
+            tf = 0;
         }
 
-        return number.toFixed(tf);
+        return parseFloat(number.toFixed(tf));
     }
 
     /**
@@ -685,8 +686,7 @@ Item {
                             */
                             tickmarkLabel:  Text {
                                 function getText() {
-                                    var val = root.prettyNumber(styleData.value, root.maxMotorKg > 1 ? 0 : 2);
-                                    return val + ((styleData.value === root.minMotorKg) ? 'kg' : '');
+                                    return root.prettyNumber(styleData.value) + ((styleData.value === root.minMotorKg) ? 'kg' : '');
                                 }
 
                                 font.pixelSize: gauge.getFontSize()
@@ -1075,7 +1075,7 @@ Item {
 
                     Text {
                         id: motoKgTxt1
-                        text: root.prettyNumber(root.motorKg)
+                        text: root.prettyNumber(root.motorKg, root.motorKg >= 25 ? 0 : 1)
                         font.pixelSize: Math.max(10, root.diameter * 0.055)
                         font.family: root.ff
                         font.bold: root.boldValues
