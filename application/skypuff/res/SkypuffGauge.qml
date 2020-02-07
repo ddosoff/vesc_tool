@@ -121,7 +121,13 @@ Item {
 
     onMaxMotorKgChanged: {
         setMaxMotorKg();
+
         //setMaxPower();
+    }
+
+    onMaxPowerChanged: {
+        root.minPower = root.maxPower * -1
+        root.powerLabelStepSize = (root.maxPower - root.minPower) / 4;
     }
 
     function setMaxMotorKg() {
@@ -798,6 +804,24 @@ Item {
                                 }
                             }
 
+                            /*minorTickmark: Rectangle {
+                                antialiasing: true
+                                visible: root.maxPower <= 5
+                                implicitWidth: outerRadius * ((styleData.value === root.maxPower || styleData.value === root.minPower)
+                                    ? 0.005
+                                    : 0.01)
+                                implicitHeight:  (styleData.value === root.maxPower || styleData.value === root.minPower)
+                                    ? root.gaugeHeight
+                                    : implicitWidth * (styleData.value % (root.powerLabelStepSize) ? 3 : 6)
+                                color: gauge.getTLColor(styleData.value, root.maxPower)
+                            }
+
+                            */
+
+                            minorTickmark: Rectangle {
+                                visible: false
+                            }
+
                             tickmarkLabel:  Text {
                                 font.pixelSize: gauge.getFontSize()
                                 y: gauge.getTLHY(styleData.value, root.minPower, root.maxPower)
@@ -809,9 +833,6 @@ Item {
                                 font.family: root.ff
                             }
 
-                            minorTickmark: Rectangle {
-                                visible: false
-                            }
 
                             tickmark: Rectangle {
                                 antialiasing: true
