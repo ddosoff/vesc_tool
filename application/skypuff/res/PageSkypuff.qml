@@ -16,9 +16,9 @@ Page {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 10
 
-        BigRoundButton {
+
+        RoundButton {
             id: bStop
             text: qsTr("Stop")
             Layout.fillWidth: true
@@ -102,7 +102,7 @@ Page {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 10
                 Layout.fillWidth: true
-                x: 250
+
 
                 Layout.preferredHeight: Math.min(parent.width, 400)
 
@@ -126,34 +126,26 @@ Page {
                 }
             }
 
+            Item {
+                Layout.fillWidth: true
+            }
 
 
-            /*ColumnLayout {
-                anchors.top:  parent.top
-                Layout.preferredWidth: parent.width * 0.1
-                Layout.topMargin: 10
+            ColumnLayout {
 
-
-
-
-            }*/
-
-
-        }
-
-
-
-
-        RowLayout {
-            id: mainBar
-            width: page.width
-            Layout.topMargin: 15
-            RowLayout {
                 id: mainBarTemp
+                Layout.topMargin: -40
+
+
+                Item {
+                    Layout.fillHeight:  true
+                }
+
 
                 RowLayout {
                     Rectangle {
                         width: 18
+                        height: 25
                         Image {
 
                             id: tfetsIco
@@ -175,10 +167,11 @@ Page {
                     }
 
                     Rectangle {
-                        width: 40
+                        width: 50
+                        height: 25
 
                         Text {
-                            text: Skypuff.tempMotor.toFixed(1)
+                            text: Skypuff.tempMotor.toFixed(1) + 'C'
                             color: Skypuff.tempMotor > 80 ? "red" : systemPalette.text;
                         }
                     }
@@ -187,6 +180,7 @@ Page {
                 RowLayout {
                     Rectangle {
                         width: 20
+                        height: 25
                         Image {
                             id: tmotIco
                             smooth: true
@@ -207,10 +201,10 @@ Page {
                     }
 
                     Rectangle {
-                        width: 40
-
+                        width: 50
+                        height: 25
                         Text {
-                            text: Skypuff.tempFets.toFixed(1)
+                            text: Skypuff.tempFets.toFixed(1) + 'C'
                             color: Skypuff.tempFets > 80 ? "red" : systemPalette.text;
                         }
                     }
@@ -219,6 +213,7 @@ Page {
                 RowLayout {
                     Rectangle {
                         width: 20
+                        height: 25
                         Image {
                             id: tbatIco
                             smooth: true
@@ -239,59 +234,64 @@ Page {
                     }
 
                     Rectangle {
-                        width: 40
-
+                        width: 50
+                        height: 25
                         Text {
-                            text: Skypuff.tempBat.toFixed(1)
+                            text: Skypuff.tempBat.toFixed(1) + 'C'
                             color: Skypuff.tempBat > 80 ? "red" : systemPalette.text;
                         }
                     }
                 }
-            }
 
-            RowLayout {
-                Layout.topMargin: 16
                 Item {
-                    Layout.fillWidth: true
-                }
-
-                Text {
-                    Layout.topMargin: 2
-                    //width: 40
-                    text: '15.6'
-                    color: Skypuff.tempFets > 80 ? "red" : systemPalette.text;
-                }
-
-
-                Text {
-                    ///width: 40
-                    font.bold: true
-                    text: '<<'
-                    color: 'red';
-                }
-
-                Rectangle {
-                    id: lol
-                    width: 50
-                    height: 20
-                    color: 'red'
-                }
-
-                Text {
-                    Layout.topMargin: 2
-                    //width: 40
-                    text: '33%'
-                    color: Skypuff.tempFets > 80 ? "red" : systemPalette.text;
+                    Layout.fillHeight:  true
                 }
 
             }
-
-
-
-
 
         }
 
+
+        RowLayout {
+            width: page.width
+            Layout.topMargin: 15
+            Item {
+                Layout.fillWidth: true
+            }
+
+            Text {
+                Layout.topMargin: 2
+                //width: 40
+                text: '15.6'
+                color: Skypuff.tempFets > 80 ? "red" : systemPalette.text;
+            }
+
+
+            Text {
+                ///width: 40
+                font.bold: true
+                text: '<<'
+                color: 'red';
+            }
+
+            Rectangle {
+                id: lol
+                width: 50
+                height: 20
+                color: 'red'
+            }
+
+            Text {
+                Layout.topMargin: 2
+                //width: 40
+                text: '33%'
+                color: Skypuff.tempFets > 80 ? "red" : systemPalette.text;
+            }
+            Item {
+                Layout.fillWidth: true
+            }
+
+        }
 
         /*RowLayout {
             Layout.topMargin: 20
@@ -407,7 +407,7 @@ Page {
         }
 
         RowLayout {
-            BigRoundButton {
+            RoundButton {
                 id: bSetZero
                 text: qsTr("Set zero here")
 
@@ -418,7 +418,7 @@ Page {
                 onClicked: {Skypuff.sendTerminal("set_zero")}
             }
 
-            BigRoundButton {
+            RoundButton {
                 id: bPrePull
 
                 Layout.fillWidth: true
@@ -436,7 +436,7 @@ Page {
                 onClicked: {Skypuff.sendTerminal("set %1".arg(state))}
             }
 
-            BigRoundButton {
+            RoundButton {
                 id: bUnwinding
                 text: qsTr("Unwinding")
 
