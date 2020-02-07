@@ -120,6 +120,7 @@ Page {
                     Layout.fillWidth: true
 
                     Layout.preferredHeight: page.width * 0.8
+                    motorMode: Skypuff.motorMode
 
                     Connections {
                         target: Skypuff

@@ -27,6 +27,5 @@
         <file>res/icons/motor.svg</file>
         <file>res/icons/mcu.svg</file>
         <file>res/icons/battery.svg</file>
-        <file>res/icons/mcu1.svg</file>
     </qresource>
 </RCC>
