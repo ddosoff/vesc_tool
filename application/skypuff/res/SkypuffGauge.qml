@@ -234,6 +234,7 @@ Item {
       Convert power's value to angl
     */
     function powerToAng(value) {
+        value /= 1000.0
         var deltaForNegativeValue = root.minPower < 0 ? Math.abs(root.minPower) : 0;
         var deltaForPositiveValue = root.minPower > 0 ? -1 * root.minPower : 0;
 
@@ -776,7 +777,7 @@ Item {
 
                         minimumValue: root.minPower
                         maximumValue: root.maxPower
-                        value: root.power
+                        value: root.power / 1000
 
                         Behavior on value {
                            id: animationValuePower
@@ -1140,7 +1141,7 @@ Item {
 
                     Text {
                         id: powerTxt1
-                        text: root.prettyNumber(root.power, 1)
+                        text: root.prettyNumber(Math.abs(root.power) >= 100 ? root.power / 1000 : root.power, Math.abs(root.power) < 100 ? 0 : 1)
                         font.pixelSize: Math.max(10, root.diameter * 0.055)
                         font.family: root.ff
                         font.bold: root.boldValues
@@ -1148,7 +1149,7 @@ Item {
 
                     Text {
                         id: powerTxt2
-                        text: 'kw'
+                        text: Math.abs(root.power) >= 100 ? 'kw' : 'w'
                         opacity: 0.8
                         font.pixelSize: Math.max(10, root.diameter * 0.055)
                         font.family: root.ff
@@ -1241,6 +1242,7 @@ Item {
                             minimumValue: root.minMotorKg
                             maximumValue: root.maxMotorKg
                             value: root.motorKg
+                            Layout.fillWidth: true
 
                             onValueChanged: {
                                 var res = kgToAng(value);
@@ -1289,9 +1291,10 @@ Item {
 
                         Slider {
                             id: sliderPower
-                            minimumValue: root.minPower
-                            maximumValue: root.maxPower
+                            minimumValue: root.minPower * 1000
+                            maximumValue: root.maxPower * 1000
                             value: root.power
+                            width: 350
 
                             onValueChanged: {
                                 var res = powerToAng(value);
