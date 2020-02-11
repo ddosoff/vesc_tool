@@ -54,34 +54,35 @@ Item {
     property string gaugeColor: '#C7CFD9'
 
     // Default for all scales
+    property string defaultColor: '#4CAF50'
     property string warningColor: '#FF5722'
     property string dangerColor: 'red'
     property real warningColorPercent: 0.70
     property real dangerColorPercent: 0.85
 
     // Rope
-    property string ropeColor: '#9C27B0'
+    property string ropeColor: root.defaultColor
     property string ropeWarningColor: root.warningColor
     property string ropeDangerColor: root.dangerColor
     property real ropeWarningColorPercent: root.warningColorPercent
     property real ropeDangerColorPercent: root.dangerColorPercent
 
     // MotorKg
-    property string motorKgColor: '#3F51B5'
+    property string motorKgColor: root.defaultColor
     property string motorKgWarningColor: root.warningColor
     property string motorKgDangerColor: root.dangerColor
     property real motorKgWarningColorPercent: root.warningColorPercent
     property real motorKgDangerColorPercent: root.dangerColorPercent
 
     // Power
-    property string powerColor: '#009688'
+    property string powerColor: root.defaultColor
     property string powerWarningColor: root.warningColor
     property string powerDangerColor: root.dangerColor
     property real powerWarningColorPercent: root.warningColorPercent
     property real powerDangerColorPercent: root.dangerColorPercent
 
     // Speed
-    property string speedColor: '#2196F3'
+    property string speedColor: root.defaultColor
     property string speedWarningColor: root.warningColor
     property string speedDangerColor: root.dangerColor
     property real speedWarningColorPercent: root.warningColorPercent
@@ -111,7 +112,7 @@ Item {
     property int animationType: Easing.OutExpo
 
     property real motorKgLabelStepSize: 5
-    property real powerLabelStepSize: (maxPower - minPower) / 4
+    property real powerLabelStepSize: (maxPower - minPower) / (4 * 1000)
 
     /********************
          Do not touch
@@ -120,14 +121,20 @@ Item {
     property int angK: 1000
 
     onMaxMotorKgChanged: {
-        setMaxMotorKg();
+        root.setMaxMotorKg();
 
-        //setMaxPower();
+    }
+
+    onPowerChanged: {
+       console.log(root.power)
     }
 
     onMaxPowerChanged: {
-        root.minPower = root.maxPower * -1
-        root.powerLabelStepSize = (root.maxPower - root.minPower) / 4;
+        root.setMaxPower()
+    }
+
+    onMinPowerChanged: {
+        root.setMinPower()
     }
 
     function setMaxMotorKg() {
@@ -140,19 +147,33 @@ Item {
         }
     }
 
-    /*
-    function setMaxPower() {
-        root.maxPower = Math.ceil(parseInt(root.maxPower, 10) / 10) * 10;
+    function getPowerLimits(val) {
+        val = Math.ceil(parseInt(Math.abs(val), 10) / 10) * 10;
+        var step;
 
-        console.log(root.maxPower, root.powerLabelStepSize);
-        if (root.maxPower > 20) {
-            var  k = 10000 % root.maxPower === 0 && root.maxPower <= 50 ? 10 : 5;
-            root.powerLabelStepSize = Math.ceil(parseInt(root.maxPower, 10) / k / 10 ) * 10;
+        if (val > 20000) {
+            var  k = 10000000 % val === 0 && val <= 50000 ? 10 : 5;
+            step = Math.ceil(parseInt(val, 10) / k / 10 ) * 10;
         } else {
-            root.powerLabelStepSize = root.maxPower / 5;
+            step = val / (2 * 1000);
         }
+        console.log(val, step);
+
+        return {val, step};
     }
-    */
+
+    function setMaxMinPower() {
+        var res = getPowerLimits(root.maxPower);
+        console.log(res)
+        root.maxPower = res.val;
+        root.powerLabelStepSize = res.step;
+    }
+
+    function setMinPower() {
+        var res = getPowerLimits(root.minPower);
+        console.log(res)
+        root.minPower = res.val * -1;
+    }
 
     function prettyNumber(number, tf = 1) {
         if (!number || !!isNaN(number)) return 0;
@@ -234,7 +255,8 @@ Item {
       Convert power's value to angl
     */
     function powerToAng(value) {
-        value /= 1000.0
+
+        console.log(value)
         var deltaForNegativeValue = root.minPower < 0 ? Math.abs(root.minPower) : 0;
         var deltaForPositiveValue = root.minPower > 0 ? -1 * root.minPower : 0;
 
@@ -259,6 +281,7 @@ Item {
 
             Component.onCompleted: {
                 setMaxMotorKg();
+                //setMaxPower();
             }
 
             Rectangle {
@@ -316,7 +339,7 @@ Item {
                     property real motorKgStartAng: dl1.rotation - 90
                     property real motorKgEndAng: kgToAng(Math.min(root.motorKg, root.maxMotorKg));
 
-                    property real powerStartAng: 0
+                    property real powerStartAng: powerToAng(0)
                     property real powerEndAng: powerToAng(root.power > 0
                                                   ? Math.min(root.power, root.maxPower)
                                                   : Math.max(root.power, root.minPower));
@@ -363,9 +386,9 @@ Item {
                     onMotorKgEndAngChanged: canvas.requestPaint()
                     onPowerEndAngChanged: canvas.requestPaint()
 
-                    function getColors(value, min, max, wcp, dcp, wc, dc, c, tc) {
-                        var warningZone = wcp * max;
-                        var dangerZone = dcp * max;
+                    function getColors(value, max, wcp, dcp, wc, dc, c, tc) {
+                        var warningZone = wcp * Math.abs(max);
+                        var dangerZone = dcp * Math.abs(max);
 
                         var color = c;
                         var textColor = tc;
@@ -434,7 +457,6 @@ Item {
 
                                 var ropeColors = parent.getColors(
                                     root.ropeMeters,
-                                    root.minRopeMeters,
                                     root.maxRopeMeters,
                                     root.ropeWarningColorPercent,
                                     root.ropeDangerColorPercent,
@@ -467,7 +489,6 @@ Item {
 
                                 var speedColors = parent.getColors(
                                     root.speedMs,
-                                    root.minSpeedMs,
                                     root.maxSpeedMs,
                                     root.speedWarningColorPercent,
                                     root.speedDangerColorPercent,
@@ -499,7 +520,6 @@ Item {
 
                                 var kgColors = parent.getColors(
                                     root.motorKg,
-                                    root.minMotorKg,
                                     root.maxMotorKg,
                                     root.motorKgWarningColorPercent,
                                     root.motorKgDangerColorPercent,
@@ -525,15 +545,14 @@ Item {
                                     baseLayer.radius - root.gaugeHeight * 0.4,
                                     rightStart,
                                     rightEnd,
-                                    parent.powerEndAng < 0
+                                    (parent.powerEndAng - powerToAng(0)) < 0
                                 );
 
                                 context.lineWidth = root.gaugeHeight * 0.7;
 
                                 var powerColors = parent.getColors(
                                     root.power,
-                                    root.minPower,
-                                    root.maxPower,
+                                    (parent.powerEndAng - powerToAng(0)) > 0 ? root.minPower : root.maxPower,
                                     root.powerWarningColorPercent,
                                     root.powerDangerColorPercent,
                                     root.powerWarningColor,
@@ -775,8 +794,8 @@ Item {
                             margins: 0
                         }
 
-                        minimumValue: root.minPower
-                        maximumValue: root.maxPower
+                        minimumValue: root.minPower / 1000
+                        maximumValue: root.maxPower / 1000
                         value: root.power / 1000
 
                         Behavior on value {
@@ -1173,13 +1192,14 @@ Item {
 
         Rectangle {
             width: parent.width
-            height: 200
-            anchors.horizontalCenter: parent.horizontalCenter
+            height: 250
+
             visible: root.debug
 
             Grid {
-                columns: 2
+                columns: 4
                 anchors.fill: parent
+                spacing: 10
 
                 Column {
                     spacing: 10
@@ -1269,6 +1289,12 @@ Item {
                                 root.maxMotorKg = value;
                             }
                         }
+
+                        Text {
+                            text: 'Kg step'
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
                         Slider {
 
                             minimumValue: 1
@@ -1280,26 +1306,65 @@ Item {
                             }
                         }
                     }
+                }
 
-                    Column {
-                        spacing: 5
+                Column {
+                    spacing: 5
 
-                        Text {
-                            text: 'Power'
-                            anchors.horizontalCenter: parent.horizontalCenter
+                    Text {
+                        text: 'Power'
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+
+                    Slider {
+                        id: sliderPower
+                        minimumValue: root.minPower
+                        maximumValue: root.maxPower
+                        value: root.power
+
+                        onValueChanged: {
+                            root.power = value;
                         }
+                    }
 
-                        Slider {
-                            id: sliderPower
-                            minimumValue: root.minPower * 1000
-                            maximumValue: root.maxPower * 1000
-                            value: root.power
-                            width: 350
+                    Text {
+                        text: 'Power step'
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
 
-                            onValueChanged: {
-                                var res = powerToAng(value);
-                                root.power = value;
-                            }
+                    Slider {
+
+                        minimumValue: 1
+                        maximumValue: 20
+                        value: root.powerLabelStepSize
+
+                        onValueChanged: {
+                            root.powerLabelStepSize = parseInt(value);
+                        }
+                    }
+
+                    Text {
+                        text: 'Power max'
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+
+                    Slider {
+                        minimumValue: 0
+                        maximumValue: 100000
+                        value: root.maxPower
+
+                        onValueChanged: {
+                            root.maxPower = value;
+                        }
+                    }
+
+                    Slider {
+                        minimumValue: -100000
+                        maximumValue: 0
+                        value: root.minPower
+
+                        onValueChanged: {
+                            root.minPower = value;
                         }
                     }
                 }
