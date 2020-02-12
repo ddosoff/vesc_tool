@@ -122,11 +122,9 @@ Item {
 
     onMaxMotorKgChanged: {
         root.setMaxMotorKg();
-
     }
 
     onPowerChanged: {
-       console.log(root.power)
     }
 
     onMaxPowerChanged: {
@@ -135,6 +133,14 @@ Item {
 
     onMinPowerChanged: {
         root.setMinPower()
+    }
+
+    onLeftRopeMetersChanged: {
+        //ropeCanvas.requestPaint();
+    }
+
+    onRopeMetersChanged: {
+        //ropeCanvas.requestPaint();
     }
 
     function setMaxMotorKg() {
@@ -157,21 +163,18 @@ Item {
         } else {
             step = val / (2 * 1000);
         }
-        console.log(val, step);
 
         return {val, step};
     }
 
-    function setMaxMinPower() {
+    function setMaxPower() {
         var res = getPowerLimits(root.maxPower);
-        console.log(res)
         root.maxPower = res.val;
         root.powerLabelStepSize = res.step;
     }
 
     function setMinPower() {
         var res = getPowerLimits(root.minPower);
-        console.log(res)
         root.minPower = res.val * -1;
     }
 
@@ -255,8 +258,6 @@ Item {
       Convert power's value to angl
     */
     function powerToAng(value) {
-
-        console.log(value)
         var deltaForNegativeValue = root.minPower < 0 ? Math.abs(root.minPower) : 0;
         var deltaForPositiveValue = root.minPower > 0 ? -1 * root.minPower : 0;
 
@@ -404,6 +405,65 @@ Item {
 
                     function convertAngToRadian(ang) {
                         return (Math.PI * ang) / 180;
+                    }
+
+                    function drawTextAlongArc(context, str, centerX, centerY, radius, angle){
+                        context.save();
+                        context.translate(centerX, centerY);
+                        context.rotate(-1 * angle / 2);
+                        context.rotate(-1 * (angle / str.length) / 2);
+                        var lc;
+                        for (var n = 0; n < str.length; n++) {
+                            var c = str[n];
+                            var d;
+
+                            switch (c) {
+                                case '.':
+                                    d = 0;
+                                    break;
+                                case 'm':
+                                    d = -2;
+                                    break;
+                                default:
+                                    d = 0;
+                            }
+
+                            d = lc === '.' ? 10 : d;
+                            console.log(d)
+                            context.rotate(angle / (str.length + d));
+                            context.save();
+                            context.translate(0, -1 * radius);
+
+
+
+
+
+                                /// draw text from top - makes life easier at the moment
+                                //context.textBaseline = 'top';
+
+                                /// color for background
+                                context.fillStyle = '#f50';
+
+                                /// get width of text
+                                //var width = context.measureText(c).width;
+
+                                /// draw background rect assuming height of font
+                                //context.fillRect(0, 0, width, parseInt(10, 10));
+
+                                /// text color
+                                //context.fillStyle = '#000';
+
+                                /// draw text on top
+                                context.fillText(c, 0, 0);
+
+                                /// restore original state
+                                context.restore();
+
+                            //context.fillText(c, 0, 0);
+                            //context.restore();
+                            lc = c;
+                        }
+                        context.restore();
                     }
 
                     Canvas {
@@ -564,6 +624,36 @@ Item {
                                 powerTxt2.color = powerTxt1.color = powerColors.textColor;
                                 context.strokeStyle = powerColors.color;
                                 context.stroke();
+
+
+
+                                context.reset();
+                                context.beginPath();
+
+
+                                   // var angle = parent.convertAngToRadian(180);
+
+                                var text = '%1m /%2m'
+                                    .arg(root.prettyNumber(root.leftRopeMeters, root.leftRopeMeters < 10 ? 1 : 0))
+                                    .arg(root.prettyNumber(root.ropeMeters, root.ropeMeters < 10 ? 1 : 0 ))
+
+                                //console.log(text)
+
+
+                                var angle = (Math.PI * (text.length * 3.8)) / 180; // radians
+
+
+                               // context.font = "30pt Arial";
+                                  //context.textAlign = "center";
+                                    context.font = "%1px sans-serif".arg(Math.max(10, root.diameter * 0.048))
+
+                                //console.log(Math.max(10, root.diameter * 0.04))
+
+
+
+
+
+                                parent.drawTextAlongArc(context, text, centreX, centreY, baseLayer.radius - root.gaugeHeight, angle);
                             }
                         }
                         onWidthChanged:  { requestPaint(); }
@@ -577,7 +667,7 @@ Item {
                         anchors.fill: parent
                         onPaint: {
                             if (context) {
-                                context.reset ();
+                                context.reset();
                                 context.beginPath();
 
                                 var centreX = baseLayer.width / 2;
@@ -622,6 +712,29 @@ Item {
                         }
                     }
                 }
+
+                /*Canvas {
+                    id: ropeCanvas
+                    antialiasing: true
+                    contextType: '2d'
+                    anchors.fill: parent
+
+
+                    onWidthChanged:  { requestPaint(); }
+                    onHeightChanged: { requestPaint(); }
+
+
+
+                    onPaint: {
+
+                        var centreX = baseLayer.width / 2;
+                        var centreY = baseLayer.height / 2;
+
+
+
+
+                    }
+                }*/
 
                 Item {
                     id: circleInner
@@ -1028,14 +1141,12 @@ Item {
                 /**
                   Values of ropeMeters and leftRopeMeters
                   */
-                Column {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    anchors.topMargin: root.gaugeHeight / 2 - root.gaugeHeight * 0.3
-                    spacing: 2
-                    width: Math.max(textLeftRopeMeters.width, ropeMeters.width)
 
 
+
+
+
+                    /*
                     Grid {
                         spacing: 5
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -1056,14 +1167,6 @@ Item {
                         }
                     }
 
-                    Rectangle {
-                        opacity: 0.5
-                        width: parent.width
-                        height: 1
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        color: root.borderColor
-                    }
-
                     Grid {
                         spacing: 5
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -1082,8 +1185,8 @@ Item {
                             font.family: root.ff
                             font.bold: root.boldValues
                         }
-                    }
-                }
+                    }*/
+
 
                 /**
                   Value of speedMs
