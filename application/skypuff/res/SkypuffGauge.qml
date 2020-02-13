@@ -24,7 +24,7 @@ Item {
     property real ropeMeters: 0
     property real leftRopeMeters: maxRopeMeters - ropeMeters
     property real minRopeMeters: 0
-    property real maxRopeMeters: 800
+    property real maxRopeMeters: 800;
 
     property real power: 0
     property real maxPower: 20
@@ -124,6 +124,10 @@ Item {
         root.setMaxMotorKg();
     }
 
+    onMaxRopeMetersChanged: {
+        setMaxRopeMeters();
+    }
+
     onPowerChanged: {
     }
 
@@ -135,12 +139,8 @@ Item {
         root.setMinPower()
     }
 
-    onLeftRopeMetersChanged: {
-        //ropeCanvas.requestPaint();
-    }
-
-    onRopeMetersChanged: {
-        //ropeCanvas.requestPaint();
+    function setMaxRopeMeters() {
+        root.maxRopeMeters = Math.ceil(parseInt(root.maxRopeMeters, 10) / 10) * 10;
     }
 
     function setMaxMotorKg() {
@@ -281,8 +281,9 @@ Item {
             height: diameter
 
             Component.onCompleted: {
-                setMaxMotorKg();
+                root.setMaxMotorKg();
                 //setMaxPower();
+                root.setMaxRopeMeters();
             }
 
             Rectangle {
@@ -335,15 +336,17 @@ Item {
                     property real ropeEndAng: ropeToAng(Math.max(root.maxRopeMeters - root.ropeMeters, root.minRopeMeters))
 
                     property real speedStartAng: speedToAng(0)
-                    property real speedEndAng: speedToAng(Math.min(root.speedMs, root.maxSpeedMs));
+                    property real speedEndAng: speedToAng(Math.min(root.speedMs, root.maxSpeedMs))
 
                     property real motorKgStartAng: dl1.rotation - 90
-                    property real motorKgEndAng: kgToAng(Math.min(root.motorKg, root.maxMotorKg));
+                    property real motorKgEndAng: kgToAng(Math.min(root.motorKg, root.maxMotorKg))
 
                     property real powerStartAng: powerToAng(0)
                     property real powerEndAng: powerToAng(root.power > 0
                                                   ? Math.min(root.power, root.maxPower)
-                                                  : Math.max(root.power, root.minPower));
+                                                  : Math.max(root.power, root.minPower))
+
+                    property string ropeTextColor: 'black'
 
                     // Animation
                     Behavior on ropeEndAng {
@@ -382,7 +385,10 @@ Item {
                        }
                     }
 
-                    onRopeEndAngChanged: canvas.requestPaint()
+                    onRopeEndAngChanged: {
+                        canvas.requestPaint();
+                        ropeCanvas.requestPaint();
+                    }
                     onSpeedEndAngChanged: canvas.requestPaint()
                     onMotorKgEndAngChanged: canvas.requestPaint()
                     onPowerEndAngChanged: canvas.requestPaint()
@@ -407,60 +413,55 @@ Item {
                         return (Math.PI * ang) / 180;
                     }
 
-                    function drawTextAlongArc(context, str, centerX, centerY, radius, angle){
+                    function drawTextAlongArc(context, str, centerX, centerY, radius, ang, color){
+                        var angle = (Math.PI * (str.length * 3.8)) / 180; // radians
+
                         context.save();
                         context.translate(centerX, centerY);
-                        context.rotate(-1 * angle / 2);
-                        context.rotate(-1 * (angle / str.length) / 2);
-                        var lc;
+                        context.rotate(convertAngToRadian(ang) - angle / 2);
+
                         for (var n = 0; n < str.length; n++) {
                             var c = str[n];
-                            var d;
 
-                            switch (c) {
-                                case '.':
-                                    d = 0;
-                                    break;
-                                case 'm':
-                                    d = -2;
-                                    break;
-                                default:
-                                    d = 0;
-                            }
+                            context.rotate(angle / str.length);
+                            context.save();
+                            context.translate(0, -1 * radius);
+                            context.fillStyle = color;
+                            context.fillText(c, 0, 0);
+                            context.restore();
+                        }
+                        context.restore();
+                    }
 
-                            d = lc === '.' ? 10 : d;
-                            console.log(d)
+                    function drawRopeAlongArc(context, lrm, rm, centerX, centerY, radius){
+                        var lrmLebgth = (lrm + '').replace('.', '').toString().length;
+                        var rmLebgth = (rm + '').replace('.', '').toString().length;
+                        var diff = lrmLebgth - rmLebgth;
+                        var lc;
+
+                        var str = '%1 |%2'
+                            .arg(diff < 0 ? (((rm % 1) !== 0 ? '*' : '') + (new Array(Math.abs(diff) + 1).join('*')) + lrm + 'm') : (((rm % 1) !== 0 ? '*' : '') + lrm + 'm'))
+                            .arg(diff > 0 ? (rm + 'm' + (new Array(Math.abs(diff) + 1).join('*'))) : (rm + 'm'));
+
+                        // Calculate angle of str
+                        var angle = (Math.PI * (str.length * 3.8)) / 180; // radians
+
+                        context.save();
+                        context.translate(centerX, centerY);
+                        context.rotate(convertAngToRadian(-5.5) - angle / 2);
+
+
+                        for (var n = 0; n < str.length; n++) {
+                            var c = str[n];
+                            var d = c === 'm' ? -2 : 0;
+                                d = lc === '.' ? 10 : d;
+
                             context.rotate(angle / (str.length + d));
                             context.save();
                             context.translate(0, -1 * radius);
-
-
-
-
-
-                                /// draw text from top - makes life easier at the moment
-                                //context.textBaseline = 'top';
-
-                                /// color for background
-                                context.fillStyle = '#f50';
-
-                                /// get width of text
-                                //var width = context.measureText(c).width;
-
-                                /// draw background rect assuming height of font
-                                //context.fillRect(0, 0, width, parseInt(10, 10));
-
-                                /// text color
-                                //context.fillStyle = '#000';
-
-                                /// draw text on top
-                                context.fillText(c, 0, 0);
-
-                                /// restore original state
-                                context.restore();
-
-                            //context.fillText(c, 0, 0);
-                            //context.restore();
+                            context.fillStyle = c === '*' ? 'rgba(255, 0, 0, 0)' : progressBars.ropeTextColor;
+                            context.fillText(c, 0, 0);
+                            context.restore();
                             lc = c;
                         }
                         context.restore();
@@ -525,6 +526,8 @@ Item {
                                     root.ropeColor,
                                     'black'
                                 );
+
+                                parent.ropeTextColor = ropeColors.textColor;
 
                                 context.strokeStyle = ropeColors.color;
                                 context.stroke();
@@ -624,36 +627,6 @@ Item {
                                 powerTxt2.color = powerTxt1.color = powerColors.textColor;
                                 context.strokeStyle = powerColors.color;
                                 context.stroke();
-
-
-
-                                context.reset();
-                                context.beginPath();
-
-
-                                   // var angle = parent.convertAngToRadian(180);
-
-                                var text = '%1m /%2m'
-                                    .arg(root.prettyNumber(root.leftRopeMeters, root.leftRopeMeters < 10 ? 1 : 0))
-                                    .arg(root.prettyNumber(root.ropeMeters, root.ropeMeters < 10 ? 1 : 0 ))
-
-                                //console.log(text)
-
-
-                                var angle = (Math.PI * (text.length * 3.8)) / 180; // radians
-
-
-                               // context.font = "30pt Arial";
-                                  //context.textAlign = "center";
-                                    context.font = "%1px sans-serif".arg(Math.max(10, root.diameter * 0.048))
-
-                                //console.log(Math.max(10, root.diameter * 0.04))
-
-
-
-
-
-                                parent.drawTextAlongArc(context, text, centreX, centreY, baseLayer.radius - root.gaugeHeight, angle);
                             }
                         }
                         onWidthChanged:  { requestPaint(); }
@@ -713,7 +686,7 @@ Item {
                     }
                 }
 
-                /*Canvas {
+                Canvas {
                     id: ropeCanvas
                     antialiasing: true
                     contextType: '2d'
@@ -730,11 +703,32 @@ Item {
                         var centreX = baseLayer.width / 2;
                         var centreY = baseLayer.height / 2;
 
+                        context.reset();
+                        context.beginPath();
+                        context.font = "%1px sans-serif".arg(Math.max(10, root.diameter * 0.048));
 
+                        progressBars.drawRopeAlongArc(
+                            context,
+                            root.prettyNumber(root.leftRopeMeters, root.leftRopeMeters < 10 ? 1 : 0),
+                            root.prettyNumber(root.ropeMeters, root.ropeMeters < 10 ? 1 : 0),
+                            centreX,
+                            centreY,
+                            baseLayer.radius - root.gaugeHeight
+                        );
 
+                        context.beginPath();
 
+                        /*progressBars.drawTextAlongArc(
+                            context,
+                            'Rope',
+                            centreX,
+                            centreY,
+                            baseLayer.radius - root.gaugeHeight,
+                            180 -  90 - dl2.rotation,
+                            '#515151'
+                        );*/
                     }
-                }*/
+                }
 
                 Item {
                     id: circleInner
@@ -1090,7 +1084,7 @@ Item {
                             minimumValueAngle: root.ropeToAng(root.minRopeMeters)
                             maximumValueAngle: root.ropeToAng(root.maxRopeMeters)
                             labelInset: root.gaugeHeight / 2
-                            labelStepSize: root.maxRopeMeters
+                            labelStepSize: 1
 
                             foreground: Item {
                                 Rectangle {
@@ -1128,7 +1122,22 @@ Item {
                             }
 
                             tickmark: Rectangle {
-                                visible: false
+                                function show(value) {
+                                    var ifHalf = value === Math.ceil((root.maxRopeMeters / 2));
+                                    var ifQuat1 = value === Math.ceil((root.maxRopeMeters / 4));
+                                    var ifQuat2 = value === Math.ceil((root.maxRopeMeters - root.maxRopeMeters / 4));
+                                    return ifHalf || ifQuat1 || ifQuat2;
+                                }
+
+                                visible: this.show(styleData.value)
+                                antialiasing: true
+                                implicitWidth: outerRadius * ((styleData.value === root.maxRopeMeters || styleData.value === root.minRopeMeters)
+                                    ? 0.005
+                                    : 0.01)
+                                implicitHeight:  (styleData.value === root.maxRopeMeters || styleData.value === root.minRopeMeters)
+                                    ? root.gaugeHeight
+                                    : implicitWidth * ((styleData.value % (root.maxRopeMeters)) ? 3 : 6)
+                                color: root.gaugeFontColor
                             }
 
                             needle: Rectangle {
@@ -1141,10 +1150,6 @@ Item {
                 /**
                   Values of ropeMeters and leftRopeMeters
                   */
-
-
-
-
 
                     /*
                     Grid {
@@ -1231,7 +1236,7 @@ Item {
                 Grid {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
-                    anchors.topMargin: root.gaugeHeight * 3.4
+                    anchors.topMargin: root.gaugeHeight * 3.7
                     spacing: 5
 
                     Text {
@@ -1258,7 +1263,7 @@ Item {
                 Grid {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
-                    anchors.bottomMargin: root.gaugeHeight * 3.4
+                    anchors.bottomMargin: root.gaugeHeight * 3.7
                     spacing: 5
 
                     Text {
@@ -1282,14 +1287,71 @@ Item {
                 /**
                   Title 'Power'
                   */
-                Text {
-                    text: 'Power'
+                Item {
+                   // text: 'Power'
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
-                    anchors.bottomMargin: root.gaugeHeight * 2.4
-                    font.pixelSize: Math.max(10, root.diameter * 0.035)
-                    font.family: root.ff
+                    anchors.bottomMargin: root.gaugeHeight * 3
+
+                   // font.pixelSize: Math.max(10, root.diameter * 0.035)
+                   // font.family: root.ff
+
+                    Rectangle {
+                        id: lol
+                        width: tBat.width + 20
+                        height: 20
+                        border.color: 'grey'
+                        x: -lol.width / 2
+                        radius: 2
+
+
+                        /*ProgressBar {
+                            width: parent.width
+                            height: parent.height
+
+                            Layout.fillWidth: true
+                            enabled: Skypuff.isBatteryScaleValid
+                            to: 100
+                            value: Skypuff.batteryPercents
+
+                            background: Rectangle {
+                                radius: 2
+                                color: "lightgray"
+                                border.color: "gray"
+                                border.width: 1
+                                implicitWidth: parent.width
+                                implicitHeight: parent.height
+                            }
+                        }*/
+                        Rectangle {
+                            anchors.left: lol.left
+                            anchors.leftMargin: 1
+                            anchors.verticalCenter: lol.verticalCenter
+
+                            height: lol.height-2
+                            color: "lightgreen"
+                            width: lol.width * 45 / 100
+                        }
+
+                        Text {
+                            id: tBat
+                            anchors.centerIn: parent
+                            text: qsTr("%1V").arg((100).toFixed(2))
+                        }
+
+                        Rectangle {
+                            anchors.left: lol.right
+                            anchors.verticalCenter: lol.verticalCenter
+
+                            height: 10
+                            width: 2
+                            border.color: 'grey'
+
+                        }
+                    }
                 }
+
+
             }
         }
 

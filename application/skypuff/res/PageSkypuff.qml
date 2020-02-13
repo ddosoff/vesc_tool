@@ -117,7 +117,7 @@ Page {
                     minPower: -8000
 
                     Layout.preferredHeight: page.width * 0.85
-                    motorMode: Skypuff.motorMode
+                    //motorMode: Skypuff.motorMode
 
                     debug: true
 
