@@ -2,7 +2,7 @@
 
 bool QMLable_skypuff_config::deserializeV1(VByteArray& from)
 {
-    if(from.length() < 4 * 25 - 2)
+    if(from.length() < 4 * 29 - 2)
             return false;
 
     motor_poles = from.vbPopFrontUint8();
@@ -38,6 +38,11 @@ bool QMLable_skypuff_config::deserializeV1(VByteArray& from)
     manual_slow_max_current = from.vbPopFrontDouble32Auto();
     manual_slow_speed_up_current = from.vbPopFrontDouble32Auto();
     manual_slow_erpm = from.vbPopFrontDouble32Auto();
+
+    antisex_starting_integral = from.vbPopFrontDouble32Auto();
+    antisex_reduce_amps = from.vbPopFrontDouble32Auto();
+    antisex_reduce_steps = from.vbPopFrontInt32();
+    antisex_reduce_amps_per_step = from.vbPopFrontDouble32Auto();
 
     return true;
 }
@@ -77,6 +82,10 @@ QByteArray QMLable_skypuff_config::serializeV1() const
     vb.vbAppendDouble32Auto(manual_slow_max_current);
     vb.vbAppendDouble32Auto(manual_slow_speed_up_current);
     vb.vbAppendDouble32Auto(manual_slow_erpm);
+    vb.vbAppendDouble32Auto(antisex_starting_integral);
+    vb.vbAppendDouble32Auto(antisex_reduce_amps);
+    vb.vbAppendInt32(antisex_reduce_steps);
+    vb.vbAppendDouble32Auto(antisex_reduce_amps_per_step);
 
     return std::move(vb);
 }
@@ -139,6 +148,13 @@ bool QMLable_skypuff_config::saveV1(QSettings &f) const
     f.setValue("manual_slow_max_kg", QString::number(manual_slow_max_current_to_kg(), 'f', 1));
     f.endGroup();
 
+    f.beginGroup("antisex");
+    f.setValue("starting_ms", QString::number(antisex_starting_integral_to_ms(), 'f', 1));
+    f.setValue("reduce_kg", QString::number(antisex_reduce_amps_to_kg(), 'f', 1));
+    f.setValue("reduce_steps", antisex_reduce_steps);
+    f.setValue("reduce_per_step_kg", QString::number(antisex_reduce_amps_per_step_to_kg(), 'f', 1));
+    f.endGroup();
+
     f.sync();
     return f.status() == QSettings::NoError;
 }
@@ -195,6 +211,13 @@ bool QMLable_skypuff_config::loadV1(QSettings &f)
     ms_to_manual_slow_erpm(f.value("manual_slow_ms").toDouble());
     kg_to_manual_slow_speed_up_current(f.value("manual_slow_speed_up_kg").toDouble());
     kg_to_manual_slow_max_current(f.value("manual_slow_max_kg").toDouble());
+    f.endGroup();
+
+    f.beginGroup("antisex");
+    ms_to_antisex_starting_integral(f.value("starting_ms").toDouble());
+    kg_to_antisex_reduce_amps(f.value("reduce_kg").toDouble());
+    antisex_reduce_steps = f.value("reduce_steps").toInt();
+    kg_to_antisex_reduce_amps_per_step(f.value("reduce_per_step_kg").toDouble());
     f.endGroup();
 
     return f.status() == QSettings::NoError;

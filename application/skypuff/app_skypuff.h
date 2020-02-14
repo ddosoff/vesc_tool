@@ -82,6 +82,12 @@ typedef struct
     float manual_slow_max_current;      // Max force for MANUAL_SLOW and MANUAL_SLOW_BACK
     float manual_slow_speed_up_current; // Speed up current for manual constant speed states
     float manual_slow_erpm;             // Constant speed for manual rotation
+
+    // Antisex dampering
+    float antisex_starting_integral;    // Start antisex algorihtm if acceleration integral is higher then this
+    float antisex_reduce_amps;          // Reduce motor amps to this value on deceleration
+    int antisex_reduce_steps;           // Maximum number of steps to increase deceleration
+    float antisex_reduce_amps_per_step; // Deceleration increase amps per step
 } skypuff_config;
 
 // Drive settings part of mc_configuration
