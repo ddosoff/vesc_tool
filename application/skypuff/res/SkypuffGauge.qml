@@ -24,10 +24,10 @@ Item {
     property real ropeMeters: 0
     property real leftRopeMeters: maxRopeMeters - ropeMeters
     property real minRopeMeters: 0
-    property real maxRopeMeters: 800;
+    property real maxRopeMeters: 1500;
 
     property real power: 0
-    property real maxPower: 20
+    property real maxPower: 20000
     property real minPower: maxPower * -1
 
     property real motorKg
@@ -47,7 +47,7 @@ Item {
             Colors
     ********************/
 
-    property real baseOpacity: 0.4  // Opacity is to all colors of the scale
+    property real baseOpacity: 0.5  // Opacity is to all colors of the scale
     property string innerColor: '#efeded'
     property string gaugeDangerFontColor: '#8e1616' // Color for danger ranges
     property string gaugeFontColor: '#515151'
@@ -55,38 +55,38 @@ Item {
 
     // Default for all scales
     property string defaultColor: '#4CAF50'
-    property string warningColor: '#FF5722'
+    property string warningColor: '#FF9800'
     property string dangerColor: 'red'
-    property real warningColorPercent: 0.70
-    property real dangerColorPercent: 0.85
+
+    property int gaugesColorAnimation: 800
 
     // Rope
     property string ropeColor: root.defaultColor
     property string ropeWarningColor: root.warningColor
     property string ropeDangerColor: root.dangerColor
-    property real ropeWarningColorPercent: root.warningColorPercent
-    property real ropeDangerColorPercent: root.dangerColorPercent
+    property bool ropeWarning: false
+    property bool ropeDanger: false
 
     // MotorKg
     property string motorKgColor: root.defaultColor
     property string motorKgWarningColor: root.warningColor
     property string motorKgDangerColor: root.dangerColor
-    property real motorKgWarningColorPercent: root.warningColorPercent
-    property real motorKgDangerColorPercent: root.dangerColorPercent
+    property bool motorKgWarning: false
+    property bool motorKgDanger: false
 
     // Power
     property string powerColor: root.defaultColor
     property string powerWarningColor: root.warningColor
     property string powerDangerColor: root.dangerColor
-    property real powerWarningColorPercent: root.warningColorPercent
-    property real powerDangerColorPercent: root.dangerColorPercent
+    property bool powerWarning: false
+    property bool powerDanger: false
 
     // Speed
     property string speedColor: root.defaultColor
     property string speedWarningColor: root.warningColor
     property string speedDangerColor: root.dangerColor
-    property real speedWarningColorPercent: root.warningColorPercent
-    property real speedDangerColorPercent: root.dangerColorPercent
+    property bool speedWarning: false
+    property bool speedDanger: false
 
     /********************
         Default view
@@ -112,32 +112,20 @@ Item {
     property int animationType: Easing.OutExpo
 
     property real motorKgLabelStepSize: 5
-    property real powerLabelStepSize: (maxPower - minPower) / (4 * 1000)
+    property real powerLabelStepSize: (maxPower - minPower) / (5 * 1000)
 
     /********************
          Do not touch
     ********************/
     property bool debug: false
+    property bool debugBlink: false
+
     property int angK: 1000
 
-    onMaxMotorKgChanged: {
-        root.setMaxMotorKg();
-    }
-
-    onMaxRopeMetersChanged: {
-        setMaxRopeMeters();
-    }
-
-    onPowerChanged: {
-    }
-
-    onMaxPowerChanged: {
-        root.setMaxPower()
-    }
-
-    onMinPowerChanged: {
-        root.setMinPower()
-    }
+    onMaxMotorKgChanged: root.setMaxMotorKg()
+    onMaxRopeMetersChanged: setMaxRopeMeters()
+    onMaxPowerChanged: root.setMaxPower()
+    onMinPowerChanged: root.setMinPower()
 
     function setMaxRopeMeters() {
         root.maxRopeMeters = Math.ceil(parseInt(root.maxRopeMeters, 10) / 10) * 10;
@@ -154,7 +142,7 @@ Item {
     }
 
     function getPowerLimits(val) {
-        val = Math.ceil(parseInt(Math.abs(val), 10) / 10) * 10;
+        val = Math.ceil(parseInt(Math.abs(val), 10) / 10000) * 10000;
         var step;
 
         if (val > 20000) {
@@ -352,6 +340,95 @@ Item {
                     property string powerBgColor: 'black'
                     property string kgBgColor: 'black'
 
+                    property bool ropeD: root.ropeDanger
+                    property string ropeDColor: root.ropeDangerColor
+
+                    property bool powerD: root.powerDanger
+                    property string powerDColor: root.powerDangerColor
+
+                    property bool motorKgD: root.motorKgDanger
+                    property string motorKgDColor: root.motorKgDangerColor
+
+                    property bool speedD: root.speedDanger
+                    property string speedDColor: root.speedDangerColor
+
+                    /******/
+
+                    onRopeDChanged: {
+                        ropeDAnimation.loops = ropeD ? Animation.Infinite : 1;
+                        if (!ropeD) ropeDColor = root.ropeDangerColor;
+                        canvas.requestPaint();
+                    }
+
+                    onRopeDColorChanged: canvas.requestPaint()
+
+                    ColorAnimation on ropeDColor {
+                        id: ropeDAnimation
+                        running: root.ropeDanger
+                        from: root.ropeWarningColor
+                        to: root.ropeDangerColor
+                        duration: root.gaugesColorAnimation
+                        loops: Animation.Infinite
+                    }
+
+                    /******/
+
+                    onPowerDChanged: {
+                        powerDAnimation.loops = powerD ? Animation.Infinite : 1;
+                        if (!powerD) powerDColor = root.powerDangerColor;
+                        canvas.requestPaint();
+                    }
+
+                    onPowerDColorChanged: canvas.requestPaint()
+
+                    ColorAnimation on powerDColor {
+                        id: powerDAnimation
+                        running: root.powerDanger
+                        from: root.powerWarningColor
+                        to: root.powerDangerColor
+                        duration: root.gaugesColorAnimation
+                        loops: Animation.Infinite
+                    }
+
+                    /******/
+
+                    onMotorKgDChanged: {
+                        motorKgDAnimation.loops = motorKgD ? Animation.Infinite : 1;
+                        if (!motorKgD) motorKgDColor = root.motorKgDangerColor;
+                        canvas.requestPaint();
+                    }
+
+                    onMotorKgDColorChanged: canvas.requestPaint()
+
+                    ColorAnimation on motorKgDColor {
+                        id: motorKgDAnimation
+                        running: root.motorKgDanger
+                        from: root.motorKgWarningColor
+                        to: root.motorKgDangerColor
+                        duration: root.gaugesColorAnimation
+                        loops: Animation.Infinite
+                    }
+
+                    /******/
+                    onSpeedDChanged: {
+                        speedDAnimation.loops = speedD ? Animation.Infinite : 1;
+                        if (!speedD) speedDColor = root.speedDangerColor;
+                        canvas.requestPaint();
+                    }
+
+                    onSpeedDColorChanged: canvas.requestPaint()
+
+                    ColorAnimation on speedDColor {
+                        id: speedDAnimation
+                        running: root.speedDanger
+                        from: root.speedWarningColor
+                        to: root.speedDangerColor
+                        duration: root.gaugesColorAnimation
+                        loops: Animation.Infinite
+                    }
+
+                    /******/
+
                     // Animation
                     Behavior on ropeEndAng {
                        id: animationRopeEndAng
@@ -390,19 +467,66 @@ Item {
                     }
 
                     onRopeEndAngChanged: {
+                        if (root.debug && root.debugBlink) {
+                            var debug = debugBlink(root.ropeMeters, root.maxRopeMeters);
+                            root.ropeDanger = debug.danger;
+                            root.ropeWarning = debug.warning;
+                        }
+
                         canvas.requestPaint();
                         ropeCanvas.requestPaint();
                     }
+
                     onSpeedEndAngChanged: {
+                        if (root.debug && root.debugBlink) {
+                            var debug = debugBlink(root.speedMs, root.maxSpeedMs);
+                            root.speedDanger = debug.danger;
+                            root.speedWarning = debug.warning;
+                        }
+
                         canvas.requestPaint();
-                        ropeCanvas.requestPaint();
                     }
-                    onMotorKgEndAngChanged: canvas.requestPaint()
-                    onPowerEndAngChanged: canvas.requestPaint()
+                    onMotorKgEndAngChanged: {
+                        if (root.debug && root.debugBlink) {
+                            var debug = debugBlink(root.motorKg, root.maxMotorKg);
+                            root.motorKgDanger = debug.danger;
+                            root.motorKgWarning = debug.warning;
+                        }
+
+                        canvas.requestPaint();
+                    }
+                    onPowerEndAngChanged: {
+                        if (root.debug && root.debugBlink) {
+                            var debug = debugBlink(root.power, root.maxPower);
+                            root.powerDanger = debug.danger;
+                            root.powerWarning = debug.warning;
+                        }
+
+                        canvas.requestPaint()
+                    }
+
+                    function debugBlink(value, max) {
+                        var warningZone = 0.7 * Math.abs(max);
+                        var dangerZone = 0.8 * Math.abs(max);
+                        var warning;
+                        var danger;
+
+                        if (Math.abs(value) >= warningZone && Math.abs(value) < dangerZone) {
+                            warning = true;
+                            danger = false;
+                        } else if (Math.abs(value) >= dangerZone) {
+                            danger = true;
+                            warning = false
+                        } else {
+                            warning = danger = false;
+                        }
+
+                        return { warning, danger };
+                    }
 
                     function getColors(value, max, wcp, dcp, wc, dc, c, tc) {
-                        var warningZone = wcp * Math.abs(max);
-                        var dangerZone = dcp * Math.abs(max);
+                        var warningZone = 0.75 * Math.abs(max);
+                        var dangerZone = 0.8 * Math.abs(max);
 
                         var color = c;
                         var textColor = tc;
@@ -553,21 +677,10 @@ Item {
                                 context.globalCompositeOperation = 'source-atop';
                                 context.lineWidth = 200;
 
-                                var ropeColors = parent.getColors(
-                                    root.ropeMeters,
-                                    root.maxRopeMeters,
-                                    root.ropeWarningColorPercent,
-                                    root.ropeDangerColorPercent,
-                                    root.ropeWarningColor,
-                                    root.ropeDangerColor,
-                                    root.ropeColor,
-                                    'black'
-                                );
-
-                                parent.ropeTextColor = ropeColors.textColor;
-
-                                context.strokeStyle = ropeColors.color;
+                                parent.ropeTextColor = root.ropeWarning || root.ropeDanger ? parent.ropeDColor : 'black';
+                                context.strokeStyle = root.ropeWarning || root.ropeDanger ? parent.ropeDColor : root.ropeColor;
                                 context.stroke();
+
 
                                 /********** Bottom ***********/
 
@@ -587,19 +700,8 @@ Item {
                                 context.globalCompositeOperation = 'source-atop';
                                 context.lineWidth = 200;
 
-                                var speedColors = parent.getColors(
-                                    root.speedMs,
-                                    root.maxSpeedMs,
-                                    root.speedWarningColorPercent,
-                                    root.speedDangerColorPercent,
-                                    root.speedWarningColor,
-                                    root.speedDangerColor,
-                                    root.speedColor,
-                                    'black'
-                                );
-
-                                parent.speedTextColor = speedColors.textColor;
-                                context.strokeStyle = speedColors.color;
+                                parent.speedTextColor = root.speedWarning || root.speedDanger ? parent.speedDColor : 'black';
+                                context.strokeStyle = root.speedWarning || root.speedDanger ? parent.speedDColor : root.speedColor;
                                 context.stroke();
 
                                 /********** Left ***********/
@@ -619,20 +721,11 @@ Item {
 
                                 context.lineWidth = root.gaugeHeight * 0.7;
 
-                                var kgColors = parent.getColors(
-                                    root.motorKg,
-                                    root.maxMotorKg,
-                                    root.motorKgWarningColorPercent,
-                                    root.motorKgDangerColorPercent,
-                                    root.motorKgWarningColor,
-                                    root.motorKgDangerColor,
-                                    root.motorKgColor,
-                                    'black'
-                                );
+                                motoKgTxt1.color = motoKgTxt2.color = root.motorKgWarning || root.motorKgDanger ? parent.motorKgDColor : 'black';
+                                var kgColor = root.motorKgWarning || root.motorKgDanger ? parent.motorKgDColor : root.motorKgColor;
 
-                                motoKgTxt1.color = motoKgTxt2.color = kgColors.textColor;
-                                parent.kgBgColor = kgColors.color;
-                                context.strokeStyle = kgColors.color;
+                                parent.kgBgColor = kgColor;
+                                context.strokeStyle = kgColor;
                                 context.stroke();
 
 
@@ -660,21 +753,11 @@ Item {
 
                                 context.lineWidth = root.gaugeHeight * 0.7;
 
-                                var powerColors = parent.getColors(
-                                    root.power,
-                                    (parent.powerEndAng - powerToAng(0)) > 0 ? root.minPower : root.maxPower,
-                                    root.powerWarningColorPercent,
-                                    root.powerDangerColorPercent,
-                                    root.powerWarningColor,
-                                    root.powerDangerColor,
-                                    root.powerColor,
-                                    'black'
-                                );
+                                var powerColor = root.powerWarning || root.powerDanger ? parent.powerDColor : root.powerColor;
 
-                                powerTxt2.color = powerTxt1.color = powerColors.textColor;
-                                parent.powerTextColor = powerColors.textColor;
-                                parent.powerBgColor = powerColors.color;
-                                context.strokeStyle = powerColors.color;
+                                powerTxt2.color = powerTxt1.color = parent.powerTextColor = powerColor;
+                                parent.powerBgColor = powerColor;
+                                context.strokeStyle = powerColor;
                                 context.stroke();
                             }
                         }
@@ -1011,42 +1094,16 @@ Item {
                             labelInset: root.gaugeHeight
                             labelStepSize: root.powerLabelStepSize
 
-                            foreground: Item {
-                                Rectangle {
-                                    width: 10
-                                    height: width
-                                    radius: width / 2
-                                    color: root.gaugeFontColor
-                                    antialiasing: true
-                                    anchors.centerIn: parent
-                                }
-                            }
-
-                            /*minorTickmark: Rectangle {
-                                antialiasing: true
-                                visible: root.maxPower <= 5
-                                implicitWidth: outerRadius * ((styleData.value === root.maxPower || styleData.value === root.minPower)
-                                    ? 0.005
-                                    : 0.01)
-                                implicitHeight:  (styleData.value === root.maxPower || styleData.value === root.minPower)
-                                    ? root.gaugeHeight
-                                    : implicitWidth * (styleData.value % (root.powerLabelStepSize) ? 3 : 6)
-                                color: gauge.getTLColor(styleData.value, root.maxPower)
-                            }
-
-                            */
-
-                            minorTickmark: Rectangle {
-                                visible: false
-                            }
+                            foreground: null
+                            minorTickmark: null
 
                             tickmarkLabel:  Text {
                                 font.pixelSize: gauge.getFontSize()
-                                y: gauge.getTLHY(styleData.value, root.minPower, root.maxPower)
-                                x: gauge.getTLHX(styleData.value, root.minPower, root.maxPower, -0.13)
+                                y: gauge.getTLHY(styleData.value * 1000, root.minPower, root.maxPower)
+                                x: gauge.getTLHX(styleData.value * 1000, root.minPower, root.maxPower, -0.13)
                                 text: styleData.value + ((styleData.value === 0) ? 'kw' : '')
-                                rotation: root.powerToAng(styleData.value)
-                                color: gauge.getTLColor(Math.abs(styleData.value), root.maxPower)
+                                rotation: root.powerToAng(styleData.value * 1000)
+                                color: gauge.getTLColor(Math.abs(styleData.value * 1000), root.maxPower)
                                 antialiasing: true
                                 font.family: root.ff
                             }
@@ -1055,7 +1112,7 @@ Item {
                             tickmark: Rectangle {
                                 antialiasing: true
                                 implicitWidth: outerRadius * 0.01
-                                implicitHeight:  (styleData.value === root.maxPower || styleData.value === root.minPower)
+                                implicitHeight:  (styleData.value * 1000 === root.maxPower || styleData.value * 1000 === root.minPower)
                                     ? root.gaugeHeight * 1.7
                                     : implicitWidth * ((styleData.value % (root.powerLabelStepSize)) ? 3 : 6)
                                 color: root.gaugeFontColor
@@ -1100,11 +1157,8 @@ Item {
                             labelInset: root.gaugeHeight / 2
                             labelStepSize: root.maxSpeedMs
 
-                            foreground: Item {
-                                Rectangle {
-                                    visible: false
-                                }
-                            }
+                            foreground: null
+                            minorTickmark: null
 
                             tickmarkLabel:  Text {
                                 visible: styleData.value === root.maxSpeedMs || styleData.value === root.minSpeedMs
@@ -1124,9 +1178,7 @@ Item {
                                 font.family: root.ff
                             }
 
-                            minorTickmark: Rectangle {
-                                visible: false
-                            }
+
 
                             tickmark: Rectangle {
                                 antialiasing: true
@@ -1175,11 +1227,10 @@ Item {
                             labelInset: root.gaugeHeight / 2
                             labelStepSize: 1
 
-                            foreground: Item {
-                                Rectangle {
-                                    visible: false
-                                }
-                            }
+                            foreground: null
+                            minorTickmark: null
+                            needle: null
+
 
                             tickmarkLabel:  Text {
                                 function getAng(value) {
@@ -1206,9 +1257,6 @@ Item {
                                 font.family: root.ff
                             }
 
-                            minorTickmark: Rectangle {
-                                visible: false
-                            }
 
                             tickmark: Rectangle {
                                 function show(value) {
@@ -1229,9 +1277,7 @@ Item {
                                 color: root.gaugeFontColor
                             }
 
-                            needle: Rectangle {
-                                visible: false
-                            }
+
                         }
                     }
                 }
@@ -1644,6 +1690,18 @@ Item {
 
                 Column {
                     spacing: 10
+
+                    Slider {
+                        id: qwd
+                        minimumValue: 0
+                        maximumValue: 1
+                        stepSize: 1
+                        value: 0
+
+                        onValueChanged: {
+                            root.ropeDanger = !!value;
+                        }
+                    }
 
                     Column {
                         spacing: 5

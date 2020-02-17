@@ -113,13 +113,14 @@ Page {
                     maxSpeedMs: 20
                     Layout.fillWidth: true
 
-                    maxPower: 10000
-                    minPower: -8000
+                    maxPower: 11111
+                    minPower: -15000
 
                     Layout.preferredHeight: page.width * 0.85
                     //motorMode: Skypuff.motorMode
 
                     debug: true
+                    debugBlink: true
 
                     Connections {
                         target: Skypuff
@@ -135,8 +136,8 @@ Page {
                         onSettingsChanged: {
                             sGauge.maxMotorKg = cfg.motor_max_kg
                             //sGauge.maxPower = (cfg.power_max / 1000).toFixed(0)
-                            sGauge.maxPower = 10000
-                            sGauge.minPower = -8000
+                            sGauge.maxPower = 11111
+                            sGauge.minPower = -8250
                         }
                     }
                 }
