@@ -347,6 +347,10 @@ Item {
                                                   : Math.max(root.power, root.minPower))
 
                     property string ropeTextColor: 'black'
+                    property string speedTextColor: 'black'
+                    property string powerTextColor: 'black'
+                    property string powerBgColor: 'black'
+                    property string kgBgColor: 'black'
 
                     // Animation
                     Behavior on ropeEndAng {
@@ -389,7 +393,10 @@ Item {
                         canvas.requestPaint();
                         ropeCanvas.requestPaint();
                     }
-                    onSpeedEndAngChanged: canvas.requestPaint()
+                    onSpeedEndAngChanged: {
+                        canvas.requestPaint();
+                        ropeCanvas.requestPaint();
+                    }
                     onMotorKgEndAngChanged: canvas.requestPaint()
                     onPowerEndAngChanged: canvas.requestPaint()
 
@@ -413,7 +420,7 @@ Item {
                         return (Math.PI * ang) / 180;
                     }
 
-                    function drawTextAlongArc(context, str, centerX, centerY, radius, ang, color){
+                    function drawTextAlongArc(context, str, centerX, centerY, radius, ang, color) {
                         var angle = (Math.PI * (str.length * 3.8)) / 180; // radians
 
                         context.save();
@@ -433,7 +440,37 @@ Item {
                         context.restore();
                     }
 
-                    function drawRopeAlongArc(context, lrm, rm, centerX, centerY, radius){
+                    function drawSpeedAlongArc(context, speed, centerX, centerY, radius) {
+                        var str = '%1ms'.arg(speed);
+                        var lc;
+
+                        // Calculate angle of str
+                        var angle = (Math.PI * (str.length * 3.8)) / 180; // radians
+
+                        context.save();
+                        context.translate(centerX, centerY);
+                        context.rotate(convertAngToRadian(-180) - angle / 2);
+
+                        //str = str.split("").reverse().join('');
+
+
+                        for (var n = 0; n < str.length; n++) {
+                            var c = str[n];
+                            var d = c === 's' || c === 'm' ? -2 : 0;
+                                d = lc === '.' ? 10 : d;
+
+                            context.rotate(angle / (str.length + d));
+                            context.save();
+                            context.translate(0, -1 * radius);
+                            context.fillStyle = c === '*' ? 'rgba(255, 0, 0, 0)' : progressBars.speedTextColor;
+                            context.fillText(c, 0, 0);
+                            context.restore();
+                            lc = c;
+                        }
+                        context.restore();
+                    }
+
+                    function drawRopeAlongArc(context, lrm, rm, centerX, centerY, radius) {
                         var lrmLebgth = (lrm + '').replace('.', '').toString().length;
                         var rmLebgth = (rm + '').replace('.', '').toString().length;
                         var diff = lrmLebgth - rmLebgth;
@@ -561,6 +598,7 @@ Item {
                                     'black'
                                 );
 
+                                parent.speedTextColor = speedColors.textColor;
                                 context.strokeStyle = speedColors.color;
                                 context.stroke();
 
@@ -593,8 +631,17 @@ Item {
                                 );
 
                                 motoKgTxt1.color = motoKgTxt2.color = kgColors.textColor;
+                                parent.kgBgColor = kgColors.color;
                                 context.strokeStyle = kgColors.color;
                                 context.stroke();
+
+
+                                /*var gradient2 = context.createRadialGradient((parent.width / 2),(parent.height / 2), 0, (parent.width / 2),(parent.height / 2),parent.height);
+                                gradient2.addColorStop(0.5, "#81FFFE");   //oben
+                                gradient2.addColorStop(0.46, "#81FFFE");   //oben
+                                gradient2.addColorStop(0.45, "#112478");   //mitte
+                                gradient2.addColorStop(0.33, "transparent");   //unten
+                                */
 
                                 /********** Right ***********/
 
@@ -625,6 +672,8 @@ Item {
                                 );
 
                                 powerTxt2.color = powerTxt1.color = powerColors.textColor;
+                                parent.powerTextColor = powerColors.textColor;
+                                parent.powerBgColor = powerColors.color;
                                 context.strokeStyle = powerColors.color;
                                 context.stroke();
                             }
@@ -692,6 +741,56 @@ Item {
                     contextType: '2d'
                     anchors.fill: parent
 
+                    onWidthChanged:  { requestPaint(); }
+                    onHeightChanged: { requestPaint(); }
+
+                    onPaint: {
+
+                        var centreX = baseLayer.width / 2;
+                        var centreY = baseLayer.height / 2;
+
+                        context.reset();
+                        context.beginPath();
+                        context.font = "%1px sans-serif".arg(Math.max(10, root.diameter * 0.05));
+
+                        progressBars.drawRopeAlongArc(
+                            context,
+                            root.prettyNumber(root.leftRopeMeters, root.leftRopeMeters < 10 ? 1 : 0),
+                            root.prettyNumber(root.ropeMeters, root.ropeMeters < 10 ? 1 : 0),
+                            centreX,
+                            centreY,
+                            baseLayer.radius - root.gaugeHeight
+                        );
+
+                        context.beginPath();
+
+
+                        /*progressBars.drawSpeedAlongArc(
+                            context,
+                            root.prettyNumber(root.speedMs),
+                            centreX,
+                            centreY,
+                            baseLayer.radius - root.gaugeHeight
+                        );*/
+
+                        /*progressBars.drawTextAlongArc(
+                            context,
+                            'Rope',
+                            centreX,
+                            centreY,
+                            baseLayer.radius - root.gaugeHeight,
+                            180 -  90 - dl2.rotation,
+                            '#515151'
+                        );*/
+                    }
+                }
+
+                /*Canvas {
+                    id: speedCanvas
+                    antialiasing: true
+                    contextType: '2d'
+                    anchors.fill: parent
+
 
                     onWidthChanged:  { requestPaint(); }
                     onHeightChanged: { requestPaint(); }
@@ -705,16 +804,9 @@ Item {
 
                         context.reset();
                         context.beginPath();
-                        context.font = "%1px sans-serif".arg(Math.max(10, root.diameter * 0.048));
+                        context.font = "%1px sans-serif".arg(Math.max(10, root.diameter * 0.05));
 
-                        progressBars.drawRopeAlongArc(
-                            context,
-                            root.prettyNumber(root.leftRopeMeters, root.leftRopeMeters < 10 ? 1 : 0),
-                            root.prettyNumber(root.ropeMeters, root.ropeMeters < 10 ? 1 : 0),
-                            centreX,
-                            centreY,
-                            baseLayer.radius - root.gaugeHeight
-                        );
+
 
                         context.beginPath();
 
@@ -726,9 +818,9 @@ Item {
                             baseLayer.radius - root.gaugeHeight,
                             180 -  90 - dl2.rotation,
                             '#515151'
-                        );*/
+                        );
                     }
-                }
+                }*/
 
                 Item {
                     id: circleInner
@@ -747,7 +839,7 @@ Item {
                         margins: gaugeHeight * 0.1
                     }
 
-                    function getTLHY(value, min, max, k = 0.2) {
+                    function getTLHY(value, min, max, k = 0.3) {
                         if (value === max) {
                             return root.gaugeHeight * k;
                         } else if (value === min) {
@@ -869,23 +961,22 @@ Item {
                             */
                             tickmark: Rectangle {
                                 antialiasing: true
-                                implicitWidth: outerRadius * ((styleData.value === root.maxMotorKg || styleData.value === root.minMotorKg)
-                                    ? 0.005
-                                    : 0.01)
+                                implicitWidth: outerRadius * 0.01
                                 implicitHeight:  (styleData.value === root.maxMotorKg || styleData.value === root.minMotorKg)
-                                    ? root.gaugeHeight
+                                    ? root.gaugeHeight * 1.7
                                     : implicitWidth * (styleData.value % (root.motorKgLabelStepSize / 2) ? 3 : 6)
-                                color: gauge.getTLColor(styleData.value, root.maxMotorKg)
+                                color: root.gaugeFontColor
                             }
 
                             /**
                               Needle
                             */
                             needle: Rectangle {
+                                visible: root.motorKg !== root.minMotorKg
                                 antialiasing: true
-                                width: outerRadius * 0.015
-                                height: outerRadius * 0.7
-                                color: root.gaugeFontColor
+                                width: outerRadius * 0.01
+                                height: outerRadius
+                                color: progressBars.kgBgColor
                             }
                         }
                     }
@@ -963,20 +1054,18 @@ Item {
 
                             tickmark: Rectangle {
                                 antialiasing: true
-                                implicitWidth: outerRadius * ((styleData.value === root.maxPower || styleData.value === root.minPower)
-                                    ? 0.005
-                                    : 0.01)
+                                implicitWidth: outerRadius * 0.01
                                 implicitHeight:  (styleData.value === root.maxPower || styleData.value === root.minPower)
-                                    ? root.gaugeHeight
+                                    ? root.gaugeHeight * 1.7
                                     : implicitWidth * ((styleData.value % (root.powerLabelStepSize)) ? 3 : 6)
-                                color: gauge.getTLColor(Math.abs(styleData.value), root.maxPower)
+                                color: root.gaugeFontColor
                             }
 
                             needle: Rectangle {
+                                color: progressBars.powerBgColor
                                 antialiasing: true
-                                width: outerRadius * 0.015
-                                height: outerRadius * 0.7
-                                color: root.gaugeFontColor
+                                width: outerRadius * 0.01
+                                height: outerRadius
                             }
                         }
                     }
@@ -1146,6 +1235,89 @@ Item {
                         }
                     }
                 }
+                Canvas {
+                    //opacity: 0.5
+                    antialiasing: true
+                    contextType: '2d'
+                    anchors.fill: parent
+                    onPaint: {
+                        if (context) {
+                            context.reset();
+                            context.beginPath();
+
+                            var centreX = baseLayer.width / 2;
+                            var centreY = baseLayer.height / 2;
+
+                            /**   Right   **/
+                            var topEnd = progressBars.convertAngToRadian(90 - dl1.rotation);
+                            var topStart = progressBars.convertAngToRadian(90 - dl2.rotation);
+
+                            context.beginPath();
+                            context.moveTo(centreX, centreY);
+                            context.arc(
+                                centreX,
+                                centreY,
+                                baseLayer.radius - root.gaugeHeight * 1.7,
+                                topStart - progressBars.convertAngToRadian(20),
+                                topEnd + progressBars.convertAngToRadian(20),
+                                false
+                            );
+
+                            context.lineTo(centreX, centreY);
+                            context.fillStyle = root.innerColor;
+                            context.fill();
+
+                            context.beginPath();
+
+                            context.arc(
+                                centreX,
+                                centreY,
+                                baseLayer.radius - root.gaugeHeight * 1.7,
+                                topStart,
+                                topEnd,
+                                false
+                            );
+
+                            context.lineWidth = 2;
+                            context.strokeStyle = root.borderColor;
+                            context.stroke();
+
+                            /**   Left   **/
+                            topEnd = progressBars.convertAngToRadian(90 + dl2.rotation);
+                            topStart = progressBars.convertAngToRadian(90 + dl1.rotation);
+
+                            context.beginPath();
+                            context.moveTo(centreX, centreY);
+                            context.arc(
+                                centreX,
+                                centreY,
+                                baseLayer.radius - root.gaugeHeight * 1.7,
+                                topStart - progressBars.convertAngToRadian(20),
+                                topEnd + progressBars.convertAngToRadian(20),
+                                false
+                            );
+
+                            context.lineTo(centreX, centreY);
+                            context.fillStyle = root.innerColor;
+                            context.fill();
+
+                            context.beginPath();
+
+                            context.arc(
+                                centreX,
+                                centreY,
+                                baseLayer.radius - root.gaugeHeight * 1.7,
+                                topStart,
+                                topEnd,
+                                false
+                            );
+
+                            context.lineWidth = 2;
+                            context.strokeStyle = root.borderColor;
+                            context.stroke();
+                        }
+                    }
+                }
 
                 /**
                   Values of ropeMeters and leftRopeMeters
@@ -1204,14 +1376,14 @@ Item {
 
                     Text {
                         text: root.prettyNumber(root.speedMs)
-                        font.pixelSize: Math.max(10, root.diameter * 0.04)
+                        font.pixelSize: Math.max(10, root.diameter * 0.05)
                         font.family: root.ff
                         font.bold: root.boldValues
                     }
 
                     Text {
                         text: 'ms'
-                        font.pixelSize: Math.max(10, root.diameter * 0.04)
+                        font.pixelSize: Math.max(10, root.diameter * 0.05)
                         font.family: root.ff
                         font.bold: root.boldValues
                     }
@@ -1234,9 +1406,10 @@ Item {
                   Value of motorKg
                   */
                 Grid {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    anchors.topMargin: root.gaugeHeight * 3.7
+                    anchors.verticalCenter: parent.verticalCenter
+                    //anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.left: parent.left
+                    anchors.leftMargin: root.gaugeHeight * 2.5
                     spacing: 5
 
                     Text {
@@ -1261,9 +1434,9 @@ Item {
                   Value of power
                   */
                 Grid {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.bottom: parent.bottom
-                    anchors.bottomMargin: root.gaugeHeight * 3.7
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.right: parent.right
+                    anchors.rightMargin: root.gaugeHeight * 2.5
                     spacing: 5
 
                     Text {
@@ -1284,9 +1457,112 @@ Item {
                     }
                 }
 
-                /**
-                  Title 'Power'
-                  */
+                Grid {
+                   // text: 'Power'
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: root.gaugeHeight * 3.4
+                    columns: 6
+                    spacing: 5
+                    width: root.diameter * 0.5
+
+                    Item {
+                        width: 20
+                        height: 30
+                        Image {
+                            id: tfetsIco
+                            smooth: true
+                            source: "qrc:/res/icons/motor.svg"
+                            sourceSize.width: 26
+                            sourceSize.height: 34
+                            y: -1
+                            visible: false
+
+                        }
+                        ColorOverlay {
+                            anchors.fill: tfetsIco
+                            source: tfetsIco
+                            color: Material.color(Material.Blue)
+                        }
+                    }
+
+                    Item {
+                        width: 25
+                        height: 25
+
+                        Text {
+                            text: 55 + 'C'
+                            color: 55 > 80 ? "red" : systemPalette.text;
+                        }
+                    }
+
+
+
+                    Item {
+                        width: 20
+                        height: 25
+
+                        Image {
+                            id: tmotIco
+                            smooth: true
+                            source: "qrc:/res/icons/mcu.svg"
+                            sourceSize.width: 20
+                            sourceSize.height: 18
+                            visible: false
+                        }
+
+                        ColorOverlay {
+                            anchors.fill: tmotIco
+                            source: tmotIco
+                            color: Material.color(Material.Blue)
+                        }
+                    }
+
+                    Item {
+                        width: 25
+                        height: 25
+
+                        Text {
+                            text: 55 + 'C'
+                            color: 55 > 80 ? "red" : systemPalette.text;
+                        }
+                    }
+
+
+
+                    Item {
+                        width: 20
+                        height: 25
+
+                        Image {
+                            id: tbatIco
+                            smooth: true
+                            source: "qrc:/res/icons/battery.svg"
+                            sourceSize.width: 20
+                            sourceSize.height: 19
+                            visible: false
+                        }
+
+                        ColorOverlay {
+                            anchors.fill: tbatIco
+                            source: tbatIco
+                            color: Material.color(Material.Blue)
+                        }
+                    }
+
+                    Item {
+                        width: 25
+                        height: 25
+
+                        Text {
+                            text: 55 + 'C'
+                            color: 55 > 80 ? "red" : systemPalette.text;
+                        }
+                    }
+
+                }
+
+
                 Item {
                    // text: 'Power'
                     anchors.horizontalCenter: parent.horizontalCenter
