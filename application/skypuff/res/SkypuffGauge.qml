@@ -54,39 +54,32 @@ Item {
     property string gaugeColor: '#C7CFD9'
 
     // Default for all scales
-    property string defaultColor: '#4CAF50'
-    property string warningColor: '#FF9800'
-    property string dangerColor: 'red'
+    property string defaultColor: '#4CAF50' // base color (green)
+    property string dangerColor: 'red'      // attention color (red)
+    property string warningColor: '#FF9800' // blink color (yellow)
 
-    property int gaugesColorAnimation: 800
+    property int gaugesColorAnimation: 800  // freq of blinking
 
     // Rope
     property string ropeColor: root.defaultColor
     property string ropeWarningColor: root.warningColor
     property string ropeDangerColor: root.dangerColor
-    property bool ropeWarning: false
-    property bool ropeDanger: false
 
     // MotorKg
     property string motorKgColor: root.defaultColor
     property string motorKgWarningColor: root.warningColor
     property string motorKgDangerColor: root.dangerColor
-    property bool motorKgWarning: false
-    property bool motorKgDanger: false
 
     // Power
     property string powerColor: root.defaultColor
     property string powerWarningColor: root.warningColor
     property string powerDangerColor: root.dangerColor
-    property bool powerWarning: false
-    property bool powerDanger: false
 
     // Speed
     property string speedColor: root.defaultColor
     property string speedWarningColor: root.warningColor
     property string speedDangerColor: root.dangerColor
-    property bool speedWarning: false
-    property bool speedDanger: false
+
 
     /********************
         Default view
@@ -108,7 +101,7 @@ Item {
     property real gaugeHeight: diameter * 0.09;
     property bool boldValues: false
     property bool enableAnimation: true
-    property int animationDuration: 100
+    property int animationDuration: 200
     property int animationType: Easing.OutExpo
 
     property real motorKgLabelStepSize: 5
@@ -119,13 +112,24 @@ Item {
     ********************/
     property bool debug: false
     property bool debugBlink: false
-
+    property bool motorKgWarning: false
+    property bool motorKgDanger: false
+    property bool ropeWarning: false
+    property bool ropeDanger: false
+    property bool powerWarning: false
+    property bool powerDanger: false
+    property bool speedWarning: false
+    property bool speedDanger: false
     property int angK: 1000
+
+    /********************/
 
     onMaxMotorKgChanged: root.setMaxMotorKg()
     onMaxRopeMetersChanged: setMaxRopeMeters()
     onMaxPowerChanged: root.setMaxPower()
     onMinPowerChanged: root.setMinPower()
+
+    /********************/
 
     function setMaxRopeMeters() {
         root.maxRopeMeters = Math.ceil(parseInt(root.maxRopeMeters, 10) / 10) * 10;
@@ -270,7 +274,8 @@ Item {
 
             Component.onCompleted: {
                 root.setMaxMotorKg();
-                //setMaxPower();
+                root.setMaxPower();
+                root.setMinPower();
                 root.setMaxRopeMeters();
             }
 
@@ -336,7 +341,6 @@ Item {
 
                     property string ropeTextColor: 'black'
                     property string speedTextColor: 'black'
-                    property string powerTextColor: 'black'
                     property string powerBgColor: 'black'
                     property string kgBgColor: 'black'
 
@@ -352,7 +356,7 @@ Item {
                     property bool speedD: root.speedDanger
                     property string speedDColor: root.speedDangerColor
 
-                    /******/
+                    /*************** ROPE ***************/
 
                     onRopeDChanged: {
                         ropeDAnimation.loops = ropeD ? Animation.Infinite : 1;
@@ -371,7 +375,7 @@ Item {
                         loops: Animation.Infinite
                     }
 
-                    /******/
+                    /*************** POWER ***************/
 
                     onPowerDChanged: {
                         powerDAnimation.loops = powerD ? Animation.Infinite : 1;
@@ -390,7 +394,7 @@ Item {
                         loops: Animation.Infinite
                     }
 
-                    /******/
+                    /*************** KG ***************/
 
                     onMotorKgDChanged: {
                         motorKgDAnimation.loops = motorKgD ? Animation.Infinite : 1;
@@ -409,7 +413,8 @@ Item {
                         loops: Animation.Infinite
                     }
 
-                    /******/
+                    /*************** SPEED ***************/
+
                     onSpeedDChanged: {
                         speedDAnimation.loops = speedD ? Animation.Infinite : 1;
                         if (!speedD) speedDColor = root.speedDangerColor;
@@ -427,7 +432,7 @@ Item {
                         loops: Animation.Infinite
                     }
 
-                    /******/
+                    /******************************/
 
                     // Animation
                     Behavior on ropeEndAng {
@@ -466,13 +471,14 @@ Item {
                        }
                     }
 
+                    /******************************/
+
                     onRopeEndAngChanged: {
                         if (root.debug && root.debugBlink) {
                             var debug = debugBlink(root.ropeMeters, root.maxRopeMeters);
                             root.ropeDanger = debug.danger;
                             root.ropeWarning = debug.warning;
                         }
-
                         canvas.requestPaint();
                         ropeCanvas.requestPaint();
                     }
@@ -483,7 +489,6 @@ Item {
                             root.speedDanger = debug.danger;
                             root.speedWarning = debug.warning;
                         }
-
                         canvas.requestPaint();
                     }
                     onMotorKgEndAngChanged: {
@@ -492,21 +497,22 @@ Item {
                             root.motorKgDanger = debug.danger;
                             root.motorKgWarning = debug.warning;
                         }
-
                         canvas.requestPaint();
                     }
                     onPowerEndAngChanged: {
                         if (root.debug && root.debugBlink) {
-                            var debug = debugBlink(root.power, root.maxPower);
-                            root.powerDanger = debug.danger;
-                            root.powerWarning = debug.warning;
+                            var debugMax = debugBlink(root.power, root.maxPower);
+                            var debugMin = debugBlink(root.power, root.minPower);
+                            root.powerDanger = root.power < 0 ? debugMin.danger : debugMax.danger;
+                            root.powerWarning = root.power < 0 ? debugMin.warning : debugMax.warning;
                         }
-
                         canvas.requestPaint()
                     }
 
+                    /******************************/
+
                     function debugBlink(value, max) {
-                        var warningZone = 0.7 * Math.abs(max);
+                        var warningZone = 0.6 * Math.abs(max);
                         var dangerZone = 0.8 * Math.abs(max);
                         var warning;
                         var danger;
@@ -522,22 +528,6 @@ Item {
                         }
 
                         return { warning, danger };
-                    }
-
-                    function getColors(value, max, wcp, dcp, wc, dc, c, tc) {
-                        var warningZone = 0.75 * Math.abs(max);
-                        var dangerZone = 0.8 * Math.abs(max);
-
-                        var color = c;
-                        var textColor = tc;
-
-                        if (Math.abs(value) >= warningZone && Math.abs(value) < dangerZone) {
-                            textColor = color = wc;
-                        } else if (Math.abs(value) >= dangerZone) {
-                            textColor = color = dc;
-                        }
-
-                        return { color, textColor };
                     }
 
                     function convertAngToRadian(ang) {
@@ -603,9 +593,12 @@ Item {
                         var str = '%1 |%2'
                             .arg(diff < 0 ? (((rm % 1) !== 0 ? '*' : '') + (new Array(Math.abs(diff) + 1).join('*')) + lrm + 'm') : (((rm % 1) !== 0 ? '*' : '') + lrm + 'm'))
                             .arg(diff > 0 ? (rm + 'm' + (new Array(Math.abs(diff) + 1).join('*'))) : (rm + 'm'));
+                        //str = 'qqqqqq1111111qqqqqqqqqqqqqqsssssssssssqqqqqqqqqaaaaaaaaaq' + str + 'qqqqqq1111111qqqqqqqqqqqqqqsssssssssssqqqqqqqqqaaaaaaaaaq'
 
                         // Calculate angle of str
                         var angle = (Math.PI * (str.length * 3.8)) / 180; // radians
+
+
 
                         context.save();
                         context.translate(centerX, centerY);
@@ -659,7 +652,8 @@ Item {
                                 );
                                 context.fill();
 
-                                /********** Top ***********/
+
+                                /********** Top | ROPE ***********/
 
                                 var topEnd = parent.convertAngToRadian(parent.ropeEndAng - 90);
                                 var topStart = parent.convertAngToRadian(parent.ropeStartAng + 90);
@@ -677,12 +671,12 @@ Item {
                                 context.globalCompositeOperation = 'source-atop';
                                 context.lineWidth = 200;
 
-                                parent.ropeTextColor = root.ropeWarning || root.ropeDanger ? parent.ropeDColor : 'black';
-                                context.strokeStyle = root.ropeWarning || root.ropeDanger ? parent.ropeDColor : root.ropeColor;
+                                var b = root.ropeWarning || root.ropeDanger;
+                                context.strokeStyle = b ? parent.ropeDColor : root.ropeColor;
                                 context.stroke();
 
 
-                                /********** Bottom ***********/
+                                /********** Bottom | SPEED ***********/
 
                                 var bottomStart = parent.convertAngToRadian(parent.speedStartAng - 90);
                                 var bottomEnd = parent.convertAngToRadian(parent.speedEndAng - 90);
@@ -700,11 +694,13 @@ Item {
                                 context.globalCompositeOperation = 'source-atop';
                                 context.lineWidth = 200;
 
-                                parent.speedTextColor = root.speedWarning || root.speedDanger ? parent.speedDColor : 'black';
-                                context.strokeStyle = root.speedWarning || root.speedDanger ? parent.speedDColor : root.speedColor;
+                                b = root.speedWarning || root.speedDanger;
+                                parent.speedTextColor = b ? parent.speedDColor : 'black';
+                                context.strokeStyle = b ? parent.speedDColor : root.speedColor;
                                 context.stroke();
 
-                                /********** Left ***********/
+
+                                /********** Left | KG ***********/
 
                                 var leftEnd = parent.convertAngToRadian(parent.motorKgStartAng + 180);
                                 var leftStart = parent.convertAngToRadian(parent.motorKgEndAng - 180);
@@ -721,8 +717,9 @@ Item {
 
                                 context.lineWidth = root.gaugeHeight * 0.7;
 
-                                motoKgTxt1.color = motoKgTxt2.color = root.motorKgWarning || root.motorKgDanger ? parent.motorKgDColor : 'black';
-                                var kgColor = root.motorKgWarning || root.motorKgDanger ? parent.motorKgDColor : root.motorKgColor;
+                                b = root.motorKgWarning || root.motorKgDanger;
+                                motoKgTxt1.color = motoKgTxt2.color = b ? parent.motorKgDColor : 'black';
+                                var kgColor = b ? parent.motorKgDColor : root.motorKgColor;
 
                                 parent.kgBgColor = kgColor;
                                 context.strokeStyle = kgColor;
@@ -736,7 +733,7 @@ Item {
                                 gradient2.addColorStop(0.33, "transparent");   //unten
                                 */
 
-                                /********** Right ***********/
+                                /********** Right | POWER ***********/
 
                                 var rightEnd = parent.convertAngToRadian(parent.powerEndAng);
                                 var rightStart = parent.convertAngToRadian(parent.powerStartAng);
@@ -753,9 +750,10 @@ Item {
 
                                 context.lineWidth = root.gaugeHeight * 0.7;
 
-                                var powerColor = root.powerWarning || root.powerDanger ? parent.powerDColor : root.powerColor;
+                                b = root.powerWarning || root.powerDanger;
+                                var powerColor = b ? parent.powerDColor : root.powerColor;
+                                powerTxt2.color = powerTxt1.color = b ? parent.powerDColor : 'black';
 
-                                powerTxt2.color = powerTxt1.color = parent.powerTextColor = powerColor;
                                 parent.powerBgColor = powerColor;
                                 context.strokeStyle = powerColor;
                                 context.stroke();
@@ -828,13 +826,14 @@ Item {
                     onHeightChanged: { requestPaint(); }
 
                     onPaint: {
-
                         var centreX = baseLayer.width / 2;
                         var centreY = baseLayer.height / 2;
 
                         context.reset();
                         context.beginPath();
-                        context.font = "%1px sans-serif".arg(Math.max(10, root.diameter * 0.05));
+                        context.font = "%2 %1px sans-serif"
+                            .arg(Math.max(10, root.diameter * 0.05))
+                            .arg(root.boldValues ? 'bold' : '');
 
                         progressBars.drawRopeAlongArc(
                             context,
@@ -1119,6 +1118,7 @@ Item {
                             }
 
                             needle: Rectangle {
+                                visible: root.power !== 0
                                 color: progressBars.powerBgColor
                                 antialiasing: true
                                 width: outerRadius * 0.01
@@ -1366,50 +1366,16 @@ Item {
                 }
 
                 /**
-                  Values of ropeMeters and leftRopeMeters
+                  Center point
                   */
-
-                    /*
-                    Grid {
-                        spacing: 5
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        id: textLeftRopeMeters
-
-                        Text {
-                            text: root.prettyNumber(root.leftRopeMeters)
-                            font.pixelSize: Math.max(10, root.diameter * 0.04)
-                            font.family: root.ff
-                            font.bold: root.boldValues
-                        }
-
-                        Text {
-                            text: 'm'
-                            font.pixelSize: Math.max(10, root.diameter * 0.04)
-                            font.family: root.ff
-                            font.bold: root.boldValues
-                        }
-                    }
-
-                    Grid {
-                        spacing: 5
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        id: textRopeMeters
-
-                        Text {
-                            text: root.prettyNumber(root.ropeMeters)
-                            font.pixelSize: Math.max(10, root.diameter * 0.04)
-                            font.family: root.ff
-                            font.bold: root.boldValues
-                        }
-
-                        Text {
-                            text: 'm'
-                            font.pixelSize: Math.max(10, root.diameter * 0.04)
-                            font.family: root.ff
-                            font.bold: root.boldValues
-                        }
-                    }*/
-
+                Rectangle {
+                    anchors.horizontalCenter: baseLayer.horizontalCenter
+                    anchors.verticalCenter: baseLayer.verticalCenter
+                    width: 5
+                    height: width
+                    radius: 50
+                    color: root.borderColor
+                }
 
                 /**
                   Value of speedMs
@@ -1443,7 +1409,7 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
 
                     anchors.top: parent.top
-                    anchors.topMargin: root.gaugeHeight * 2.4
+                    anchors.topMargin: root.gaugeHeight * 3.3
                     font.pixelSize: Math.max(10, root.diameter * 0.055)
                     font.family: root.ff
                 }
@@ -1461,7 +1427,7 @@ Item {
                     Text {
                         id: motoKgTxt1
                         text: root.prettyNumber(root.motorKg, root.motorKg >= 25 ? 0 : 1)
-                        font.pixelSize: Math.max(10, root.diameter * 0.055)
+                        font.pixelSize: Math.max(10, root.diameter * 0.07)
                         font.family: root.ff
                         font.bold: root.boldValues
                     }
@@ -1470,7 +1436,7 @@ Item {
                         id: motoKgTxt2
                         text: 'kg'
                         opacity: 0.8
-                        font.pixelSize: Math.max(10, root.diameter * 0.055)
+                        font.pixelSize: Math.max(10, root.diameter * 0.07)
                         font.family: root.ff
                         font.bold: root.boldValues
                     }
@@ -1488,7 +1454,7 @@ Item {
                     Text {
                         id: powerTxt1
                         text: root.prettyNumber(Math.abs(root.power) >= 100 ? root.power / 1000 : root.power, Math.abs(root.power) < 100 ? 0 : 1)
-                        font.pixelSize: Math.max(10, root.diameter * 0.055)
+                        font.pixelSize: Math.max(10, root.diameter * 0.07)
                         font.family: root.ff
                         font.bold: root.boldValues
                     }
@@ -1497,14 +1463,14 @@ Item {
                         id: powerTxt2
                         text: Math.abs(root.power) >= 100 ? 'kw' : 'w'
                         opacity: 0.8
-                        font.pixelSize: Math.max(10, root.diameter * 0.055)
+                        font.pixelSize: Math.max(10, root.diameter * 0.07)
                         font.family: root.ff
                         font.bold: root.boldValues
                     }
                 }
 
                 Grid {
-                   // text: 'Power'
+
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: root.gaugeHeight * 3.4
@@ -1609,14 +1575,43 @@ Item {
                 }
 
 
-                Item {
-                   // text: 'Power'
+                /*Item {
+
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
-                    anchors.bottomMargin: root.gaugeHeight * 3
+                    anchors.bottomMargin: root.gaugeHeight * 4
 
-                   // font.pixelSize: Math.max(10, root.diameter * 0.035)
-                   // font.family: root.ff
+                    Rectangle {
+                        id: inWh
+                        height: 20
+                        x: (lol.width  + inArrow.width + 15) * -1
+                        width: inWhT.width
+                        color: "transparent"
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            id: inWhT
+                            font.pixelSize: Math.max(10, root.diameter * 0.04)
+                            text: "%1Wh".arg((3.5).toFixed(1))
+                        }
+
+                    }
+
+                    Rectangle {
+                        id: inArrow
+                        height: 20
+                        x: -lol.width + 10
+                        width: inArrowT.width
+                        color: "transparent"
+
+                        Text {
+                            id: inArrowT
+                            font.pixelSize: Math.max(10, root.diameter * 0.04)
+                            font.bold: true
+                            text: '>>'
+                            color: 'red';
+                        }
+                    }
 
                     Rectangle {
                         id: lol
@@ -1624,41 +1619,24 @@ Item {
                         height: 20
                         border.color: 'grey'
                         x: -lol.width / 2
-                        radius: 2
+                        radius: 3
 
-
-                        /*ProgressBar {
-                            width: parent.width
-                            height: parent.height
-
-                            Layout.fillWidth: true
-                            enabled: Skypuff.isBatteryScaleValid
-                            to: 100
-                            value: Skypuff.batteryPercents
-
-                            background: Rectangle {
-                                radius: 2
-                                color: "lightgray"
-                                border.color: "gray"
-                                border.width: 1
-                                implicitWidth: parent.width
-                                implicitHeight: parent.height
-                            }
-                        }*/
                         Rectangle {
                             anchors.left: lol.left
                             anchors.leftMargin: 1
                             anchors.verticalCenter: lol.verticalCenter
 
+
                             height: lol.height-2
                             color: "lightgreen"
-                            width: lol.width * 45 / 100
+                            width: lol.width * 33 / 100
                         }
 
                         Text {
+                            font.pixelSize: Math.max(10, root.diameter * 0.04)
                             id: tBat
                             anchors.centerIn: parent
-                            text: qsTr("%1V").arg((100).toFixed(2))
+                            text: qsTr("%2x6").arg((1.11).toFixed(2))
                         }
 
                         Rectangle {
@@ -1671,15 +1649,46 @@ Item {
 
                         }
                     }
-                }
 
 
+                    Rectangle {
+                        id: outArrow
+                        height: 20
+                        x: lol.width / 2 + 5
+                        width: outArrowT.width
+                        color: "transparent"
+
+                        Text {
+                            id: outArrowT
+                            font.pixelSize: Math.max(10, root.diameter * 0.04)
+                            font.bold: true
+                            text: '>>'
+                            color: 'red';
+                        }
+                    }
+
+                    Rectangle {
+                        id: outWh
+                        height: 20
+                        x: lol.width / 2 + outArrow.width + 10
+                        width: outWhT.width
+                        color: "transparent"
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            id: outWhT
+                            font.pixelSize: Math.max(10, root.diameter * 0.04)
+                            text: "%1Wh".arg((3.5).toFixed(1))
+                        }
+
+                    }
+                }*/
             }
         }
 
         Rectangle {
             width: parent.width
-            height: 250
+            height: 300
 
             visible: root.debug
 

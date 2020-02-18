@@ -105,7 +105,7 @@ Page {
                 color: 'blue'
             }*/
             RowLayout {
-                Layout.leftMargin: page.width * 0.2 / 2
+                Layout.leftMargin: page.width * 0.1 / 2
 
                 SkypuffGauge {
                     id: sGauge
@@ -114,12 +114,12 @@ Page {
                     Layout.fillWidth: true
 
                     maxPower: 11111
-                    minPower: -15000
+                    minPower: -8500
 
-                    Layout.preferredHeight: page.width * 0.85
+                    Layout.preferredHeight: page.width * 0.9
                     //motorMode: Skypuff.motorMode
 
-                    debug: true
+                    debug: false
                     debugBlink: true
 
                     Connections {
