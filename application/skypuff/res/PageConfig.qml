@@ -534,6 +534,82 @@ Page {
                         }
                     }
                 }
+                GroupBox {
+                    title: qsTr("Antisex")
+                    Layout.fillWidth: true
+                    Layout.margins: 10
+
+                    ColumnLayout {
+                        anchors.fill: parent
+
+                        RowLayout {
+                            Text {
+                                text: qsTr('Starting (<a href="help">M/S</a>)')
+                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Acceleration integral"),
+                                                                          qsTr("Start antisex sequense when integral of acceleration in zero direction is above this."),
+                                                                          false, false);
+                            }
+                            Item {Layout.fillWidth: true}
+                            RealSpinBox {
+                                id: antisex_starting_integral
+                                from: 1
+                                to: 10
+                                value: 3
+                                decimals: 1
+                                stepSize: 0.2
+                            }
+                        }
+                        RowLayout {
+                            Text {
+                                text: qsTr('Reduce (<a href="help">KG</a>)')
+                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Reduce tension"),
+                                                                          qsTr("Reduce tension within 30ms when deceleration on this value."),
+                                                                          false, false);
+                            }
+                            Item {Layout.fillWidth: true}
+                            RealSpinBox {
+                                id: antisex_reduce_kg
+                                from: 1
+                                to: 20
+                                value: 8
+                                decimals: 1
+                                stepSize: 0.5
+                            }
+                        }
+                        RowLayout {
+                            Text {
+                                text: qsTr('Steps (<a href="help">num</a>)')
+                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Number of steps"),
+                                                                          qsTr("Will decrease tension more each step, but no more then this value."),
+                                                                          false, false);
+                            }
+                            Item {Layout.fillWidth: true}
+                            SpinBox {
+                                id: antisex_reduce_steps
+                                from: 0
+                                to: 10
+                                value: 3
+                            }
+                        }
+                        RowLayout {
+                            Text {
+                                text: qsTr('Step (<a href="help">KG</a>)')
+                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Increase tension reduce"),
+                                                                          qsTr("Each step add value to tension reduce value."),
+                                                                          false, false);
+                            }
+                            Item {Layout.fillWidth: true}
+                            RealSpinBox {
+                                id: antisex_reduce_per_step_kg
+                                from: 0
+                                to: 3
+                                value: 1
+                                decimals: 1
+                                stepSize: 0.2
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -576,6 +652,11 @@ Page {
         cfg.fast_pull_k_percents = fast_pull_k.value
         cfg.pre_pull_timeout_seconds = pre_pull_timeout.value
         cfg.takeoff_period_seconds = takeoff_period.value
+
+        cfg.antisex_starting_integral_ms = antisex_starting_integral.value
+        cfg.antisex_reduce_kg = antisex_reduce_kg.value
+        cfg.antisex_reduce_steps = antisex_reduce_steps.value
+        cfg.antisex_reduce_per_step_kg = antisex_reduce_per_step_kg.value
 
         if(fileName)
             Skypuff.saveSettings(fileName, cfg)
@@ -621,6 +702,11 @@ Page {
         fast_pull_k.value = cfg.fast_pull_k_percents
         pre_pull_timeout.value = cfg.pre_pull_timeout_seconds
         takeoff_period.value = cfg.takeoff_period_seconds
+
+        antisex_starting_integral.value = cfg.antisex_starting_integral_ms
+        antisex_reduce_kg.value = cfg.antisex_reduce_kg
+        antisex_reduce_steps.value = cfg.antisex_reduce_steps
+        antisex_reduce_per_step_kg.value = cfg.antisex_reduce_per_step_kg
     }
 
     FileDialog {

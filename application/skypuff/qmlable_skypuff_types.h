@@ -59,6 +59,10 @@ struct QMLable_skypuff_config : public skypuff_config, public skypuff_drive {
     Q_PROPERTY(float manual_slow_max_kg READ manual_slow_max_current_to_kg WRITE kg_to_manual_slow_max_current)
     Q_PROPERTY(float manual_slow_speed_up_kg READ manual_slow_speed_up_current_to_kg WRITE kg_to_manual_slow_speed_up_current)
     Q_PROPERTY(float manual_slow_erpm_ms READ manual_slow_erpm_to_ms WRITE ms_to_manual_slow_erpm)
+    Q_PROPERTY(float antisex_starting_integral_ms READ antisex_starting_integral_to_ms WRITE ms_to_antisex_starting_integral)
+    Q_PROPERTY(float antisex_reduce_kg READ antisex_reduce_amps_to_kg WRITE kg_to_antisex_reduce_amps)
+    Q_PROPERTY(float antisex_reduce_per_step_kg READ antisex_reduce_amps_per_step_to_kg WRITE kg_to_antisex_reduce_amps_per_step)
+    Q_PROPERTY(int antisex_reduce_steps MEMBER antisex_reduce_steps)
 public:
 
     float motor_max_current;
@@ -136,6 +140,12 @@ public:
     float manual_slow_speed_up_current_to_kg() const {return manual_slow_speed_up_current / amps_per_kg;}
     void kg_to_manual_slow_speed_up_current(float kg) {manual_slow_speed_up_current = kg * amps_per_kg;}
 
+    float antisex_reduce_amps_to_kg() const {return antisex_reduce_amps / amps_per_kg;}
+    void kg_to_antisex_reduce_amps(float kg) {antisex_reduce_amps = kg * amps_per_kg;}
+
+    float antisex_reduce_amps_per_step_to_kg() const {return antisex_reduce_amps_per_step / amps_per_kg;}
+    void kg_to_antisex_reduce_amps_per_step(float kg) {antisex_reduce_amps_per_step = kg * amps_per_kg;}
+
     float rope_length_to_meters() const {return tac_steps_to_meters(rope_length);}
     void meters_to_rope_length(float meters) {rope_length = meters_to_tac_steps(meters);}
 
@@ -162,6 +172,9 @@ public:
 
     float manual_slow_erpm_to_ms() const {return erpm_to_ms(manual_slow_erpm);}
     void ms_to_manual_slow_erpm(float ms) {manual_slow_erpm = ms_to_erpm(ms);}
+
+    float antisex_starting_integral_to_ms() const {return erpm_to_ms(antisex_starting_integral);}
+    void ms_to_antisex_starting_integral(float ms) {antisex_starting_integral = ms_to_erpm(ms);}
 
     inline float meters_per_rev() const {return wheel_diameter / gear_ratio * M_PI;}
     inline float steps_per_rev(void) const {return motor_poles * 3;}
