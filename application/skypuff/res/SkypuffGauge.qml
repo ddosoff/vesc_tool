@@ -156,7 +156,7 @@ Item {
             step = val / (2 * 1000);
         }
 
-        return {val, step};
+        return { val, step };
     }
 
     function setMaxPower() {
@@ -262,7 +262,7 @@ Item {
         var res =  (dl2.rotation - 90) - (value + deltaForNegativeValue + deltaForPositiveValue) * delta;
 
         // 0.1 - is a little fix for canvas context.arc
-        return (value === root.minPower ? res + 0.1 : res)
+        return (value === root.minPower ? res + 0.1 : res);
     }
 
     Column {
@@ -317,7 +317,6 @@ Item {
                     }
                 }
 
-
                 /**
                   All 4 scales
                   */
@@ -359,7 +358,9 @@ Item {
                     /*************** ROPE ***************/
 
                     onRopeDChanged: {
+                        // Count of loops
                         ropeDAnimation.loops = ropeD ? Animation.Infinite : 1;
+                        // Restore default color
                         if (!ropeD) ropeDColor = root.ropeDangerColor;
                         canvas.requestPaint();
                     }
@@ -372,7 +373,7 @@ Item {
                         from: root.ropeWarningColor
                         to: root.ropeDangerColor
                         duration: root.gaugesColorAnimation
-                        loops: Animation.Infinite
+                        loops: Animation.Infinite // Loops will be controlled in onRopeDChanged
                     }
 
                     /*************** POWER ***************/
@@ -475,6 +476,7 @@ Item {
 
                     onRopeEndAngChanged: {
                         if (root.debug && root.debugBlink) {
+                            // Only for debug
                             var debug = debugBlink(root.ropeMeters, root.maxRopeMeters);
                             root.ropeDanger = debug.danger;
                             root.ropeWarning = debug.warning;
@@ -514,8 +516,8 @@ Item {
                     function debugBlink(value, max) {
                         var warningZone = 0.6 * Math.abs(max);
                         var dangerZone = 0.8 * Math.abs(max);
-                        var warning;
-                        var danger;
+                        var warning  = false;
+                        var danger = false;
 
                         if (Math.abs(value) >= warningZone && Math.abs(value) < dangerZone) {
                             warning = true;
@@ -523,8 +525,6 @@ Item {
                         } else if (Math.abs(value) >= dangerZone) {
                             danger = true;
                             warning = false
-                        } else {
-                            warning = danger = false;
                         }
 
                         return { warning, danger };
@@ -565,11 +565,9 @@ Item {
                         context.translate(centerX, centerY);
                         context.rotate(convertAngToRadian(-180) - angle / 2);
 
-                        //str = str.split("").reverse().join('');
-
-
                         for (var n = 0; n < str.length; n++) {
                             var c = str[n];
+                            // Custom margin for special chars
                             var d = c === 's' || c === 'm' ? -2 : 0;
                                 d = lc === '.' ? 10 : d;
 
@@ -585,34 +583,40 @@ Item {
                     }
 
                     function drawRopeAlongArc(context, lrm, rm, centerX, centerY, radius) {
+                        // Length of string leftRopeMeters
                         var lrmLebgth = (lrm + '').replace('.', '').toString().length;
                         var rmLebgth = (rm + '').replace('.', '').toString().length;
                         var diff = lrmLebgth - rmLebgth;
                         var lc;
 
+                        // Fill the difference in length between lrm and rm with '*' so that symbol '|' rigth in the middle
+                        // **0m |800m
+                        // 753m |47m*
                         var str = '%1 |%2'
                             .arg(diff < 0 ? (((rm % 1) !== 0 ? '*' : '') + (new Array(Math.abs(diff) + 1).join('*')) + lrm + 'm') : (((rm % 1) !== 0 ? '*' : '') + lrm + 'm'))
                             .arg(diff > 0 ? (rm + 'm' + (new Array(Math.abs(diff) + 1).join('*'))) : (rm + 'm'));
-                        //str = 'qqqqqq1111111qqqqqqqqqqqqqqsssssssssssqqqqqqqqqaaaaaaaaaq' + str + 'qqqqqq1111111qqqqqqqqqqqqqqsssssssssssqqqqqqqqqaaaaaaaaaq'
 
-                        // Calculate angle of str
+                        // Calculate width angle of str
                         var angle = (Math.PI * (str.length * 3.8)) / 180; // radians
-
-
 
                         context.save();
                         context.translate(centerX, centerY);
-                        context.rotate(convertAngToRadian(-5.5) - angle / 2);
 
+                        // -5.5 - margin
+                        context.rotate(convertAngToRadian(-5.5) - angle / 2);
 
                         for (var n = 0; n < str.length; n++) {
                             var c = str[n];
+
+                            // Custom margin for special chars
                             var d = c === 'm' ? -2 : 0;
                                 d = lc === '.' ? 10 : d;
 
                             context.rotate(angle / (str.length + d));
                             context.save();
                             context.translate(0, -1 * radius);
+
+                            // '*' will be transparent
                             context.fillStyle = c === '*' ? 'rgba(255, 0, 0, 0)' : progressBars.ropeTextColor;
                             context.fillText(c, 0, 0);
                             context.restore();
@@ -726,13 +730,6 @@ Item {
                                 context.stroke();
 
 
-                                /*var gradient2 = context.createRadialGradient((parent.width / 2),(parent.height / 2), 0, (parent.width / 2),(parent.height / 2),parent.height);
-                                gradient2.addColorStop(0.5, "#81FFFE");   //oben
-                                gradient2.addColorStop(0.46, "#81FFFE");   //oben
-                                gradient2.addColorStop(0.45, "#112478");   //mitte
-                                gradient2.addColorStop(0.33, "transparent");   //unten
-                                */
-
                                 /********** Right | POWER ***********/
 
                                 var rightEnd = parent.convertAngToRadian(parent.powerEndAng);
@@ -763,6 +760,9 @@ Item {
                         onHeightChanged: { requestPaint(); }
                     }
 
+                    /**
+                      Left and Rigth BG
+                     */
                     Canvas {
                         //opacity: 0.5
                         antialiasing: true
@@ -816,6 +816,9 @@ Item {
                     }
                 }
 
+                /**
+                  Text along arc
+                  */
                 Canvas {
                     id: ropeCanvas
                     antialiasing: true
@@ -914,6 +917,9 @@ Item {
                     }
                 }
 
+                /**
+                  Gauges
+                  */
                 Item {
                     id: gauge
                     anchors {
@@ -1001,9 +1007,7 @@ Item {
                             /**
                               Center point
                             */
-                            foreground: Item {
-                                visible: false
-                            }
+                            foreground: null
 
                             /**
                               Numbers on the scale
@@ -1162,23 +1166,15 @@ Item {
 
                             tickmarkLabel:  Text {
                                 visible: styleData.value === root.maxSpeedMs || styleData.value === root.minSpeedMs
-
                                 font.pixelSize: gauge.getFontSize(0.04)
-
                                 y: gauge.getTLVY(styleData.value, root.minSpeedMs, root.maxSpeedMs, 0.3)
                                 x: gauge.getTLVX(styleData.value, root.minSpeedMs, root.maxSpeedMs, -0.3)
-
-
                                 text: styleData.value + ((styleData.value === 0) ? 'kw' : '')
-
                                 rotation: styleData.value !== root.maxSpeedMs ? root.speedToAng(styleData.value) - 180 - 90 : root.speedToAng(styleData.value)  - 90
-
                                 color: root.gaugeFontColor
                                 antialiasing: true
                                 font.family: root.ff
                             }
-
-
 
                             tickmark: Rectangle {
                                 antialiasing: true
@@ -1191,9 +1187,7 @@ Item {
                                 color: root.gaugeFontColor
                             }
 
-                            needle: Rectangle {
-                                visible: false
-                            }
+                            needle: null
                         }
                     }
 
@@ -1230,7 +1224,6 @@ Item {
                             foreground: null
                             minorTickmark: null
                             needle: null
-
 
                             tickmarkLabel:  Text {
                                 function getAng(value) {
@@ -1281,6 +1274,10 @@ Item {
                         }
                     }
                 }
+
+                /**
+                  Right and Left BG borders
+                  */
                 Canvas {
                     //opacity: 0.5
                     antialiasing: true
@@ -1469,8 +1466,7 @@ Item {
                     }
                 }
 
-                Grid {
-
+                /*Grid {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: root.gaugeHeight * 3.4
@@ -1572,7 +1568,7 @@ Item {
                         }
                     }
 
-                }
+                }*/
 
 
                 /*Item {
@@ -1650,7 +1646,6 @@ Item {
                         }
                     }
 
-
                     Rectangle {
                         id: outArrow
                         height: 20
@@ -1686,6 +1681,9 @@ Item {
             }
         }
 
+        /**
+          Debug sliderSpeed
+         */
         Rectangle {
             width: parent.width
             height: 300
