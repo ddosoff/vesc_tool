@@ -140,7 +140,6 @@ Item {
     onMaxMotorKgChanged: root.setMaxMotorKg()
     onMaxRopeMetersChanged: setMaxRopeMeters()
     onMaxPowerChanged: root.setMaxPower()
-
     onMaxSpeedMsChanged: root.getSpeedLimit()
     onMinSpeedMsChanged: root.getSpeedLimit()
     onMinPowerChanged: root.setMinPower()
@@ -299,6 +298,7 @@ Item {
                 root.setMaxMotorKg();
                 root.setMaxPower();
                 root.setMinPower();
+                root.getSpeedLimit();
                 root.setMaxRopeMeters();
             }
 
@@ -1493,14 +1493,12 @@ Item {
                     }
                 }
 
-
                 Item {
                     id: battery
                     enabled: root.isBatteryScaleValid
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: root.gaugeHeight * 4
-
 
                     Rectangle {
                         id: batBlock
@@ -1510,8 +1508,6 @@ Item {
                         border.width: 2
                         x: -batBlock.width / 2
                         radius: 3
-
-
 
                         Rectangle {
                             opacity: root.baseOpacity
@@ -1581,7 +1577,6 @@ Item {
                             height: root.diameter * 0.035
                             width: 3
                             border.color: root.borderColor
-
                         }
                     }
 
@@ -1596,9 +1591,7 @@ Item {
 
                             anchors.left: parent.left
                             anchors.leftMargin: batBlock.width / 12
-
                             width: inArrowT.width
-                            //color: "transparent"
 
                             Text {
                                 id: inArrowT
@@ -1615,9 +1608,7 @@ Item {
                             height: 20
                             anchors.right: parent.right
                             anchors.rightMargin: batBlock.width / 12
-
                             width: outArrowT.width
-                            //color: "transparent"
 
                             Text {
                                 id: outArrowT
@@ -1631,11 +1622,9 @@ Item {
                     }
 
                     Rectangle {
-
                         width: batBlock.width
                         y: batBlock.height * 2
                         x: -batBlock.width / 2
-
 
                         Item {
                             id: inWh
@@ -1650,19 +1639,15 @@ Item {
                                 font.pixelSize: Math.max(10, root.diameter * 0.04)
                                 text: "%1".arg((root.whIn).toFixed(1))
                             }
-
                         }
 
                         Item {
-
                             height: 20
-
                             x: parent.width / 2 - wh.width / 2
 
                             Text {
                                 id: wh
                                 anchors.verticalCenter: parent.verticalCenter
-
                                 font.pixelSize: Math.max(10, root.diameter * 0.04)
                                 text: 'wh'
                             }
@@ -1685,8 +1670,6 @@ Item {
 
                         }
                     }
-
-
                 }
             }
         }
@@ -1698,7 +1681,6 @@ Item {
             width: parent.width
             height: parent.height
 
-
             visible: root.debug
 
             Grid {
@@ -1706,11 +1688,8 @@ Item {
                 anchors.fill: parent
                 spacing: 5
 
-
                 Column {
                     spacing: 10
-
-
 
                     Column {
                         spacing: 5
