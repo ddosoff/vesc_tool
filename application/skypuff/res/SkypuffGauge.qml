@@ -60,6 +60,9 @@ Item {
     property string gaugeDangerFontColor: '#8e1616' // Color for danger ranges
     property string gaugeFontColor: '#515151'
     property string gaugeColor: '#C7CFD9'
+    property string battGaugeColor: '#e2e3e6'
+
+
 
     // Default for all scales
     property string defaultColor: '#4CAF50' // base color (green)
@@ -1501,6 +1504,7 @@ Item {
                     anchors.bottomMargin: root.gaugeHeight * 4
 
                     Rectangle {
+
                         id: batBlock
                         width: root.diameter * 0.30
                         height: root.diameter * 0.07
@@ -1508,6 +1512,7 @@ Item {
                         border.width: 2
                         x: -batBlock.width / 2
                         radius: 3
+                        color: root.battGaugeColor
 
                         Rectangle {
                             opacity: root.baseOpacity
@@ -1547,7 +1552,7 @@ Item {
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
                                 anchors.left: parent.left
-                                anchors.leftMargin: 5
+                                anchors.leftMargin: 6
 
                                 font.pixelSize: Math.max(10, root.diameter * 0.037)
                                 id: tBat
@@ -1562,7 +1567,7 @@ Item {
                             Text {
                                 anchors.right: parent.right
                                 anchors.verticalCenter: parent.verticalCenter
-                                anchors.rightMargin: 5
+                                anchors.rightMargin: 6
 
                                 font.pixelSize: Math.max(10, root.diameter * 0.037)
                                 id: tBatPercent
