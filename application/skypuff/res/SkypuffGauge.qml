@@ -629,7 +629,9 @@ Item {
                         context.translate(centerX, centerY);
 
                         // -11.2 - margin
-                        context.rotate(convertAngToRadian(-11.2) - angle);
+
+                        var marginAng = lrm.indexOf('.') !== -1 ? -10 : -11.2
+                        context.rotate(convertAngToRadian(marginAng) - angle);
                         drawArc(context, lrm.toString(), angle, radius);
                         context.restore();
 
@@ -656,7 +658,9 @@ Item {
                         for (var n = 0; n < str.length; n++) {
                             var c = str[n];
 
-                            var a = c === 'm' ? -1.2 : 0
+                            var a = c === 'm' ? -1.2 : 0;
+                                a = lc === '.' ? 1.2 : a;
+
 
 
                             context.rotate(angle / (str.length) - convertAngToRadian(a));
