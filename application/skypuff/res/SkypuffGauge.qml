@@ -616,47 +616,59 @@ Item {
                         context.restore();
                     }
 
-                    function drawRopeAlongArc(context, lrm, rm, centerX, centerY, radius) {
-                        // Length of string leftRopeMeters
-                        var lrmLebgth = (lrm + '').replace('.', '').toString().length;
-                        var rmLebgth = (rm + '').replace('.', '').toString().length;
-                        var diff = lrmLebgth - rmLebgth;
-                        var lc;
 
-                        // Fill the difference in length between lrm and rm with '*' so that symbol '|' rigth in the middle
-                        // **0m |800m
-                        // 753m |47m*
-                        var str = '%1 |%2'
-                            .arg(diff < 0 ? (((rm % 1) !== 0 ? '*' : '') + (new Array(Math.abs(diff) + 1).join('*')) + lrm + 'm') : (((rm % 1) !== 0 ? '*' : '') + lrm + 'm'))
-                            .arg(diff > 0 ? (rm + 'm' + (new Array(Math.abs(diff) + 1).join('*'))) : (rm + 'm'));
+
+                    function drawRopeAlongArc(context, lrm, rm, centerX, centerY, radius) {
+                        lrm += 'm';
+                        rm += 'm';
 
                         // Calculate width angle of str
-                        var angle = (Math.PI * (str.length * 3.8)) / 180; // radians
+                        var angle = (Math.PI * (lrm.length * 3.8)) / 180; // radians
 
                         context.save();
                         context.translate(centerX, centerY);
 
-                        // -5.5 - margin
-                        context.rotate(convertAngToRadian(-5.5) - angle / 2);
+                        // -11.2 - margin
+                        context.rotate(convertAngToRadian(-11.2) - angle);
+                        drawArc(context, lrm.toString(), angle, radius);
+                        context.restore();
 
+                        /******/
+
+                        angle = (Math.PI * (rm.length * 3.8)) / 180; // radians
+                        context.save();
+                        context.translate(centerX, centerY);
+                        drawArc(context, rm.toString(), angle, radius);
+                        context.restore();
+
+                        /******/
+
+                        angle = 0 // radians
+                        context.save();
+                        context.translate(centerX, centerY);
+                        context.rotate(convertAngToRadian(-1));
+                        drawArc(context, '|', angle, radius);
+                        context.restore();
+                    }
+
+                    function drawArc(context, str, angle, radius) {
+                        var lc;
                         for (var n = 0; n < str.length; n++) {
                             var c = str[n];
 
-                            // Custom margin for special chars
-                            var d = c === 'm' ? -2 : 0;
-                                d = lc === '.' ? 10 : d;
+                            var a = c === 'm' ? -1.2 : 0
 
-                            context.rotate(angle / (str.length + d));
+
+                            context.rotate(angle / (str.length) - convertAngToRadian(a));
                             context.save();
                             context.translate(0, -1 * radius);
 
                             // '*' will be transparent
-                            context.fillStyle = c === '*' ? 'rgba(255, 0, 0, 0)' : progressBars.ropeTextColor;
+                            context.fillStyle = progressBars.ropeTextColor;
                             context.fillText(c, 0, 0);
                             context.restore();
                             lc = c;
                         }
-                        context.restore();
                     }
 
                     Canvas {
