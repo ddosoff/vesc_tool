@@ -105,16 +105,14 @@ Page {
                 color: 'blue'
             }*/
             RowLayout {
-                Layout.leftMargin: page.width * 0.2 / 2
+                Layout.leftMargin: page.width * 0.1 / 2
 
                 SkypuffGauge {
                     id: sGauge
-                    //debug: true
-                    maxSpeedMs: 20
                     Layout.fillWidth: true
+                    Layout.preferredHeight: page.width * 0.9
 
-                    Layout.preferredHeight: page.width * 0.85
-                    motorMode: Skypuff.motorMode
+                    debug: false
 
                     Connections {
                         target: Skypuff
@@ -123,13 +121,36 @@ Page {
                         onMotorKgChanged: { sGauge.motorKg = Math.abs(Skypuff.motorKg) }
                         onSpeedMsChanged: { sGauge.speedMs = Skypuff.speedMs }
                         onPowerChanged: { sGauge.power = Skypuff.power }
+
                         onLeftMetersChanged: { sGauge.leftRopeMeters = Skypuff.leftMeters.toFixed(1) }
                         onDrawnMetersChanged: { sGauge.ropeMeters = Skypuff.drawnMeters }
                         onRopeMetersChanged: { sGauge.maxRopeMeters = Skypuff.ropeMeters.toFixed() }
 
+                        onIsBatteryBlinkingChanged: { sGauge.isBatteryBlinking = Skypuff.isBatteryBlinking }
+                        onIsBatteryWarningChanged: { sGauge.isBatteryWarning = Skypuff.isBatteryWarning }
+                        onIsBatteryScaleValidChanged: { sGauge.isBatteryScaleValid = Skypuff.isBatteryScaleValid }
+
+                        // Warning and Blink (bool) | I don't know names of this params
+                        /*onMotorKgWarningChanged: { sGauge.motorKgWarning = false } // Warning
+                        onMotorKgDangerChanged: { sGauge.motorKgDanger = false } // Blink
+                        onRopeWarningChanged: { sGauge.ropeWarning = false }
+                        onRopeDangerChanged: { sGauge.ropeDanger = false }
+                        onPowerWarningChanged: { sGauge.powerWarning = false }
+                        onPowerDangerChanged: { sGauge.powerDanger = false }
+                        onSpeedWarningChanged: { sGauge.speedWarning = false }
+                        onSpeedDangerChanged: { sGauge.speedDanger = false }*/
+
+                        onWhInChanged: { sGauge.whIn = Skypuff.whIn }
+                        onWhOutChanged: { sGauge.whOut = Skypuff.whOut }
+                        // Count of cells
+                        //onBatteryCellChanged: { sGauge.batteryCell = Skypuff.batteryCell }
+                        onBatteryPercentsChanged: { sGauge.batteryPercents = Skypuff.batteryPercents }
+                        onBatteryCellVoltsChanged: { sGauge.batteryCellVolts = Skypuff.batteryCellVolts }
+
                         onSettingsChanged: {
                             sGauge.maxMotorKg = cfg.motor_max_kg
-                            sGauge.maxPower = (cfg.power_max / 1000).toFixed(0)
+                            sGauge.maxPower = cfg.power_max
+                            sGauge.minPower = cfg.power_min
                         }
                     }
                 }
@@ -242,144 +263,7 @@ Page {
             Item {
                 Layout.fillWidth: true
             }
-
         }
-
-        RowLayout {
-            width: page.width
-            Layout.topMargin: 10
-
-            Item {
-                Layout.fillWidth: true
-            }
-            Text {
-                Layout.topMargin: 2
-                //width: 40
-                text: "%1 Wh".arg(Skypuff.whIn.toFixed(1))
-                color: systemPalette.text;
-            }
-
-            Text {
-                font.bold: true
-                text: '<<'
-                color: 'red';
-            }
-
-            Rectangle {
-                id: lol
-                width: tBat.width + 20
-                height: 30
-                border.color: 'grey'
-
-
-                /*ProgressBar {
-                    width: parent.width
-                    height: parent.height
-
-                    Layout.fillWidth: true
-                    enabled: Skypuff.isBatteryScaleValid
-                    to: 100
-                    value: Skypuff.batteryPercents
-
-                    background: Rectangle {
-                        radius: 2
-                        color: "lightgray"
-                        border.color: "gray"
-                        border.width: 1
-                        implicitWidth: parent.width
-                        implicitHeight: parent.height
-                    }
-                }*/
-                Rectangle {
-                    anchors.left: lol.left
-                    anchors.leftMargin: 1
-                    anchors.verticalCenter: lol.verticalCenter
-
-                    height: lol.height-2
-                    color: "lightgreen"
-                    width: lol.width * Skypuff.batteryPercents / 100
-                }
-
-                Text {
-                    id: tBat
-                    anchors.centerIn: parent
-                    text: qsTr("%1V (%2 / cell)").arg(Skypuff.batteryVolts.toFixed(2)).arg(Skypuff.batteryCellVolts.toFixed(2))
-                }
-
-                Rectangle {
-                    anchors.left: lol.right
-                    anchors.verticalCenter: lol.verticalCenter
-
-                    height: 10
-                    width: 2
-                    border.color: 'grey'
-
-                }
-            }
-
-
-            Text {
-                font.bold: true
-                text: '<<'
-                color: 'red';
-            }
-
-            Text {
-                Layout.topMargin: 2
-                text: "%1 Wh".arg(Skypuff.whOut.toFixed(1))
-            }
-
-            Item {
-                Layout.fillWidth: true
-            }
-        }
-
-
-        /*RowLayout {
-            Layout.topMargin: 20
-
-            Text {
-                id: batText
-                text: qsTr("Battery %1V (%2V / cell)").arg(Skypuff.batteryVolts.toFixed(2)).arg(Skypuff.batteryCellVolts.toFixed(2))
-                enabled: Skypuff.isBatteryScaleValid
-
-                function getBatColor() {return Skypuff.isBatteryScaleValid ? Skypuff.isBatteryWarning ? "red" : "green" : systemPalette.text}
-
-                color: getBatColor()
-
-                SequentialAnimation on color {
-                    loops: Animation.Infinite
-                    running: Skypuff.isBatteryBlinking
-                    ColorAnimation { easing.type: Easing.OutExpo; from: systemPalette.window; to: "red"; duration: 400 }
-                    ColorAnimation { easing.type: Easing.OutExpo; from: "red"; to: systemPalette.window;  duration: 200 }
-
-                    onStopped: batText.color = getBatColor()
-                }
-            }
-            ProgressBar {
-                Layout.fillWidth: true
-                enabled: Skypuff.isBatteryScaleValid
-                to: 100
-                value: Skypuff.batteryPercents
-            }
-        }
-
-        // Temps
-        RowLayout {
-            Layout.topMargin: 20
-
-            Text {
-                text: qsTr("Temps: %1, %2, %3").arg(Skypuff.tempFets).arg(Skypuff.tempMotor).arg(Skypuff.tempBat)
-
-                color: Skypuff.tempFets > 80 || Skypuff.tempMotor > 80 ? "red" : systemPalette.text;
-            }
-            Item {
-                Layout.fillWidth: true
-            }
-            Text {
-                text: qsTr("In/out: %1 / %2 Wh").arg(Skypuff.whIn.toFixed(3)).arg(Skypuff.whOut.toFixed(3))
-            }
-        }*/
 
         Item {
             Layout.fillHeight: true

@@ -18,16 +18,16 @@ Item {
     SystemPalette {id: systemPalette; colorGroup: SystemPalette.Active}
 
     property real speedMs: 0
-    property real maxSpeedMs: 30
+    property real maxSpeedMs: 20
     property real minSpeedMs: maxSpeedMs * -1
 
     property real ropeMeters: 0
     property real leftRopeMeters: maxRopeMeters - ropeMeters
     property real minRopeMeters: 0
-    property real maxRopeMeters: 800
+    property real maxRopeMeters: 1500;
 
     property real power: 0
-    property real maxPower: 20
+    property real maxPower: 20000
     property real minPower: maxPower * -1
 
     property real motorKg
@@ -38,54 +38,64 @@ Item {
     property real tempMotor: 0
     property real tempBat: 0
 
-    property real whIn: 0
-    property real whOut: 0
-
     property string motorMode: 'Not Connected'
+
+    property real batteryPercents: 0
+    property real batteryCellVolts: 0.0
+    property int batteryCell: 0
+    property real whIn: 0.0
+    property real whOut: 0.0
+
+    property bool isBatteryBlinking: false
+    property bool isBatteryWarning: false
+    property bool isBatteryScaleValid: false
+
 
     /********************
             Colors
     ********************/
 
-    property real baseOpacity: 0.4  // Opacity is to all colors of the scale
+    property real baseOpacity: 0.5  // Opacity is to all colors of the scale
     property string innerColor: '#efeded'
     property string gaugeDangerFontColor: '#8e1616' // Color for danger ranges
     property string gaugeFontColor: '#515151'
     property string gaugeColor: '#C7CFD9'
+    property string battGaugeColor: '#e2e3e6'
+
+
 
     // Default for all scales
-    property string warningColor: '#FF5722'
-    property string dangerColor: 'red'
-    property real warningColorPercent: 0.70
-    property real dangerColorPercent: 0.85
+    property string defaultColor: '#4CAF50' // base color (green)
+    property string dangerColor: 'red'      // attention color (red)
+    property string warningColor: '#FF9800' // blink color (yellow)
+
+    property int gaugesColorAnimation: 800  // freq of blinking
 
     // Rope
-    property string ropeColor: '#9C27B0'
+    property string ropeColor: root.defaultColor
     property string ropeWarningColor: root.warningColor
     property string ropeDangerColor: root.dangerColor
-    property real ropeWarningColorPercent: root.warningColorPercent
-    property real ropeDangerColorPercent: root.dangerColorPercent
 
     // MotorKg
-    property string motorKgColor: '#3F51B5'
+    property string motorKgColor: root.defaultColor
     property string motorKgWarningColor: root.warningColor
     property string motorKgDangerColor: root.dangerColor
-    property real motorKgWarningColorPercent: root.warningColorPercent
-    property real motorKgDangerColorPercent: root.dangerColorPercent
 
     // Power
-    property string powerColor: '#009688'
+    property string powerColor: root.defaultColor
     property string powerWarningColor: root.warningColor
     property string powerDangerColor: root.dangerColor
-    property real powerWarningColorPercent: root.warningColorPercent
-    property real powerDangerColorPercent: root.dangerColorPercent
 
     // Speed
-    property string speedColor: '#2196F3'
+    property string speedColor: root.defaultColor
     property string speedWarningColor: root.warningColor
     property string speedDangerColor: root.dangerColor
-    property real speedWarningColorPercent: root.warningColorPercent
-    property real speedDangerColorPercent: root.dangerColorPercent
+
+    // Battery
+    property string battColor: root.defaultColor
+    property string battWarningColor: root.warningColor
+    property string battDangerColor: root.dangerColor
+
 
     /********************
         Default view
@@ -107,27 +117,40 @@ Item {
     property real gaugeHeight: diameter * 0.09;
     property bool boldValues: false
     property bool enableAnimation: true
-    property int animationDuration: 100
+    property int animationDuration: 200
     property int animationType: Easing.OutExpo
 
     property real motorKgLabelStepSize: 5
-    property real powerLabelStepSize: (maxPower - minPower) / 4
+    property real powerLabelStepSize: (maxPower - minPower) / (5 * 1000)
 
     /********************
          Do not touch
     ********************/
     property bool debug: false
+    property bool debugBlink: false
+    property bool motorKgWarning: false
+    property bool motorKgDanger: false
+    property bool ropeWarning: false
+    property bool ropeDanger: false
+    property bool powerWarning: false
+    property bool powerDanger: false
+    property bool speedWarning: false
+    property bool speedDanger: false
     property int angK: 1000
 
-    onMaxMotorKgChanged: {
-        setMaxMotorKg();
+    /********************/
 
-        //setMaxPower();
-    }
+    onMaxMotorKgChanged: root.setMaxMotorKg()
+    onMaxRopeMetersChanged: setMaxRopeMeters()
+    onMaxPowerChanged: root.setMaxPower()
+    onMaxSpeedMsChanged: root.getSpeedLimit()
+    onMinSpeedMsChanged: root.getSpeedLimit()
+    onMinPowerChanged: root.setMinPower()
 
-    onMaxPowerChanged: {
-        root.minPower = root.maxPower * -1
-        root.powerLabelStepSize = (root.maxPower - root.minPower) / 4;
+    /********************/
+
+    function setMaxRopeMeters() {
+        root.maxRopeMeters = Math.ceil(parseInt(root.maxRopeMeters, 10) / 10) * 10;
     }
 
     function setMaxMotorKg() {
@@ -140,19 +163,37 @@ Item {
         }
     }
 
-    /*
-    function setMaxPower() {
-        root.maxPower = Math.ceil(parseInt(root.maxPower, 10) / 10) * 10;
-
-        console.log(root.maxPower, root.powerLabelStepSize);
-        if (root.maxPower > 20) {
-            var  k = 10000 % root.maxPower === 0 && root.maxPower <= 50 ? 10 : 5;
-            root.powerLabelStepSize = Math.ceil(parseInt(root.maxPower, 10) / k / 10 ) * 10;
-        } else {
-            root.powerLabelStepSize = root.maxPower / 5;
-        }
+    function getPowerLimits(val) {
+        return Math.ceil(parseInt(Math.abs(val), 10) / 10000) * 10000;
     }
-    */
+
+    function getSpeedLimit() {
+        root.maxSpeedMs = Math.ceil(parseInt(Math.abs(root.maxSpeedMs), 10) / 10) * 10;
+        root.minSpeedMs = root.maxSpeedMs * -1;
+    }
+
+    function getPowerStep() {
+        var step = 10;
+        var diff = root.maxPower - root.minPower;
+
+        if (diff > 60000) {
+            step = 20;
+        } else if (diff > 100000) {
+            step = 40;
+        }
+
+        return step;
+    }
+
+    function setMaxPower() {
+        root.maxPower = getPowerLimits(root.maxPower);
+        root.powerLabelStepSize = getPowerStep();
+    }
+
+    function setMinPower() {
+        root.minPower = getPowerLimits(root.minPower) * -1;
+        root.powerLabelStepSize = getPowerStep();
+    }
 
     function prettyNumber(number, tf = 1) {
         if (!number || !!isNaN(number)) return 0;
@@ -234,7 +275,6 @@ Item {
       Convert power's value to angl
     */
     function powerToAng(value) {
-        value /= 1000.0
         var deltaForNegativeValue = root.minPower < 0 ? Math.abs(root.minPower) : 0;
         var deltaForPositiveValue = root.minPower > 0 ? -1 * root.minPower : 0;
 
@@ -247,7 +287,7 @@ Item {
         var res =  (dl2.rotation - 90) - (value + deltaForNegativeValue + deltaForPositiveValue) * delta;
 
         // 0.1 - is a little fix for canvas context.arc
-        return (value === root.minPower ? res + 0.1 : res)
+        return (value === root.minPower ? res + 0.1 : res);
     }
 
     Column {
@@ -258,7 +298,11 @@ Item {
             height: diameter
 
             Component.onCompleted: {
-                setMaxMotorKg();
+                root.setMaxMotorKg();
+                root.setMaxPower();
+                root.setMinPower();
+                root.getSpeedLimit();
+                root.setMaxRopeMeters();
             }
 
             Rectangle {
@@ -299,7 +343,6 @@ Item {
                     }
                 }
 
-
                 /**
                   All 4 scales
                   */
@@ -311,15 +354,120 @@ Item {
                     property real ropeEndAng: ropeToAng(Math.max(root.maxRopeMeters - root.ropeMeters, root.minRopeMeters))
 
                     property real speedStartAng: speedToAng(0)
-                    property real speedEndAng: speedToAng(Math.min(root.speedMs, root.maxSpeedMs));
+                    property real speedEndAng: speedToAng(Math.min(root.speedMs, root.maxSpeedMs))
 
                     property real motorKgStartAng: dl1.rotation - 90
-                    property real motorKgEndAng: kgToAng(Math.min(root.motorKg, root.maxMotorKg));
+                    property real motorKgEndAng: kgToAng(Math.min(root.motorKg, root.maxMotorKg))
 
-                    property real powerStartAng: 0
+                    property real powerStartAng: powerToAng(0)
                     property real powerEndAng: powerToAng(root.power > 0
                                                   ? Math.min(root.power, root.maxPower)
-                                                  : Math.max(root.power, root.minPower));
+                                                  : Math.max(root.power, root.minPower))
+
+                    property string ropeTextColor: 'black'
+                    property string speedTextColor: 'black'
+                    property string powerBgColor: 'black'
+                    property string kgBgColor: 'black'
+
+                    property bool ropeD: root.ropeDanger
+                    property bool ropeW: root.ropeWarning
+                    property string ropeDColor: root.ropeDangerColor
+
+                    property bool powerD: root.powerDanger
+                    property bool powerW: root.powerWarning
+                    property string powerDColor: root.powerDangerColor
+
+                    property bool motorKgD: root.motorKgDanger
+                    property bool motorKgW: root.motorKgWarning
+                    property string motorKgDColor: root.motorKgDangerColor
+
+                    property bool speedD: root.speedDanger
+                    property bool speedW: root.speedWarning
+                    property string speedDColor: root.speedDangerColor
+
+                    /*************** ROPE ***************/
+
+                    onRopeDChanged: {
+                        // Count of loops
+                        ropeDAnimation.loops = ropeD ? Animation.Infinite : 1;
+                        // Restore default color
+                        if (!ropeD) ropeDColor = root.ropeDangerColor;
+                        canvas.requestPaint();
+                    }
+
+                    onRopeWChanged: canvas.requestPaint()
+                    onRopeDColorChanged: canvas.requestPaint()
+
+                    ColorAnimation on ropeDColor {
+                        id: ropeDAnimation
+                        running: root.ropeDanger
+                        from: root.ropeWarningColor
+                        to: root.ropeDangerColor
+                        duration: root.gaugesColorAnimation
+                        loops: Animation.Infinite // Loops will be controlled in onRopeDChanged
+                    }
+
+                    /*************** POWER ***************/
+
+                    onPowerDChanged: {
+                        powerDAnimation.loops = powerD ? Animation.Infinite : 1;
+                        if (!powerD) powerDColor = root.powerDangerColor;
+                        canvas.requestPaint();
+                    }
+
+                    onPowerWChanged: canvas.requestPaint()
+                    onPowerDColorChanged: canvas.requestPaint()
+
+                    ColorAnimation on powerDColor {
+                        id: powerDAnimation
+                        running: root.powerDanger
+                        from: root.powerWarningColor
+                        to: root.powerDangerColor
+                        duration: root.gaugesColorAnimation
+                        loops: Animation.Infinite
+                    }
+
+                    /*************** KG ***************/
+
+                    onMotorKgDChanged: {
+                        motorKgDAnimation.loops = motorKgD ? Animation.Infinite : 1;
+                        if (!motorKgD) motorKgDColor = root.motorKgDangerColor;
+                        canvas.requestPaint();
+                    }
+
+                    onMotorKgWChanged: canvas.requestPaint()
+                    onMotorKgDColorChanged: canvas.requestPaint()
+
+                    ColorAnimation on motorKgDColor {
+                        id: motorKgDAnimation
+                        running: root.motorKgDanger
+                        from: root.motorKgWarningColor
+                        to: root.motorKgDangerColor
+                        duration: root.gaugesColorAnimation
+                        loops: Animation.Infinite
+                    }
+
+                    /*************** SPEED ***************/
+
+                    onSpeedDChanged: {
+                        speedDAnimation.loops = speedD ? Animation.Infinite : 1;
+                        if (!speedD) speedDColor = root.speedDangerColor;
+                        canvas.requestPaint();
+                    }
+
+                    onSpeedWChanged: canvas.requestPaint()
+                    onSpeedDColorChanged: canvas.requestPaint()
+
+                    ColorAnimation on speedDColor {
+                        id: speedDAnimation
+                        running: root.speedDanger
+                        from: root.speedWarningColor
+                        to: root.speedDangerColor
+                        duration: root.gaugesColorAnimation
+                        loops: Animation.Infinite
+                    }
+
+                    /******************************/
 
                     // Animation
                     Behavior on ropeEndAng {
@@ -358,29 +506,157 @@ Item {
                        }
                     }
 
-                    onRopeEndAngChanged: canvas.requestPaint()
-                    onSpeedEndAngChanged: canvas.requestPaint()
-                    onMotorKgEndAngChanged: canvas.requestPaint()
-                    onPowerEndAngChanged: canvas.requestPaint()
+                    /******************************/
 
-                    function getColors(value, min, max, wcp, dcp, wc, dc, c, tc) {
-                        var warningZone = wcp * max;
-                        var dangerZone = dcp * max;
+                    onRopeEndAngChanged: {
+                        if (root.debug && root.debugBlink) {
+                            // Only for debug
+                            var debug = debugBlink(root.ropeMeters, root.maxRopeMeters);
+                            root.ropeDanger = debug.danger;
+                            root.ropeWarning = debug.warning;
+                        }
+                        canvas.requestPaint();
+                        ropeCanvas.requestPaint();
+                    }
 
-                        var color = c;
-                        var textColor = tc;
+                    onSpeedEndAngChanged: {
+                        if (root.debug && root.debugBlink) {
+                            var debug = debugBlink(root.speedMs, root.maxSpeedMs);
+                            root.speedDanger = debug.danger;
+                            root.speedWarning = debug.warning;
+                        }
+                        canvas.requestPaint();
+                    }
+                    onMotorKgEndAngChanged: {
+                        if (root.debug && root.debugBlink) {
+                            var debug = debugBlink(root.motorKg, root.maxMotorKg);
+                            root.motorKgDanger = debug.danger;
+                            root.motorKgWarning = debug.warning;
+                        }
+                        canvas.requestPaint();
+                    }
+                    onPowerEndAngChanged: {
+                        if (root.debug && root.debugBlink) {
+                            var debugMax = debugBlink(root.power, root.maxPower);
+                            var debugMin = debugBlink(root.power, root.minPower);
+                            root.powerDanger = root.power < 0 ? debugMin.danger : debugMax.danger;
+                            root.powerWarning = root.power < 0 ? debugMin.warning : debugMax.warning;
+                        }
+                        canvas.requestPaint()
+                    }
+
+                    /******************************/
+
+                    function debugBlink(value, max) {
+                        var warningZone = 0.6 * Math.abs(max);
+                        var dangerZone = 0.8 * Math.abs(max);
+                        var warning  = false;
+                        var danger = false;
 
                         if (Math.abs(value) >= warningZone && Math.abs(value) < dangerZone) {
-                            textColor = color = wc;
+                            warning = true;
+                            danger = false;
                         } else if (Math.abs(value) >= dangerZone) {
-                            textColor = color = dc;
+                            danger = true;
+                            warning = false
                         }
 
-                        return { color, textColor };
+                        return { warning, danger };
                     }
 
                     function convertAngToRadian(ang) {
                         return (Math.PI * ang) / 180;
+                    }
+
+                    function drawTextAlongArc(context, str, centerX, centerY, radius, ang, color) {
+                        var angle = (Math.PI * (str.length * 3.8)) / 180; // radians
+
+                        context.save();
+                        context.translate(centerX, centerY);
+                        context.rotate(convertAngToRadian(ang) - angle / 2);
+
+                        for (var n = 0; n < str.length; n++) {
+                            var c = str[n];
+
+                            context.rotate(angle / str.length);
+                            context.save();
+                            context.translate(0, -1 * radius);
+                            context.fillStyle = color;
+                            context.fillText(c, 0, 0);
+                            context.restore();
+                        }
+                        context.restore();
+                    }
+
+                    function drawSpeedAlongArc(context, speed, centerX, centerY, radius) {
+                        var str = '%1ms'.arg(speed);
+                        var lc;
+
+                        // Calculate angle of str
+                        var angle = (Math.PI * (str.length * 3.8)) / 180; // radians
+
+                        context.save();
+                        context.translate(centerX, centerY);
+                        context.rotate(convertAngToRadian(-180) - angle / 2);
+
+                        for (var n = 0; n < str.length; n++) {
+                            var c = str[n];
+                            // Custom margin for special chars
+                            var d = c === 's' || c === 'm' ? -2 : 0;
+                                d = lc === '.' ? 10 : d;
+
+                            context.rotate(angle / (str.length + d));
+                            context.save();
+                            context.translate(0, -1 * radius);
+                            context.fillStyle = c === '*' ? 'rgba(255, 0, 0, 0)' : progressBars.speedTextColor;
+                            context.fillText(c, 0, 0);
+                            context.restore();
+                            lc = c;
+                        }
+                        context.restore();
+                    }
+
+                    function drawRopeAlongArc(context, lrm, rm, centerX, centerY, radius) {
+                        // Length of string leftRopeMeters
+                        var lrmLebgth = (lrm + '').replace('.', '').toString().length;
+                        var rmLebgth = (rm + '').replace('.', '').toString().length;
+                        var diff = lrmLebgth - rmLebgth;
+                        var lc;
+
+                        // Fill the difference in length between lrm and rm with '*' so that symbol '|' rigth in the middle
+                        // **0m |800m
+                        // 753m |47m*
+                        var str = '%1 |%2'
+                            .arg(diff < 0 ? (((rm % 1) !== 0 ? '*' : '') + (new Array(Math.abs(diff) + 1).join('*')) + lrm + 'm') : (((rm % 1) !== 0 ? '*' : '') + lrm + 'm'))
+                            .arg(diff > 0 ? (rm + 'm' + (new Array(Math.abs(diff) + 1).join('*'))) : (rm + 'm'));
+
+                        // Calculate width angle of str
+                        var angle = (Math.PI * (str.length * 3.8)) / 180; // radians
+
+                        context.save();
+                        context.translate(centerX, centerY);
+
+                        // -5.5 - margin
+                        context.rotate(convertAngToRadian(-5.5) - angle / 2);
+
+                        for (var n = 0; n < str.length; n++) {
+                            var c = str[n];
+
+                            // Custom margin for special chars
+                            var d = c === 'm' ? -2 : 0;
+                                d = lc === '.' ? 10 : d;
+
+                            context.rotate(angle / (str.length + d));
+                            context.save();
+                            context.translate(0, -1 * radius);
+
+                            // '*' will be transparent
+                            context.fillStyle = c === '*' ? 'rgba(255, 0, 0, 0)' : progressBars.ropeTextColor;
+                            context.fillText(c, 0, 0);
+                            context.restore();
+                            lc = c;
+                        }
+                        context.restore();
                     }
 
                     Canvas {
@@ -414,7 +690,8 @@ Item {
                                 );
                                 context.fill();
 
-                                /********** Top ***********/
+
+                                /********** Top | ROPE ***********/
 
                                 var topEnd = parent.convertAngToRadian(parent.ropeEndAng - 90);
                                 var topStart = parent.convertAngToRadian(parent.ropeStartAng + 90);
@@ -432,22 +709,12 @@ Item {
                                 context.globalCompositeOperation = 'source-atop';
                                 context.lineWidth = 200;
 
-                                var ropeColors = parent.getColors(
-                                    root.ropeMeters,
-                                    root.minRopeMeters,
-                                    root.maxRopeMeters,
-                                    root.ropeWarningColorPercent,
-                                    root.ropeDangerColorPercent,
-                                    root.ropeWarningColor,
-                                    root.ropeDangerColor,
-                                    root.ropeColor,
-                                    'black'
-                                );
-
-                                context.strokeStyle = ropeColors.color;
+                                var b = root.ropeWarning || root.ropeDanger;
+                                context.strokeStyle = b ? parent.ropeDColor : root.ropeColor;
                                 context.stroke();
 
-                                /********** Bottom ***********/
+
+                                /********** Bottom | SPEED ***********/
 
                                 var bottomStart = parent.convertAngToRadian(parent.speedStartAng - 90);
                                 var bottomEnd = parent.convertAngToRadian(parent.speedEndAng - 90);
@@ -465,22 +732,13 @@ Item {
                                 context.globalCompositeOperation = 'source-atop';
                                 context.lineWidth = 200;
 
-                                var speedColors = parent.getColors(
-                                    root.speedMs,
-                                    root.minSpeedMs,
-                                    root.maxSpeedMs,
-                                    root.speedWarningColorPercent,
-                                    root.speedDangerColorPercent,
-                                    root.speedWarningColor,
-                                    root.speedDangerColor,
-                                    root.speedColor,
-                                    'black'
-                                );
-
-                                context.strokeStyle = speedColors.color;
+                                b = root.speedWarning || root.speedDanger;
+                                parent.speedTextColor = b ? parent.speedDColor : 'black';
+                                context.strokeStyle = b ? parent.speedDColor : root.speedColor;
                                 context.stroke();
 
-                                /********** Left ***********/
+
+                                /********** Left | KG ***********/
 
                                 var leftEnd = parent.convertAngToRadian(parent.motorKgStartAng + 180);
                                 var leftStart = parent.convertAngToRadian(parent.motorKgEndAng - 180);
@@ -497,23 +755,16 @@ Item {
 
                                 context.lineWidth = root.gaugeHeight * 0.7;
 
-                                var kgColors = parent.getColors(
-                                    root.motorKg,
-                                    root.minMotorKg,
-                                    root.maxMotorKg,
-                                    root.motorKgWarningColorPercent,
-                                    root.motorKgDangerColorPercent,
-                                    root.motorKgWarningColor,
-                                    root.motorKgDangerColor,
-                                    root.motorKgColor,
-                                    'black'
-                                );
+                                b = root.motorKgWarning || root.motorKgDanger;
+                                motoKgTxt1.color = motoKgTxt2.color = b ? parent.motorKgDColor : 'black';
+                                var kgColor = b ? parent.motorKgDColor : root.motorKgColor;
 
-                                motoKgTxt1.color = motoKgTxt2.color = kgColors.textColor;
-                                context.strokeStyle = kgColors.color;
+                                parent.kgBgColor = kgColor;
+                                context.strokeStyle = kgColor;
                                 context.stroke();
 
-                                /********** Right ***********/
+
+                                /********** Right | POWER ***********/
 
                                 var rightEnd = parent.convertAngToRadian(parent.powerEndAng);
                                 var rightStart = parent.convertAngToRadian(parent.powerStartAng);
@@ -525,25 +776,17 @@ Item {
                                     baseLayer.radius - root.gaugeHeight * 0.4,
                                     rightStart,
                                     rightEnd,
-                                    parent.powerEndAng < 0
+                                    (parent.powerEndAng - powerToAng(0)) < 0
                                 );
 
                                 context.lineWidth = root.gaugeHeight * 0.7;
 
-                                var powerColors = parent.getColors(
-                                    root.power,
-                                    root.minPower,
-                                    root.maxPower,
-                                    root.powerWarningColorPercent,
-                                    root.powerDangerColorPercent,
-                                    root.powerWarningColor,
-                                    root.powerDangerColor,
-                                    root.powerColor,
-                                    'black'
-                                );
+                                b = root.powerWarning || root.powerDanger;
+                                var powerColor = b ? parent.powerDColor : root.powerColor;
+                                powerTxt2.color = powerTxt1.color = b ? parent.powerDColor : 'black';
 
-                                powerTxt2.color = powerTxt1.color = powerColors.textColor;
-                                context.strokeStyle = powerColors.color;
+                                parent.powerBgColor = powerColor;
+                                context.strokeStyle = powerColor;
                                 context.stroke();
                             }
                         }
@@ -551,6 +794,9 @@ Item {
                         onHeightChanged: { requestPaint(); }
                     }
 
+                    /**
+                      Left and Rigth BG
+                     */
                     Canvas {
                         //opacity: 0.5
                         antialiasing: true
@@ -558,7 +804,7 @@ Item {
                         anchors.fill: parent
                         onPaint: {
                             if (context) {
-                                context.reset ();
+                                context.reset();
                                 context.beginPath();
 
                                 var centreX = baseLayer.width / 2;
@@ -604,6 +850,97 @@ Item {
                     }
                 }
 
+                /**
+                  Text along arc
+                  */
+                Canvas {
+                    id: ropeCanvas
+                    antialiasing: true
+                    contextType: '2d'
+                    anchors.fill: parent
+
+                    onWidthChanged:  { requestPaint(); }
+                    onHeightChanged: { requestPaint(); }
+
+                    onPaint: {
+                        var centreX = baseLayer.width / 2;
+                        var centreY = baseLayer.height / 2;
+
+                        context.reset();
+                        context.beginPath();
+                        context.font = "%2 %1px sans-serif"
+                            .arg(Math.max(10, root.diameter * 0.05))
+                            .arg(root.boldValues ? 'bold' : '');
+
+                        progressBars.drawRopeAlongArc(
+                            context,
+                            root.prettyNumber(root.leftRopeMeters, root.leftRopeMeters < 10 ? 1 : 0),
+                            root.prettyNumber(root.ropeMeters, root.ropeMeters < 10 ? 1 : 0),
+                            centreX,
+                            centreY,
+                            baseLayer.radius - root.gaugeHeight
+                        );
+
+                        context.beginPath();
+
+
+                        /*progressBars.drawSpeedAlongArc(
+                            context,
+                            root.prettyNumber(root.speedMs),
+                            centreX,
+                            centreY,
+                            baseLayer.radius - root.gaugeHeight
+                        );*/
+
+                        /*progressBars.drawTextAlongArc(
+                            context,
+                            'Rope',
+                            centreX,
+                            centreY,
+                            baseLayer.radius - root.gaugeHeight,
+                            180 -  90 - dl2.rotation,
+                            '#515151'
+                        );*/
+                    }
+                }
+
+                /*Canvas {
+                    id: speedCanvas
+                    antialiasing: true
+                    contextType: '2d'
+                    anchors.fill: parent
+
+
+                    onWidthChanged:  { requestPaint(); }
+                    onHeightChanged: { requestPaint(); }
+
+
+
+                    onPaint: {
+
+                        var centreX = baseLayer.width / 2;
+                        var centreY = baseLayer.height / 2;
+
+                        context.reset();
+                        context.beginPath();
+                        context.font = "%1px sans-serif".arg(Math.max(10, root.diameter * 0.05));
+
+
+
+                        context.beginPath();
+
+                        /*progressBars.drawTextAlongArc(
+                            context,
+                            'Rope',
+                            centreX,
+                            centreY,
+                            baseLayer.radius - root.gaugeHeight,
+                            180 -  90 - dl2.rotation,
+                            '#515151'
+                        );
+                    }
+                }*/
+
                 Item {
                     id: circleInner
 
@@ -614,6 +951,9 @@ Item {
                     }
                 }
 
+                /**
+                  Gauges
+                  */
                 Item {
                     id: gauge
                     anchors {
@@ -621,7 +961,7 @@ Item {
                         margins: gaugeHeight * 0.1
                     }
 
-                    function getTLHY(value, min, max, k = 0.2) {
+                    function getTLHY(value, min, max, k = 0.3) {
                         if (value === max) {
                             return root.gaugeHeight * k;
                         } else if (value === min) {
@@ -701,9 +1041,7 @@ Item {
                             /**
                               Center point
                             */
-                            foreground: Item {
-                                visible: false
-                            }
+                            foreground: null
 
                             /**
                               Numbers on the scale
@@ -743,23 +1081,22 @@ Item {
                             */
                             tickmark: Rectangle {
                                 antialiasing: true
-                                implicitWidth: outerRadius * ((styleData.value === root.maxMotorKg || styleData.value === root.minMotorKg)
-                                    ? 0.005
-                                    : 0.01)
+                                implicitWidth: outerRadius * 0.01
                                 implicitHeight:  (styleData.value === root.maxMotorKg || styleData.value === root.minMotorKg)
-                                    ? root.gaugeHeight
+                                    ? root.gaugeHeight * 1.7
                                     : implicitWidth * (styleData.value % (root.motorKgLabelStepSize / 2) ? 3 : 6)
-                                color: gauge.getTLColor(styleData.value, root.maxMotorKg)
+                                color: root.gaugeFontColor
                             }
 
                             /**
                               Needle
                             */
                             needle: Rectangle {
+                                visible: root.motorKg !== root.minMotorKg
                                 antialiasing: true
-                                width: outerRadius * 0.015
-                                height: outerRadius * 0.7
-                                color: root.gaugeFontColor
+                                width: outerRadius * 0.01
+                                height: outerRadius
+                                color: progressBars.kgBgColor
                             }
                         }
                     }
@@ -775,8 +1112,8 @@ Item {
                             margins: 0
                         }
 
-                        minimumValue: root.minPower
-                        maximumValue: root.maxPower
+                        minimumValue: root.minPower / 1000
+                        maximumValue: root.maxPower / 1000
                         value: root.power / 1000
 
                         Behavior on value {
@@ -794,63 +1131,35 @@ Item {
                             labelInset: root.gaugeHeight
                             labelStepSize: root.powerLabelStepSize
 
-                            foreground: Item {
-                                Rectangle {
-                                    width: 10
-                                    height: width
-                                    radius: width / 2
-                                    color: root.gaugeFontColor
-                                    antialiasing: true
-                                    anchors.centerIn: parent
-                                }
-                            }
-
-                            /*minorTickmark: Rectangle {
-                                antialiasing: true
-                                visible: root.maxPower <= 5
-                                implicitWidth: outerRadius * ((styleData.value === root.maxPower || styleData.value === root.minPower)
-                                    ? 0.005
-                                    : 0.01)
-                                implicitHeight:  (styleData.value === root.maxPower || styleData.value === root.minPower)
-                                    ? root.gaugeHeight
-                                    : implicitWidth * (styleData.value % (root.powerLabelStepSize) ? 3 : 6)
-                                color: gauge.getTLColor(styleData.value, root.maxPower)
-                            }
-
-                            */
-
-                            minorTickmark: Rectangle {
-                                visible: false
-                            }
+                            foreground: null
+                            minorTickmark: null
 
                             tickmarkLabel:  Text {
                                 font.pixelSize: gauge.getFontSize()
-                                y: gauge.getTLHY(styleData.value, root.minPower, root.maxPower)
-                                x: gauge.getTLHX(styleData.value, root.minPower, root.maxPower, -0.13)
+                                y: gauge.getTLHY(styleData.value * 1000, root.minPower, root.maxPower)
+                                x: gauge.getTLHX(styleData.value * 1000, root.minPower, root.maxPower, -0.13)
                                 text: styleData.value + ((styleData.value === 0) ? 'kw' : '')
-                                rotation: root.powerToAng(styleData.value)
-                                color: gauge.getTLColor(Math.abs(styleData.value), root.maxPower)
+                                rotation: root.powerToAng(styleData.value * 1000)
+                                color: gauge.getTLColor(Math.abs(styleData.value * 1000), root.maxPower)
                                 antialiasing: true
                                 font.family: root.ff
                             }
 
-
                             tickmark: Rectangle {
                                 antialiasing: true
-                                implicitWidth: outerRadius * ((styleData.value === root.maxPower || styleData.value === root.minPower)
-                                    ? 0.005
-                                    : 0.01)
-                                implicitHeight:  (styleData.value === root.maxPower || styleData.value === root.minPower)
-                                    ? root.gaugeHeight
+                                implicitWidth: outerRadius * 0.01
+                                implicitHeight:  (styleData.value * 1000 === root.maxPower || styleData.value * 1000 === root.minPower)
+                                    ? root.gaugeHeight * 1.7
                                     : implicitWidth * ((styleData.value % (root.powerLabelStepSize)) ? 3 : 6)
-                                color: gauge.getTLColor(Math.abs(styleData.value), root.maxPower)
+                                color: root.gaugeFontColor
                             }
 
                             needle: Rectangle {
+                                visible: root.power !== 0
+                                color: progressBars.powerBgColor
                                 antialiasing: true
-                                width: outerRadius * 0.015
-                                height: outerRadius * 0.7
-                                color: root.gaugeFontColor
+                                width: outerRadius * 0.01
+                                height: outerRadius
                             }
                         }
                     }
@@ -885,32 +1194,19 @@ Item {
                             labelInset: root.gaugeHeight / 2
                             labelStepSize: root.maxSpeedMs
 
-                            foreground: Item {
-                                Rectangle {
-                                    visible: false
-                                }
-                            }
+                            foreground: null
+                            minorTickmark: null
 
                             tickmarkLabel:  Text {
                                 visible: styleData.value === root.maxSpeedMs || styleData.value === root.minSpeedMs
-
                                 font.pixelSize: gauge.getFontSize(0.04)
-
                                 y: gauge.getTLVY(styleData.value, root.minSpeedMs, root.maxSpeedMs, 0.3)
                                 x: gauge.getTLVX(styleData.value, root.minSpeedMs, root.maxSpeedMs, -0.3)
-
-
                                 text: styleData.value + ((styleData.value === 0) ? 'kw' : '')
-
                                 rotation: styleData.value !== root.maxSpeedMs ? root.speedToAng(styleData.value) - 180 - 90 : root.speedToAng(styleData.value)  - 90
-
                                 color: root.gaugeFontColor
                                 antialiasing: true
                                 font.family: root.ff
-                            }
-
-                            minorTickmark: Rectangle {
-                                visible: false
                             }
 
                             tickmark: Rectangle {
@@ -924,9 +1220,7 @@ Item {
                                 color: root.gaugeFontColor
                             }
 
-                            needle: Rectangle {
-                                visible: false
-                            }
+                            needle: null
                         }
                     }
 
@@ -958,13 +1252,11 @@ Item {
                             minimumValueAngle: root.ropeToAng(root.minRopeMeters)
                             maximumValueAngle: root.ropeToAng(root.maxRopeMeters)
                             labelInset: root.gaugeHeight / 2
-                            labelStepSize: root.maxRopeMeters
+                            labelStepSize: 1
 
-                            foreground: Item {
-                                Rectangle {
-                                    visible: false
-                                }
-                            }
+                            foreground: null
+                            minorTickmark: null
+                            needle: null
 
                             tickmarkLabel:  Text {
                                 function getAng(value) {
@@ -991,79 +1283,125 @@ Item {
                                 font.family: root.ff
                             }
 
-                            minorTickmark: Rectangle {
-                                visible: false
-                            }
-
                             tickmark: Rectangle {
-                                visible: false
-                            }
+                                function show(value) {
+                                    var ifHalf = value === Math.ceil((root.maxRopeMeters / 2));
+                                    var ifQuat1 = value === Math.ceil((root.maxRopeMeters / 4));
+                                    var ifQuat2 = value === Math.ceil((root.maxRopeMeters - root.maxRopeMeters / 4));
+                                    return ifHalf || ifQuat1 || ifQuat2;
+                                }
 
-                            needle: Rectangle {
-                                visible: false
+                                visible: this.show(styleData.value)
+                                antialiasing: true
+                                implicitWidth: outerRadius * ((styleData.value === root.maxRopeMeters || styleData.value === root.minRopeMeters)
+                                    ? 0.005
+                                    : 0.01)
+                                implicitHeight:  (styleData.value === root.maxRopeMeters || styleData.value === root.minRopeMeters)
+                                    ? root.gaugeHeight
+                                    : implicitWidth * ((styleData.value % (root.maxRopeMeters)) ? 3 : 6)
+                                color: root.gaugeFontColor
                             }
                         }
                     }
                 }
 
                 /**
-                  Values of ropeMeters and leftRopeMeters
+                  Right and Left BG borders
                   */
-                Column {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    anchors.topMargin: root.gaugeHeight / 2 - root.gaugeHeight * 0.3
-                    spacing: 2
-                    width: Math.max(textLeftRopeMeters.width, ropeMeters.width)
+                Canvas {
+                    //opacity: 0.5
+                    antialiasing: true
+                    contextType: '2d'
+                    anchors.fill: parent
+                    onPaint: {
+                        if (context) {
+                            context.reset();
+                            context.beginPath();
 
+                            var centreX = baseLayer.width / 2;
+                            var centreY = baseLayer.height / 2;
 
-                    Grid {
-                        spacing: 5
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        id: textLeftRopeMeters
+                            /**   Right   **/
+                            var topEnd = progressBars.convertAngToRadian(90 - dl1.rotation);
+                            var topStart = progressBars.convertAngToRadian(90 - dl2.rotation);
 
-                        Text {
-                            text: root.prettyNumber(root.leftRopeMeters)
-                            font.pixelSize: Math.max(10, root.diameter * 0.04)
-                            font.family: root.ff
-                            font.bold: root.boldValues
-                        }
+                            context.beginPath();
+                            context.moveTo(centreX, centreY);
+                            context.arc(
+                                centreX,
+                                centreY,
+                                baseLayer.radius - root.gaugeHeight * 1.7,
+                                topStart - progressBars.convertAngToRadian(20),
+                                topEnd + progressBars.convertAngToRadian(20),
+                                false
+                            );
 
-                        Text {
-                            text: 'm'
-                            font.pixelSize: Math.max(10, root.diameter * 0.04)
-                            font.family: root.ff
-                            font.bold: root.boldValues
+                            context.lineTo(centreX, centreY);
+                            context.fillStyle = root.innerColor;
+                            context.fill();
+
+                            context.beginPath();
+
+                            context.arc(
+                                centreX,
+                                centreY,
+                                baseLayer.radius - root.gaugeHeight * 1.7,
+                                topStart,
+                                topEnd,
+                                false
+                            );
+
+                            context.lineWidth = 2;
+                            context.strokeStyle = root.borderColor;
+                            context.stroke();
+
+                            /**   Left   **/
+                            topEnd = progressBars.convertAngToRadian(90 + dl2.rotation);
+                            topStart = progressBars.convertAngToRadian(90 + dl1.rotation);
+
+                            context.beginPath();
+                            context.moveTo(centreX, centreY);
+                            context.arc(
+                                centreX,
+                                centreY,
+                                baseLayer.radius - root.gaugeHeight * 1.7,
+                                topStart - progressBars.convertAngToRadian(20),
+                                topEnd + progressBars.convertAngToRadian(20),
+                                false
+                            );
+
+                            context.lineTo(centreX, centreY);
+                            context.fillStyle = root.innerColor;
+                            context.fill();
+
+                            context.beginPath();
+
+                            context.arc(
+                                centreX,
+                                centreY,
+                                baseLayer.radius - root.gaugeHeight * 1.7,
+                                topStart,
+                                topEnd,
+                                false
+                            );
+
+                            context.lineWidth = 2;
+                            context.strokeStyle = root.borderColor;
+                            context.stroke();
                         }
                     }
+                }
 
-                    Rectangle {
-                        opacity: 0.5
-                        width: parent.width
-                        height: 1
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        color: root.borderColor
-                    }
-
-                    Grid {
-                        spacing: 5
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        id: textRopeMeters
-
-                        Text {
-                            text: root.prettyNumber(root.ropeMeters)
-                            font.pixelSize: Math.max(10, root.diameter * 0.04)
-                            font.family: root.ff
-                            font.bold: root.boldValues
-                        }
-
-                        Text {
-                            text: 'm'
-                            font.pixelSize: Math.max(10, root.diameter * 0.04)
-                            font.family: root.ff
-                            font.bold: root.boldValues
-                        }
-                    }
+                /**
+                  Center point
+                  */
+                Rectangle {
+                    anchors.horizontalCenter: baseLayer.horizontalCenter
+                    anchors.verticalCenter: baseLayer.verticalCenter
+                    width: 5
+                    height: width
+                    radius: 50
+                    color: root.borderColor
                 }
 
                 /**
@@ -1072,19 +1410,19 @@ Item {
                 Grid {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
-                    anchors.bottomMargin: root.gaugeHeight / 1.5
+                    anchors.bottomMargin: root.gaugeHeight / 1.7
                     spacing: 5
 
                     Text {
                         text: root.prettyNumber(root.speedMs)
-                        font.pixelSize: Math.max(10, root.diameter * 0.04)
+                        font.pixelSize: Math.max(10, root.diameter * 0.05)
                         font.family: root.ff
                         font.bold: root.boldValues
                     }
 
                     Text {
                         text: 'ms'
-                        font.pixelSize: Math.max(10, root.diameter * 0.04)
+                        font.pixelSize: Math.max(10, root.diameter * 0.05)
                         font.family: root.ff
                         font.bold: root.boldValues
                     }
@@ -1098,8 +1436,8 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
 
                     anchors.top: parent.top
-                    anchors.topMargin: root.gaugeHeight * 2.4
-                    font.pixelSize: Math.max(10, root.diameter * 0.055)
+                    anchors.topMargin: root.gaugeHeight * 3.3
+                    font.pixelSize: Math.max(10, root.diameter * 0.06)
                     font.family: root.ff
                 }
 
@@ -1107,15 +1445,16 @@ Item {
                   Value of motorKg
                   */
                 Grid {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    anchors.topMargin: root.gaugeHeight * 3.4
+                    anchors.verticalCenter: parent.verticalCenter
+                    //anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.left: parent.left
+                    anchors.leftMargin: root.gaugeHeight * 2.5
                     spacing: 5
 
                     Text {
                         id: motoKgTxt1
                         text: root.prettyNumber(root.motorKg, root.motorKg >= 25 ? 0 : 1)
-                        font.pixelSize: Math.max(10, root.diameter * 0.055)
+                        font.pixelSize: Math.max(10, root.diameter * 0.07)
                         font.family: root.ff
                         font.bold: root.boldValues
                     }
@@ -1124,7 +1463,7 @@ Item {
                         id: motoKgTxt2
                         text: 'kg'
                         opacity: 0.8
-                        font.pixelSize: Math.max(10, root.diameter * 0.055)
+                        font.pixelSize: Math.max(10, root.diameter * 0.07)
                         font.family: root.ff
                         font.bold: root.boldValues
                     }
@@ -1134,15 +1473,15 @@ Item {
                   Value of power
                   */
                 Grid {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.bottom: parent.bottom
-                    anchors.bottomMargin: root.gaugeHeight * 3.4
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.right: parent.right
+                    anchors.rightMargin: root.gaugeHeight * 2.2
                     spacing: 5
 
                     Text {
                         id: powerTxt1
                         text: root.prettyNumber(Math.abs(root.power) >= 100 ? root.power / 1000 : root.power, Math.abs(root.power) < 100 ? 0 : 1)
-                        font.pixelSize: Math.max(10, root.diameter * 0.055)
+                        font.pixelSize: Math.max(10, root.diameter * 0.07)
                         font.family: root.ff
                         font.bold: root.boldValues
                     }
@@ -1151,35 +1490,208 @@ Item {
                         id: powerTxt2
                         text: Math.abs(root.power) >= 100 ? 'kw' : 'w'
                         opacity: 0.8
-                        font.pixelSize: Math.max(10, root.diameter * 0.055)
+                        font.pixelSize: Math.max(10, root.diameter * 0.07)
                         font.family: root.ff
                         font.bold: root.boldValues
                     }
                 }
 
-                /**
-                  Title 'Power'
-                  */
-                Text {
-                    text: 'Power'
+                Item {
+                    id: battery
+                    enabled: root.isBatteryScaleValid
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
-                    anchors.bottomMargin: root.gaugeHeight * 2.4
-                    font.pixelSize: Math.max(10, root.diameter * 0.035)
-                    font.family: root.ff
+                    anchors.bottomMargin: root.gaugeHeight * 4
+
+                    Rectangle {
+
+                        id: batBlock
+                        width: root.diameter * 0.30
+                        height: root.diameter * 0.07
+                        border.color: root.borderColor
+                        border.width: 2
+                        x: -batBlock.width / 2
+                        radius: 3
+                        color: root.battGaugeColor
+
+                        Rectangle {
+                            opacity: root.baseOpacity
+                            radius: 2
+
+                            anchors.left: batBlock.left
+                            anchors.leftMargin: parent.border.width
+                            anchors.topMargin: parent.border.width
+                            anchors.verticalCenter: batBlock.verticalCenter
+
+                            property bool battD: root.isBatteryBlinking
+                            property string battDColor: root.battDangerColor
+
+                            onBattDChanged: {
+                                battDAnimation.loops = battD ? Animation.Infinite : 1;
+                                if (!battD) battDColor = root.battDangerColor;
+                            }
+
+                            ColorAnimation on battDColor {
+                                id: battDAnimation
+                                running: root.isBatteryBlinking
+                                from: root.battWarningColor
+                                to: root.battDangerColor
+                                duration: root.gaugesColorAnimation
+                                loops: Animation.Infinite
+                            }
+
+                            height: batBlock.height - parent.border.width * 2
+                            color: root.isBatteryWarning || root.isBatteryBlinking ? battDColor : root.battColor
+                            width: (batBlock.width - parent.border.width * 2) * root.batteryPercents / 100
+                        }
+
+                        Item {
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.left: parent.left
+                                anchors.leftMargin: 6
+
+                                font.pixelSize: Math.max(10, root.diameter * 0.037)
+                                id: tBat
+                                text: qsTr("%1 x %2").arg(root.batteryCellVolts.toFixed(2)).arg(root.batteryCell)
+
+                            }
+                        }
+
+                        Item {
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            Text {
+                                anchors.right: parent.right
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.rightMargin: 6
+
+                                font.pixelSize: Math.max(10, root.diameter * 0.037)
+                                id: tBatPercent
+                                text: root.batteryPercents.toFixed(0) + '%'
+                            }
+                        }
+
+                        Rectangle {
+                            anchors.left: batBlock.right
+                            anchors.verticalCenter: batBlock.verticalCenter
+                            color: root.borderColor
+                            height: root.diameter * 0.035
+                            width: 3
+                            border.color: root.borderColor
+                        }
+                    }
+
+                    Rectangle {
+                        width: batBlock.width
+                        y: batBlock.height + 2
+                        x: -batBlock.width / 2
+
+                        Item {
+                            id: inArrow
+                            height: 20
+
+                            anchors.left: parent.left
+                            anchors.leftMargin: batBlock.width / 12
+                            width: inArrowT.width
+
+                            Text {
+                                id: inArrowT
+                                font.pixelSize: Math.max(10, root.diameter * 0.037)
+                                font.bold: true
+                                rotation: -90
+                                text: '>>'
+                                color: 'red';
+                            }
+                        }
+
+                        Item {
+                            id: outArrow
+                            height: 20
+                            anchors.right: parent.right
+                            anchors.rightMargin: batBlock.width / 12
+                            width: outArrowT.width
+
+                            Text {
+                                id: outArrowT
+                                font.pixelSize: Math.max(10, root.diameter * 0.037)
+                                font.bold: true
+                                rotation: 90
+                                text: '>>'
+                                color: 'red';
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        width: batBlock.width
+                        y: batBlock.height * 2
+                        x: -batBlock.width / 2
+
+                        Item {
+                            id: inWh
+                            height: 20
+                            anchors.left: parent.left
+                            anchors.leftMargin: batBlock.width / 15
+
+                            Text {
+                                anchors.left: parent.left
+                                anchors.verticalCenter: parent.verticalCenter
+                                id: inWhT
+                                font.pixelSize: Math.max(10, root.diameter * 0.04)
+                                text: "%1".arg((root.whIn).toFixed(1))
+                            }
+                        }
+
+                        Item {
+                            height: 20
+                            x: parent.width / 2 - wh.width / 2
+
+                            Text {
+                                id: wh
+                                anchors.verticalCenter: parent.verticalCenter
+                                font.pixelSize: Math.max(10, root.diameter * 0.04)
+                                text: 'wh'
+                            }
+
+                        }
+
+                        Item {
+                            id: outWh
+                            height: 20
+                            anchors.right: parent.right
+                            anchors.rightMargin: batBlock.width / 15
+
+                            Text {
+                                anchors.right: parent.right
+                                anchors.verticalCenter: parent.verticalCenter
+                                id: outWhT
+                                font.pixelSize: Math.max(10, root.diameter * 0.04)
+                                text: "%1".arg((root.whOut).toFixed(1))
+                            }
+
+                        }
+                    }
                 }
             }
         }
 
+        /**
+          Debug sliderSpeed
+         */
         Rectangle {
             width: parent.width
-            height: 200
-            anchors.horizontalCenter: parent.horizontalCenter
+            height: parent.height
+
             visible: root.debug
 
             Grid {
-                columns: 2
+                columns: 4
                 anchors.fill: parent
+                spacing: 5
 
                 Column {
                     spacing: 10
@@ -1188,7 +1700,7 @@ Item {
                         spacing: 5
 
                         Text {
-                            text: 'Rope'
+                            text: 'Rope val'
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
 
@@ -1209,31 +1721,7 @@ Item {
                         spacing: 5
 
                         Text {
-                            text: 'Speed'
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Slider {
-                            id: sliderSpeed
-                            minimumValue: root.minSpeedMs
-                            maximumValue: root.maxSpeedMs
-                            value: root.speedMs
-
-                            onValueChanged: {
-                                var res = speedToAng(value);
-                                root.speedMs = value;
-                            }
-                        }
-                    }
-                }
-
-                Column {
-                    spacing: 10
-                    Column {
-                        spacing: 5
-
-                        Text {
-                            text: 'Kg'
+                            text: 'Kg val'
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
 
@@ -1255,6 +1743,239 @@ Item {
                         spacing: 5
 
                         Text {
+                            text: 'Power val'
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        Slider {
+                            id: sliderPower
+                            minimumValue: root.minPower
+                            maximumValue: root.maxPower
+                            value: root.power
+
+                            onValueChanged: {
+                                root.power = value;
+                            }
+                        }
+                    }
+
+                    Column {
+                        spacing: 5
+
+                        Text {
+                            text: 'Speed val'
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        Slider {
+                            id: sliderSpeed
+                            minimumValue: root.minSpeedMs
+                            maximumValue: root.maxSpeedMs
+                            value: root.speedMs
+
+                            onValueChanged: {
+                                var res = speedToAng(value);
+                                root.speedMs = value;
+                            }
+                        }
+                    }   
+                }
+
+                Column {
+                    spacing: 10
+
+                    Column {
+                        spacing: 5
+
+                        Text {
+                            text: 'Batt val'
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        Slider {
+                            minimumValue: 0
+                            maximumValue: 100
+                            value: root.batteryPercents
+
+                            onValueChanged: {
+                                root.batteryPercents = value;
+                            }
+                        }
+                    }
+
+                    Column {
+                        spacing: 5
+
+                        Text {
+                            text: 'CellV val'
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        Slider {
+                            minimumValue: 0.00
+                            maximumValue: 15.00
+                            value: root.batteryCellVolts
+
+                            onValueChanged: {
+                                root.batteryCellVolts = value;
+                            }
+                        }
+                    }
+
+                    Column {
+                        spacing: 5
+
+                        Text {
+                            text: 'Cell Count'
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        Slider {
+                            minimumValue: 0
+                            maximumValue: 100
+                            value: root.batteryCell
+
+                            onValueChanged: {
+                                root.batteryCell = value;
+                            }
+                        }
+                    }
+
+                    Column {
+                        spacing: 5
+
+                        Text {
+                            text: 'WH in'
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        Slider {
+                            minimumValue: 0.0
+                            maximumValue: 100.0
+                            value: root.whIn
+
+                            onValueChanged: {
+                                root.whIn = value;
+                            }
+                        }
+                    }
+
+                    Column {
+                        spacing: 5
+
+                        Text {
+                            text: 'WH out'
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        Slider {
+                            minimumValue: 0.0
+                            maximumValue: 100.0
+                            value: root.whOut
+
+                            onValueChanged: {
+                                root.whOut = value;
+                            }
+                        }
+                    }
+                }
+
+                Column {
+                    spacing: 10
+
+                    Column {
+                        spacing: 5
+
+                        Text {
+                            text: 'Warning Gauges'
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        Slider {
+                            minimumValue: 0
+                            maximumValue: 1
+                            stepSize: 1
+                            value: 0
+
+                            onValueChanged: {
+                                root.ropeWarning = !!value;
+                                root.powerWarning = !!value;
+                                root.motorKgWarning= !!value;
+                                root.speedWarning = !!value;
+                                root.isBatteryWarning = !!value
+                            }
+                        }
+                    }
+
+                    Column {
+                        spacing: 5
+
+                        Text {
+                            text: 'Blink Gauges'
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        Slider {
+                            minimumValue: 0
+                            maximumValue: 1
+                            stepSize: 1
+                            value: 0
+
+                            onValueChanged: {
+                                root.ropeDanger = !!value;
+                                root.powerDanger = !!value;
+                                root.motorKgDanger = !!value;
+                                root.speedDanger = !!value;
+                                root.isBatteryBlinking = !!value
+                            }
+                        }
+                    }
+
+                    Column {
+                        Text {
+                            text: 'Speed max'
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        Slider {
+
+                            minimumValue: 0
+                            maximumValue: 100
+                            value: root.maxSpeedMs
+
+                            onValueChanged: {
+                                root.maxSpeedMs = value;
+                            }
+                        }
+                    }
+                }
+
+                Column {
+                    spacing: 10
+
+                    Column {
+                        Text {
+                            text: 'Kg step'
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        Slider {
+
+                            minimumValue: 1
+                            maximumValue: 20
+                            value: root.motorKgLabelStepSize
+
+                            onValueChanged: {
+                                root.motorKgLabelStepSize = value;
+                            }
+                        }
+                    }
+
+
+                    Column {
+                        spacing: 10
+
+                        Text {
                             text: 'MaxKg'
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
@@ -1269,36 +1990,56 @@ Item {
                                 root.maxMotorKg = value;
                             }
                         }
+                    }
+
+                    Column {
+
+                        Text {
+                            text: 'Power step'
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
                         Slider {
 
                             minimumValue: 1
                             maximumValue: 20
-                            value: root.motorKgLabelStepSize
+                            value: root.powerLabelStepSize
 
                             onValueChanged: {
-                                root.motorKgLabelStepSize = value;
+                                root.powerLabelStepSize = parseInt(value);
                             }
                         }
                     }
 
                     Column {
-                        spacing: 5
-
                         Text {
-                            text: 'Power'
+                            text: 'Power max'
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
 
                         Slider {
-                            id: sliderPower
-                            minimumValue: root.minPower * 1000
-                            maximumValue: root.maxPower * 1000
-                            value: root.power
-                            width: 350
+                            minimumValue: 0
+                            maximumValue: 100000
+                            value: root.maxPower
 
                             onValueChanged: {
-                                var res = powerToAng(value);
-                                root.power = value;
+                                root.maxPower = value;
+                            }
+                        }
+                    }
+                    Column {
+                        Text {
+                            text: 'Power min'
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        Slider {
+                            minimumValue: -100000
+                            maximumValue: 0
+                            value: root.minPower
+
+                            onValueChanged: {
+                                root.minPower = value;
                             }
                         }
                     }
