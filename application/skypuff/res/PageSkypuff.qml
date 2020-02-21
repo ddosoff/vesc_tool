@@ -105,14 +105,14 @@ Page {
                 color: 'blue'
             }*/
             RowLayout {
-                Layout.leftMargin: page.width * 0.1 / 2
+                Layout.leftMargin: 10
 
                 SkypuffGauge {
                     id: sGauge
                     Layout.fillWidth: true
-                    Layout.preferredHeight: page.width * 0.9
+                    Layout.preferredHeight: page.width - 20
 
-                    debug: false
+                    //debug: true
 
                     Connections {
                         target: Skypuff
@@ -131,19 +131,18 @@ Page {
                         onIsBatteryScaleValidChanged: { sGauge.isBatteryScaleValid = Skypuff.isBatteryScaleValid }
 
                         // Warning and Blink (bool) | I don't know names of this params
-                        /*onMotorKgWarningChanged: { sGauge.motorKgWarning = false } // Warning
-                        onMotorKgDangerChanged: { sGauge.motorKgDanger = false } // Blink
-                        onRopeWarningChanged: { sGauge.ropeWarning = false }
-                        onRopeDangerChanged: { sGauge.ropeDanger = false }
-                        onPowerWarningChanged: { sGauge.powerWarning = false }
-                        onPowerDangerChanged: { sGauge.powerDanger = false }
-                        onSpeedWarningChanged: { sGauge.speedWarning = false }
-                        onSpeedDangerChanged: { sGauge.speedDanger = false }*/
+                        //onMotorKgWarningChanged: { sGauge.motorKgWarning = false } // Warning
+                        //onMotorKgDangerChanged: { sGauge.motorKgDanger = false } // Blink
+                        //onRopeWarningChanged: { sGauge.ropeWarning = false }
+                        //onRopeDangerChanged: { sGauge.ropeDanger = false }
+                        //onPowerWarningChanged: { sGauge.powerWarning = false }
+                        //onPowerDangerChanged: { sGauge.powerDanger = false }
+                        //onSpeedWarningChanged: { sGauge.speedWarning = false }
+                        //onSpeedDangerChanged: { sGauge.speedDanger = false }
 
                         onWhInChanged: { sGauge.whIn = Skypuff.whIn }
                         onWhOutChanged: { sGauge.whOut = Skypuff.whOut }
                         // Count of cells
-                        //onBatteryCellChanged: { sGauge.batteryCell = Skypuff.batteryCell }
                         onBatteryPercentsChanged: { sGauge.batteryPercents = Skypuff.batteryPercents }
                         onBatteryCellVoltsChanged: { sGauge.batteryCellVolts = Skypuff.batteryCellVolts }
 
@@ -151,6 +150,7 @@ Page {
                             sGauge.maxMotorKg = cfg.motor_max_kg
                             sGauge.maxPower = cfg.power_max
                             sGauge.minPower = cfg.power_min
+                            sGauge.batteryCells = cfg.battery_cells
                         }
                     }
                 }
