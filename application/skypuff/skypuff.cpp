@@ -76,6 +76,8 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
 
     setState("DISCONNECTED");
     clearStats();
+
+    aliveResponseTimes.setCapacity(aliveAvgN);
 }
 
 void Skypuff::logVescDialog(const QString & title, const QString & text)
@@ -164,6 +166,12 @@ void Skypuff::portConnectedChanged()
 
 void Skypuff::clearStats()
 {
+    // Alive ping stats
+    aliveResponseTimes.clear();
+    sumResponceTime = 0;
+    minResponceTime = INT_MAX;
+    maxResponceTime = INT_MIN;
+
     vBat = 0;
     curTac = 0;
     erpm = 0;
@@ -365,7 +373,7 @@ void Skypuff::printReceived(QString str)
             if(fault_parsed == h_faults.end()) {
                 qWarning() << "Unknown fault string" << c.second;
                 vesc->emitMessageDialog(tr("Can't parse fault"),
-                                        tr("Unknown code: %s").arg(c.second),
+                                        tr("Unknown code: %s").arg(c.second.toString()),
                                         false, false);
             }
             break;
@@ -425,10 +433,34 @@ void Skypuff::customAppDataReceived(QByteArray data)
 
 }
 
+void Skypuff::updateAliveResponseStats(const int millis)
+{
+    sumResponceTime += millis;
+
+    // Get old value if buffer is full
+    if(aliveResponseTimes.count() == aliveAvgN)
+        sumResponceTime -= aliveResponseTimes.takeFirst();
+
+    aliveResponseTimes.append(millis);
+
+    emit avgResponseMillisChanged(getAvgResponseMillis());
+
+    if(millis < minResponceTime) {
+        minResponceTime = millis;
+        emit minResponseMillisChanged(millis);
+    }
+
+    if(millis > maxResponceTime) {
+        maxResponceTime = millis;
+        emit maxResponseMillisChanged(millis);
+    }
+}
+
 void Skypuff::processAlive(VByteArray &vb)
 {
     // alive could be set from UI, timer is not necessary but possible
     if(aliveTimeoutTimerId) {
+        updateAliveResponseStats(aliveResponseDelay.elapsed());
         killTimer(aliveTimeoutTimerId);
         aliveTimeoutTimerId = 0;
     }

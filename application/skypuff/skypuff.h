@@ -20,12 +20,14 @@
 #include <QMediaPlayer>
 #include <QMediaPlaylist>
 #include <QElapsedTimer>
+#include <QContiguousCache>
 #include "vescinterface.h"
 #include "qmlable_skypuff_types.h"
 
 const int aliveTimerDelay = 333; // milliseconds
 const int aliveTimeout = 500;
 const int commandTimeout = 300;
+const int aliveAvgN = 20; // number last alive responses to average
 
 
 /*
@@ -75,6 +77,11 @@ class Skypuff : public QObject
     Q_PROPERTY(float batteryCellVolts READ getBatteryCellVolts NOTIFY batteryChanged)
     // Readable fault, empty if none
     Q_PROPERTY(QString fault READ getFaultTranslation NOTIFY faultChanged)
+
+    Q_PROPERTY(int minResponseMillis READ getMinResponseMillis NOTIFY minResponseMillisChanged)
+    Q_PROPERTY(int maxResponseMillis READ getMaxResponseMillis NOTIFY maxResponseMillisChanged)
+    Q_PROPERTY(float avgResponseMillis READ getAvgResponseMillis NOTIFY avgResponseMillisChanged)
+
 public:
     Skypuff(VescInterface *parent = 0);
 
@@ -119,6 +126,12 @@ signals:
     void batteryChanged(const float percents);
 
     void faultChanged(const QString& newFault);
+
+    // Connection
+    void minResponseMillisChanged(const int millis);
+    void maxResponseMillisChanged(const int millis);
+    void avgResponseMillisChanged(const float millis);
+
 protected slots:
     void printReceived(QString str);
     void customAppDataReceived(QByteArray data);
@@ -151,14 +164,15 @@ protected:
     int aliveTimerId;
     int aliveTimeoutTimerId;
     int getConfTimeoutTimerId;
+
+    // Alive responce stats to monitor channel quality
     QElapsedTimer aliveResponseDelay;
+    QContiguousCache<int> aliveResponseTimes;
+    int sumResponceTime;
+    int minResponceTime;
+    int maxResponceTime;
 
     // Calculate average alive response
-    const int avgN = 10;
-    QVector<int> aliveResponseDelays;
-    int aliveResponseDelayIndex;
-    int sumAliveResponseDelay;
-    int alivePings;
 
     QString lastCmd;
 
@@ -214,6 +228,11 @@ protected:
     float getBatteryVolts() {return vBat;}
     float getBatteryCellVolts() {return vBat ? vBat / cfg.battery_cells : 0;}
 
+    // Connection stats
+    int getMinResponseMillis() const {return minResponceTime == INT_MAX ? 0 : minResponceTime;}
+    int getMaxResponseMillis() const {return maxResponceTime == INT_MIN ? 0 : maxResponceTime;}
+    float getAvgResponseMillis() const {return sumResponceTime == 0 ? 0 : (float)sumResponceTime / (float)aliveResponseTimes.count();}
+
     QString getState() {return state;}
     QString getStateText() {return stateText;}
     QString getStatus() {return status;}
@@ -246,6 +265,7 @@ protected:
     bool parsePrintMessage(QStringRef &str, MessageTypeAndPayload &c);
     void processAlive(VByteArray &vb);
     void processSettingsV1(VByteArray &vb);
+    void updateAliveResponseStats(const int millis);
 };
 
 #endif // SKYPUFF_H

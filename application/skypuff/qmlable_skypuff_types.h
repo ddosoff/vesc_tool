@@ -43,6 +43,7 @@ struct QMLable_skypuff_config : public skypuff_config, public skypuff_drive {
     Q_PROPERTY(float unwinding_trigger_length_meters READ unwinding_trigger_length_to_meters WRITE meters_to_unwinding_trigger_length)
     Q_PROPERTY(float motor_max_kg READ motor_max_current_to_kg)
     Q_PROPERTY(float power_max READ get_power_max)
+    Q_PROPERTY(float power_min READ get_power_min)
     Q_PROPERTY(float pull_kg READ pull_current_to_kg WRITE kg_to_pull_current)
     Q_PROPERTY(int pre_pull_k_percents READ pre_pull_k_to_percents WRITE percents_to_pre_pull_k)
     Q_PROPERTY(int takeoff_pull_k_percents READ takeoff_pull_k_to_percents WRITE percents_to_takeoff_pull_k)
@@ -63,6 +64,7 @@ struct QMLable_skypuff_config : public skypuff_config, public skypuff_drive {
     Q_PROPERTY(float antisex_reduce_kg READ antisex_reduce_amps_to_kg WRITE kg_to_antisex_reduce_amps)
     Q_PROPERTY(float antisex_reduce_per_step_kg READ antisex_reduce_amps_per_step_to_kg WRITE kg_to_antisex_reduce_amps_per_step)
     Q_PROPERTY(int antisex_reduce_steps MEMBER antisex_reduce_steps)
+    Q_PROPERTY(int battery_cells MEMBER battery_cells)
 public:
 
     float motor_max_current;
@@ -89,6 +91,8 @@ public:
     }
 
     float get_power_max() const {return v_in_max * motor_max_current;}
+    // Temporary
+    float get_power_min() const {return -v_in_max * motor_max_current;}
 
     int wheel_diameter_to_mm() const {return round(wheel_diameter * (float)1000);}
     void wheel_diameter_from_mm(int mm) {wheel_diameter = (float)mm / (float)1000;}

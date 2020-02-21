@@ -42,7 +42,7 @@ Item {
 
     property real batteryPercents: 0
     property real batteryCellVolts: 0.0
-    property int batteryCell: 0
+    property int batteryCells: 0
     property real whIn: 0.0
     property real whOut: 0.0
 
@@ -1556,7 +1556,7 @@ Item {
 
                                 font.pixelSize: Math.max(10, root.diameter * 0.037)
                                 id: tBat
-                                text: qsTr("%1 x %2").arg(root.batteryCellVolts.toFixed(2)).arg(root.batteryCell)
+                                text: qsTr("%1 x %2").arg(root.batteryCellVolts.toFixed(2)).arg(root.batteryCells)
 
                             }
                         }
@@ -1833,10 +1833,10 @@ Item {
                         Slider {
                             minimumValue: 0
                             maximumValue: 100
-                            value: root.batteryCell
+                            value: root.batteryCells
 
                             onValueChanged: {
-                                root.batteryCell = value;
+                                root.batteryCells = value;
                             }
                         }
                     }

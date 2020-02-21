@@ -40,6 +40,49 @@ Page {
         anchors.fill: parent
         spacing: 0
 
+        /*Chart {
+            id: chart
+            Layout.fillWidth: true
+            height: 100
+
+            property int v1: 65
+            onPaint: {
+                line({
+                         labels : ["January","March","April","May","June","July"],
+                         datasets : [
+                             {
+                                 fillColor : "rgba(220,220,220,0.5)",
+                                 strokeColor : "rgba(220,220,220,1)",
+                                 pointColor : "rgba(220,220,220,1)",
+                                 pointStrokeColor : "#fff",
+                                 data : [v1,59,90,81,56,55,40]
+                             },
+                             {
+                                 fillColor : "rgba(151,187,205,0.5)",
+                                 strokeColor : "rgba(151,187,205,1)",
+                                 pointColor : "rgba(151,187,205,1)",
+                                 pointStrokeColor : "#fff",
+                                 data : [28,48,40,19,96,27,100]
+                             }
+                         ]
+                     },
+                     {
+                         bezierCurve: false
+                     }
+                );
+            }
+        }
+        Button {
+            Layout.fillWidth: true
+
+            text: 'pop'
+
+            onClicked: {
+                chart.v1++
+                chart.requestPaint()
+            }
+        }*/
+
         ScrollView {
             id: scroll
             Layout.fillWidth: true
@@ -82,7 +125,22 @@ Page {
                     terminalText.clear()
                 }
             }
-       }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.margins: 10
+
+            Label {
+                text: qsTr('Avg response %1ms').arg(Skypuff.avgResponseMillis.toFixed(1))
+            }
+            Item {
+                Layout.fillWidth: true
+            }
+            Label {
+                text: qsTr('Min / max: %1 / %2ms').arg(Skypuff.minResponseMillis).arg(Skypuff.maxResponseMillis)
+            }
+        }
     }
 
     Connections {
