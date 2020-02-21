@@ -234,22 +234,21 @@ void Skypuff::sendGetConf()
 
 void Skypuff::sendAlive()
 {
-    if(aliveTimeoutTimerId) {
-        vesc->emitMessageDialog(tr("Can't send 'alive' command"),
-                                tr("Timer already activated: '%2'..").arg(aliveTimeoutTimerId),
-                                true);
-        vesc->disconnectPort();
-        return;
-    }
-
     VByteArray vb;
 
     vb.vbAppendUint8(SK_COMM_ALIVE); // Version
     vb.vbAppendInt32(aliveTimeout);
 
     vesc->commands()->sendCustomAppData(vb);
-    aliveResponseDelay.start();
-    aliveTimeoutTimerId = startTimer(commandTimeout, Qt::PreciseTimer);
+
+    if(!aliveTimeoutTimerId) {
+        aliveResponseDelay.start();
+        aliveTimeoutTimerId = startTimer(commandTimeout, Qt::PreciseTimer);
+    } else {
+        QString wrn = tr("Alive response %1ms timeout!").arg(aliveResponseDelay.elapsed());
+        qWarning() << wrn;
+        emit statusChanged(wrn, true);
+    }
 }
 
 QMLable_skypuff_config Skypuff::loadSettings(const QString & fileName)

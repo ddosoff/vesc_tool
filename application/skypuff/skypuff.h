@@ -26,8 +26,8 @@
 
 const int aliveTimerDelay = 333; // milliseconds
 const int aliveTimeout = 500;
-const int commandTimeout = 300;
-const int aliveAvgN = 20; // number last alive responses to average
+const int commandTimeout = 490;
+const int aliveAvgN = 10; // number last alive responses to average
 
 
 /*
