@@ -106,6 +106,7 @@ Page {
             }*/
             RowLayout {
                 Layout.leftMargin: 10
+                Layout.topMargin: 10
 
                 SkypuffGauge {
                     id: sGauge
