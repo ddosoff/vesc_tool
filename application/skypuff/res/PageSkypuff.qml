@@ -5,6 +5,8 @@ import QtQuick.Layouts 1.3
 import QtQuick.Controls.Material 2.12
 import QtGraphicalEffects 1.0
 
+import QtQuick.Controls 1.4
+
 import SkyPuff.vesc.winch 1.0
 
 Page {
@@ -92,177 +94,488 @@ Page {
             }
         }
 
-        GridLayout {
-            rowSpacing: 5
-            columnSpacing: 5
-            width: parent.width
 
-            //flow:  width > height ? GridLayout.LeftToRight : GridLayout.TopToBottom
-            flow: GridLayout.LeftToRight
+        RowLayout {
+            Layout.leftMargin: 10
+            Layout.topMargin: 10
 
-            /*Rectangle {
-                anchors.fill: parent
-                color: 'blue'
-            }*/
-            RowLayout {
-                Layout.leftMargin: 10
-                Layout.topMargin: 10
+            SkypuffGauge {
+                id: sGauge
+                Layout.fillWidth: true
+                Layout.preferredHeight: page.width - 20
 
-                SkypuffGauge {
-                    id: sGauge
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: page.width - 20
+                maxPower: 5000
+                minPower: -2200
 
-                    //debug: true
+                //debug: true
+                debugBlink: true
 
-                    Connections {
-                        target: Skypuff
+                Connections {
+                    target: Skypuff
 
-                        onMotorModeChanged: { sGauge.motorMode = Skypuff.motorMode }
-                        onMotorKgChanged: { sGauge.motorKg = Math.abs(Skypuff.motorKg) }
-                        onSpeedMsChanged: { sGauge.speedMs = Skypuff.speedMs }
-                        onPowerChanged: { sGauge.power = Skypuff.power }
+                    onMotorModeChanged: { sGauge.motorMode = Skypuff.motorMode }
+                    onMotorKgChanged: { sGauge.motorKg = Math.abs(Skypuff.motorKg) }
+                    onSpeedMsChanged: { sGauge.speedMs = Skypuff.speedMs }
+                    onPowerChanged: { sGauge.power = Skypuff.power }
 
-                        onLeftMetersChanged: { sGauge.leftRopeMeters = Skypuff.leftMeters.toFixed(1) }
-                        onDrawnMetersChanged: { sGauge.ropeMeters = Skypuff.drawnMeters }
-                        onRopeMetersChanged: { sGauge.maxRopeMeters = Skypuff.ropeMeters.toFixed() }
+                    onLeftMetersChanged: { sGauge.leftRopeMeters = Skypuff.leftMeters.toFixed(1) }
+                    onDrawnMetersChanged: { sGauge.ropeMeters = Skypuff.drawnMeters }
+                    onRopeMetersChanged: { sGauge.maxRopeMeters = Skypuff.ropeMeters.toFixed() }
 
-                        onIsBatteryBlinkingChanged: { sGauge.isBatteryBlinking = Skypuff.isBatteryBlinking }
-                        onIsBatteryWarningChanged: { sGauge.isBatteryWarning = Skypuff.isBatteryWarning }
-                        onIsBatteryScaleValidChanged: { sGauge.isBatteryScaleValid = Skypuff.isBatteryScaleValid }
+                    // Warning and Blink (bool) | I don't know names of this params
+                    //onMotorKgWarningChanged: { sGauge.motorKgWarning = false } // Warning
+                    //onMotorKgDangerChanged: { sGauge.motorKgDanger = false } // Blink
+                    //onRopeWarningChanged: { sGauge.ropeWarning = false }
+                    //onRopeDangerChanged: { sGauge.ropeDanger = false }
+                    //onPowerWarningChanged: { sGauge.powerWarning = false }
+                    //onPowerDangerChanged: { sGauge.powerDanger = false }
+                    //onSpeedWarningChanged: { sGauge.speedWarning = false }
+                    //onSpeedDangerChanged: { sGauge.speedDanger = false }
 
-                        // Warning and Blink (bool) | I don't know names of this params
-                        //onMotorKgWarningChanged: { sGauge.motorKgWarning = false } // Warning
-                        //onMotorKgDangerChanged: { sGauge.motorKgDanger = false } // Blink
-                        //onRopeWarningChanged: { sGauge.ropeWarning = false }
-                        //onRopeDangerChanged: { sGauge.ropeDanger = false }
-                        //onPowerWarningChanged: { sGauge.powerWarning = false }
-                        //onPowerDangerChanged: { sGauge.powerDanger = false }
-                        //onSpeedWarningChanged: { sGauge.speedWarning = false }
-                        //onSpeedDangerChanged: { sGauge.speedDanger = false }
-
-                        onWhInChanged: { sGauge.whIn = Skypuff.whIn }
-                        onWhOutChanged: { sGauge.whOut = Skypuff.whOut }
-                        // Count of cells
-                        onBatteryPercentsChanged: { sGauge.batteryPercents = Skypuff.batteryPercents }
-                        onBatteryCellVoltsChanged: { sGauge.batteryCellVolts = Skypuff.batteryCellVolts }
-
-                        onSettingsChanged: {
-                            sGauge.maxMotorKg = cfg.motor_max_kg
-                            sGauge.maxPower = cfg.power_max
-                            sGauge.minPower = cfg.power_min
-                            sGauge.batteryCells = cfg.battery_cells
-                        }
+                    onSettingsChanged: {
+                        sGauge.maxMotorKg = cfg.motor_max_kg
+                        sGauge.maxPower = cfg.power_max
+                        sGauge.minPower = cfg.power_min
                     }
                 }
             }
         }
 
+
         RowLayout {
-            Layout.topMargin: 10
+            Layout.topMargin: 15
 
             Item {
                 Layout.fillWidth: true
             }
 
-            RowLayout {
-                Item {
-                    width: 20
-                    height: 30
-                    Image {
-                        id: tfetsIco
-                        smooth: true
-                        source: "qrc:/res/icons/motor.svg"
-                        sourceSize.width: 26
-                        sourceSize.height: 34
-                        y: -1
-                        visible: false
+            SkypuffBattery {
+                id: sBattery
+                //Layout.fillWidth: true
+                Layout.preferredHeight: page.width / 13
+                Layout.preferredWidth: page.width / 3
 
-                    }
-                    ColorOverlay {
-                        anchors.fill: tfetsIco
-                        source: tfetsIco
-                        color: Material.color(Material.Blue)
-                    }
-                }
+                Connections {
+                    target: Skypuff
 
-                Item {
-                    width: 50
-                    height: 25
+                    onIsBatteryBlinkingChanged: { sGauge.isBatteryBlinking = Skypuff.isBatteryBlinking }
+                    onIsBatteryWarningChanged: { sGauge.isBatteryWarning = Skypuff.isBatteryWarning }
+                    onIsBatteryScaleValidChanged: { sGauge.isBatteryScaleValid = Skypuff.isBatteryScaleValid }
 
-                    Text {
-                        text: Skypuff.tempMotor.toFixed(1) + 'C'
-                        color: Skypuff.tempMotor > 80 ? "red" : systemPalette.text;
-                    }
-                }
-            }
+                    onWhInChanged: { sGauge.whIn = Skypuff.whIn }
+                    onWhOutChanged: { sGauge.whOut = Skypuff.whOut }
+                    onBatteryPercentsChanged: { sGauge.batteryPercents = Skypuff.batteryPercents }
+                    onBatteryCellVoltsChanged: { sGauge.batteryCellVolts = Skypuff.batteryCellVolts }
 
-            RowLayout {
-                Item {
-                    width: 20
-                    height: 25
-
-                    Image {
-                        id: tmotIco
-                        smooth: true
-                        source: "qrc:/res/icons/mcu.svg"
-                        sourceSize.width: 20
-                        sourceSize.height: 18
-                        visible: false
-                    }
-
-                    ColorOverlay {
-                        anchors.fill: tmotIco
-                        source: tmotIco
-                        color: Material.color(Material.Blue)
-                    }
-                }
-
-                Item {
-                    width: 50
-                    height: 25
-
-                    Text {
-                        text: Skypuff.tempFets.toFixed(1) + 'C'
-                        color: Skypuff.tempFets > 80 ? "red" : systemPalette.text;
-                    }
-                }
-            }
-
-            RowLayout {
-                Item {
-                    width: 20
-                    height: 25
-
-                    Image {
-                        id: tbatIco
-                        smooth: true
-                        source: "qrc:/res/icons/battery.svg"
-                        sourceSize.width: 20
-                        sourceSize.height: 19
-                        visible: false
-                    }
-
-                    ColorOverlay {
-                        anchors.fill: tbatIco
-                        source: tbatIco
-                        color: Material.color(Material.Blue)
-                    }
-                }
-
-                Item {
-                    width: 50
-                    height: 25
-
-                    Text {
-                        text: Skypuff.tempBat.toFixed(1) + 'C'
-                        color: Skypuff.tempBat > 80 ? "red" : systemPalette.text;
+                    onSettingsChanged: {
+                        sGauge.batteryCells = cfg.battery_cells
                     }
                 }
             }
 
             Item {
                 Layout.fillWidth: true
+            }
+        }
+
+        RowLayout {
+            id: debug
+            visible: true
+
+            Rectangle {
+                width: parent.width
+                height: parent.height
+
+                Grid {
+                    columns: 4
+                    anchors.fill: parent
+                    spacing: 5
+
+                    Column {
+                        spacing: 10
+
+                        Column {
+                            spacing: 5
+
+                            Text {
+                                text: 'Rope val'
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Slider {
+                                id: sliderRope
+                                minimumValue: sGauge.minRopeMeters
+                                maximumValue: sGauge.maxRopeMeters
+                                value: sGauge.ropeMeters
+
+                                onValueChanged: {
+
+                                    sGauge.ropeMeters = value;
+                                }
+                            }
+                        }
+
+                        Column {
+                            spacing: 5
+
+                            Text {
+                                text: 'Kg val'
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Slider {
+                                id: sliderKg
+                                minimumValue: sGauge.minMotorKg
+                                maximumValue: sGauge.maxMotorKg
+                                value: sGauge.motorKg
+                                Layout.fillWidth: true
+
+                                onValueChanged: {
+
+                                    sGauge.motorKg = value;
+                                }
+                            }
+                        }
+
+                        Column {
+                            spacing: 5
+
+                            Text {
+                                text: 'Power val'
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Slider {
+                                id: sliderPower
+                                minimumValue: sGauge.minPower
+                                maximumValue: sGauge.maxPower
+                                value: sGauge.power
+
+                                onValueChanged: {
+                                    sGauge.power = value;
+                                }
+                            }
+                        }
+
+                        Column {
+                            spacing: 5
+
+                            Text {
+                                text: 'Speed val'
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Slider {
+                                id: sliderSpeed
+                                minimumValue: sGauge.minSpeedMs
+                                maximumValue: sGauge.maxSpeedMs
+                                value: sGauge.speedMs
+
+                                onValueChanged: {
+                                    sGauge.speedMs = value;
+                                }
+                            }
+                        }
+                    }
+
+                    Column {
+                        spacing: 10
+
+                        Column {
+                            spacing: 5
+
+                            Text {
+                                text: 'Batt val'
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Slider {
+                                minimumValue: 0
+                                maximumValue: 100
+                                value: sBattery.batteryPercents
+
+                                onValueChanged: {
+                                    sBattery.batteryPercents = value;
+                                }
+                            }
+                        }
+
+                        Column {
+                            spacing: 5
+
+                            Text {
+                                text: 'CellV val'
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Slider {
+                                minimumValue: 0.00
+                                maximumValue: 15.00
+                                value: sBattery.batteryCellVolts
+
+                                onValueChanged: {
+                                    sBattery.batteryCellVolts = value;
+                                }
+                            }
+                        }
+
+                        Column {
+                            spacing: 5
+
+                            Text {
+                                text: 'Cell Count'
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Slider {
+                                minimumValue: 0
+                                maximumValue: 100
+                                value: sBattery.batteryCells
+
+                                onValueChanged: {
+                                    sBattery.batteryCells = value;
+                                }
+                            }
+                        }
+
+                        Column {
+                            spacing: 5
+
+                            Text {
+                                text: 'WH in'
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Slider {
+                                minimumValue: 0
+                                maximumValue: 10000
+                                value: sBattery.whIn
+
+                                onValueChanged: {
+                                    sBattery.whIn = value;
+                                }
+                            }
+                        }
+
+                        Column {
+                            spacing: 5
+
+                            Text {
+                                text: 'WH out'
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Slider {
+                                minimumValue: 0
+                                maximumValue: 10000
+                                value: sBattery.whOut
+
+                                onValueChanged: {
+                                    sBattery.whOut = value;
+                                }
+                            }
+                        }
+                    }
+
+                    Column {
+                        spacing: 10
+
+                        Column {
+                            spacing: 5
+
+                            Text {
+                                text: 'Warning Gauges'
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Slider {
+                                minimumValue: 0
+                                maximumValue: 1
+                                stepSize: 1
+                                value: 0
+
+                                onValueChanged: {
+                                    sGauge.ropeWarning = !!value;
+                                    sGauge.powerWarning = !!value;
+                                    sGauge.motorKgWarning= !!value;
+                                    sGauge.speedWarning = !!value;
+                                    sBattery.isBatteryWarning = !!value
+                                }
+                            }
+                        }
+
+                        Column {
+                            spacing: 5
+
+                            Text {
+                                text: 'Blink Gauges'
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Slider {
+                                minimumValue: 0
+                                maximumValue: 1
+                                stepSize: 1
+                                value: 0
+
+                                onValueChanged: {
+                                    sGauge.ropeDanger = !!value;
+                                    sGauge.powerDanger = !!value;
+                                    sGauge.motorKgDanger = !!value;
+                                    sGauge.speedDanger = !!value;
+                                    sBattery.isBatteryBlinking = !!value
+                                }
+                            }
+                        }
+
+                        Column {
+                            Text {
+                                text: 'Speed max'
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Slider {
+                                minimumValue: 0
+                                maximumValue: 100
+                                value: sGauge.maxSpeedMs
+
+                                onValueChanged: {
+                                    sGauge.maxSpeedMs = value;
+                                }
+                            }
+                        }
+
+                        Column {
+                            Text {
+                                text: 'Temps'
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Slider {
+                                minimumValue: -50
+                                maximumValue: 150
+                                value: 0
+
+                                onValueChanged: {
+                                    sGauge.tempBat = value;
+                                    sGauge.tempFets = value;
+                                    sGauge.tempMotor = value;
+                                }
+                            }
+                        }
+
+                        Column {
+                            Text {
+                                text: 'Debug'
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Slider {
+                                minimumValue: 0
+                                maximumValue: 1
+                                value: 1
+
+                                onValueChanged: {
+                                    debug.visible = !!value;
+                                }
+                            }
+                        }
+                    }
+
+                    Column {
+                        spacing: 10
+
+                        Column {
+                            Text {
+                                text: 'Kg step'
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Slider {
+                                minimumValue: 1
+                                maximumValue: 20
+                                value: sGauge.motorKgLabelStepSize
+
+                                onValueChanged: {
+                                    sGauge.motorKgLabelStepSize = value;
+                                }
+                            }
+                        }
+
+
+                        Column {
+                            spacing: 10
+
+                            Text {
+                                text: 'MaxKg'
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Slider {
+
+                                minimumValue: 0
+                                maximumValue: 200
+                                value: sGauge.maxMotorKg
+
+                                onValueChanged: {
+                                    sGauge.maxMotorKg = value;
+                                }
+                            }
+                        }
+
+                        Column {
+
+                            Text {
+                                text: 'Power step'
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Slider {
+
+                                minimumValue: 1
+                                maximumValue: 20
+                                value: sGauge.powerLabelStepSize
+
+                                onValueChanged: {
+                                    sGauge.powerLabelStepSize = parseInt(value);
+                                }
+                            }
+                        }
+
+                        Column {
+                            Text {
+                                text: 'Power max'
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Slider {
+                                minimumValue: 0
+                                maximumValue: 100000
+                                value: sGauge.maxPower
+
+                                onValueChanged: {
+                                    sGauge.maxPower = value;
+                                }
+                            }
+                        }
+                        Column {
+                            Text {
+                                text: 'Power min'
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Slider {
+                                minimumValue: -100000
+                                maximumValue: 0
+                                value: sGauge.minPower
+
+                                onValueChanged: {
+                                    sGauge.minPower = value;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
