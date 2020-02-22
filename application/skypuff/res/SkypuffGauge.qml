@@ -60,16 +60,15 @@ Item {
     property string gaugeDangerFontColor: '#8e1616' // Color for danger ranges
     property string gaugeFontColor: '#515151'
     property string gaugeColor: '#C7CFD9'
-    property string battGaugeColor: '#e2e3e6'
-
-
+    property string battGaugeColor: '#dbdee3'
+    property string textColor: 'black'
 
     // Default for all scales
     property string defaultColor: '#4CAF50' // base color (green)
     property string dangerColor: 'red'      // attention color (red)
-    property string warningColor: '#FF9800' // blink color (yellow)
+    property string warningColor: '#dbdee3' // blink color (yellow)
 
-    property int gaugesColorAnimation: 800  // freq of blinking
+    property int gaugesColorAnimation: 1000  // freq of blinking
 
     // Rope
     property string ropeColor: root.defaultColor
@@ -164,7 +163,8 @@ Item {
     }
 
     function getPowerLimits(val) {
-        return Math.ceil(parseInt(Math.abs(val), 10) / 10000) * 10000;
+        var k = 2000;
+        return Math.ceil(parseInt(Math.abs(val), 10) / k) * k
     }
 
     function getSpeedLimit() {
@@ -176,7 +176,13 @@ Item {
         var step = 10;
         var diff = root.maxPower - root.minPower;
 
-        if (diff > 60000) {
+        if (diff <= 12000) {
+            step = 2
+        } else if (diff === 16000 ) {
+            step = 3
+        } else if (diff === 14000 || diff === 18000) {
+            step = 4
+        } else if (diff > 60000) {
             step = 20;
         } else if (diff > 100000) {
             step = 40;
@@ -364,10 +370,10 @@ Item {
                                                   ? Math.min(root.power, root.maxPower)
                                                   : Math.max(root.power, root.minPower))
 
-                    property string ropeTextColor: 'black'
-                    property string speedTextColor: 'black'
-                    property string powerBgColor: 'black'
-                    property string kgBgColor: 'black'
+                    property string ropeTextColor: root.textColor
+                    property string speedTextColor: root.textColor
+                    property string powerBgColor: root.textColor
+                    property string kgBgColor: root.textColor
 
                     property bool ropeD: root.ropeDanger
                     property bool ropeW: root.ropeWarning
@@ -401,8 +407,8 @@ Item {
                     ColorAnimation on ropeDColor {
                         id: ropeDAnimation
                         running: root.ropeDanger
-                        from: root.ropeWarningColor
-                        to: root.ropeDangerColor
+                        from: root.ropeDangerColor
+                        to: root.ropeWarningColor
                         duration: root.gaugesColorAnimation
                         loops: Animation.Infinite // Loops will be controlled in onRopeDChanged
                     }
@@ -421,8 +427,8 @@ Item {
                     ColorAnimation on powerDColor {
                         id: powerDAnimation
                         running: root.powerDanger
-                        from: root.powerWarningColor
-                        to: root.powerDangerColor
+                        from: root.powerDangerColor
+                        to: root.powerWarningColor
                         duration: root.gaugesColorAnimation
                         loops: Animation.Infinite
                     }
@@ -441,8 +447,8 @@ Item {
                     ColorAnimation on motorKgDColor {
                         id: motorKgDAnimation
                         running: root.motorKgDanger
-                        from: root.motorKgWarningColor
-                        to: root.motorKgDangerColor
+                        from: root.motorKgDangerColor
+                        to: root.motorKgWarningColor
                         duration: root.gaugesColorAnimation
                         loops: Animation.Infinite
                     }
@@ -461,8 +467,8 @@ Item {
                     ColorAnimation on speedDColor {
                         id: speedDAnimation
                         running: root.speedDanger
-                        from: root.speedWarningColor
-                        to: root.speedDangerColor
+                        from: root.speedDangerColor
+                        to: root.speedWarningColor
                         duration: root.gaugesColorAnimation
                         loops: Animation.Infinite
                     }
@@ -616,47 +622,63 @@ Item {
                         context.restore();
                     }
 
-                    function drawRopeAlongArc(context, lrm, rm, centerX, centerY, radius) {
-                        // Length of string leftRopeMeters
-                        var lrmLebgth = (lrm + '').replace('.', '').toString().length;
-                        var rmLebgth = (rm + '').replace('.', '').toString().length;
-                        var diff = lrmLebgth - rmLebgth;
-                        var lc;
 
-                        // Fill the difference in length between lrm and rm with '*' so that symbol '|' rigth in the middle
-                        // **0m |800m
-                        // 753m |47m*
-                        var str = '%1 |%2'
-                            .arg(diff < 0 ? (((rm % 1) !== 0 ? '*' : '') + (new Array(Math.abs(diff) + 1).join('*')) + lrm + 'm') : (((rm % 1) !== 0 ? '*' : '') + lrm + 'm'))
-                            .arg(diff > 0 ? (rm + 'm' + (new Array(Math.abs(diff) + 1).join('*'))) : (rm + 'm'));
+
+                    function drawRopeAlongArc(context, lrm, rm, centerX, centerY, radius) {
+                        lrm += 'm';
+                        rm += 'm';
 
                         // Calculate width angle of str
-                        var angle = (Math.PI * (str.length * 3.8)) / 180; // radians
+                        var angle = (Math.PI * (lrm.length * 3.8)) / 180; // radians
 
                         context.save();
                         context.translate(centerX, centerY);
 
-                        // -5.5 - margin
-                        context.rotate(convertAngToRadian(-5.5) - angle / 2);
+                        // -11.2 - margin
 
+                        var marginAng = lrm.indexOf('.') !== -1 ? -10 : -11.2
+                        context.rotate(convertAngToRadian(marginAng) - angle);
+                        drawArc(context, lrm.toString(), angle, radius);
+                        context.restore();
+
+                        /******/
+
+                        angle = (Math.PI * (rm.length * 3.8)) / 180; // radians
+                        context.save();
+                        context.translate(centerX, centerY);
+                        drawArc(context, rm.toString(), angle, radius);
+                        context.restore();
+
+                        /******/
+
+                        angle = 0 // radians
+                        context.save();
+                        context.translate(centerX, centerY);
+                        context.rotate(convertAngToRadian(-1));
+                        drawArc(context, '|', angle, radius);
+                        context.restore();
+                    }
+
+                    function drawArc(context, str, angle, radius) {
+                        var lc;
                         for (var n = 0; n < str.length; n++) {
                             var c = str[n];
 
-                            // Custom margin for special chars
-                            var d = c === 'm' ? -2 : 0;
-                                d = lc === '.' ? 10 : d;
+                            var a = c === 'm' ? -1.2 : 0;
+                                a = lc === '.' ? 1.2 : a;
 
-                            context.rotate(angle / (str.length + d));
+
+
+                            context.rotate(angle / (str.length) - convertAngToRadian(a));
                             context.save();
                             context.translate(0, -1 * radius);
 
                             // '*' will be transparent
-                            context.fillStyle = c === '*' ? 'rgba(255, 0, 0, 0)' : progressBars.ropeTextColor;
+                            context.fillStyle = progressBars.ropeTextColor;
                             context.fillText(c, 0, 0);
                             context.restore();
                             lc = c;
                         }
-                        context.restore();
                     }
 
                     Canvas {
@@ -733,7 +755,7 @@ Item {
                                 context.lineWidth = 200;
 
                                 b = root.speedWarning || root.speedDanger;
-                                parent.speedTextColor = b ? parent.speedDColor : 'black';
+                                parent.speedTextColor = b ? parent.speedDColor : root.textColor;
                                 context.strokeStyle = b ? parent.speedDColor : root.speedColor;
                                 context.stroke();
 
@@ -756,7 +778,7 @@ Item {
                                 context.lineWidth = root.gaugeHeight * 0.7;
 
                                 b = root.motorKgWarning || root.motorKgDanger;
-                                motoKgTxt1.color = motoKgTxt2.color = b ? parent.motorKgDColor : 'black';
+                                motoKgTxt1.color = motoKgTxt2.color = b ? parent.motorKgDColor : root.textColor;
                                 var kgColor = b ? parent.motorKgDColor : root.motorKgColor;
 
                                 parent.kgBgColor = kgColor;
@@ -783,15 +805,15 @@ Item {
 
                                 b = root.powerWarning || root.powerDanger;
                                 var powerColor = b ? parent.powerDColor : root.powerColor;
-                                powerTxt2.color = powerTxt1.color = b ? parent.powerDColor : 'black';
+                                powerTxt2.color = powerTxt1.color = b ? parent.powerDColor : root.textColor;
 
                                 parent.powerBgColor = powerColor;
                                 context.strokeStyle = powerColor;
                                 context.stroke();
                             }
                         }
-                        onWidthChanged:  { requestPaint(); }
-                        onHeightChanged: { requestPaint(); }
+                        //onWidthChanged:  { requestPaint(); }
+                        //onHeightChanged: { requestPaint(); }
                     }
 
                     /**
@@ -859,8 +881,7 @@ Item {
                     contextType: '2d'
                     anchors.fill: parent
 
-                    onWidthChanged:  { requestPaint(); }
-                    onHeightChanged: { requestPaint(); }
+
 
                     onPaint: {
                         var centreX = baseLayer.width / 2;
@@ -1112,9 +1133,9 @@ Item {
                             margins: 0
                         }
 
-                        minimumValue: root.minPower / 1000
-                        maximumValue: root.maxPower / 1000
-                        value: root.power / 1000
+                        minimumValue: root.minPower
+                        maximumValue: root.maxPower
+                        value: root.power
 
                         Behavior on value {
                            id: animationValuePower
@@ -1129,26 +1150,29 @@ Item {
                             minimumValueAngle: dl2.rotation
                             maximumValueAngle: dl1.rotation
                             labelInset: root.gaugeHeight
-                            labelStepSize: root.powerLabelStepSize
+                            labelStepSize: root.powerLabelStepSize * 1000
+
 
                             foreground: null
+
                             minorTickmark: null
 
                             tickmarkLabel:  Text {
                                 font.pixelSize: gauge.getFontSize()
-                                y: gauge.getTLHY(styleData.value * 1000, root.minPower, root.maxPower)
-                                x: gauge.getTLHX(styleData.value * 1000, root.minPower, root.maxPower, -0.13)
-                                text: styleData.value + ((styleData.value === 0) ? 'kw' : '')
-                                rotation: root.powerToAng(styleData.value * 1000)
-                                color: gauge.getTLColor(Math.abs(styleData.value * 1000), root.maxPower)
+                                y: gauge.getTLHY(styleData.value , root.minPower, root.maxPower)
+                                x: gauge.getTLHX(styleData.value , root.minPower, root.maxPower, -0.13)
+                                text: (styleData.value / 1000)  + ((styleData.value === 0) ? 'kw' : '')
+                                rotation: root.powerToAng(styleData.value )
+                                color: gauge.getTLColor(Math.abs(styleData.value), root.maxPower)
                                 antialiasing: true
                                 font.family: root.ff
                             }
 
                             tickmark: Rectangle {
+                                visible: styleData.value % 1000 === 0
                                 antialiasing: true
                                 implicitWidth: outerRadius * 0.01
-                                implicitHeight:  (styleData.value * 1000 === root.maxPower || styleData.value * 1000 === root.minPower)
+                                implicitHeight:  (styleData.value  === root.maxPower || styleData.value  === root.minPower)
                                     ? root.gaugeHeight * 1.7
                                     : implicitWidth * ((styleData.value % (root.powerLabelStepSize)) ? 3 : 6)
                                 color: root.gaugeFontColor
@@ -1480,7 +1504,7 @@ Item {
 
                     Text {
                         id: powerTxt1
-                        text: root.prettyNumber(Math.abs(root.power) >= 100 ? root.power / 1000 : root.power, Math.abs(root.power) < 100 ? 0 : 1)
+                        text: root.prettyNumber(Math.abs(root.power) >= 1000 ? root.power / 1000 : root.power, Math.abs(root.power) < 1000 ? 0 : 1)
                         font.pixelSize: Math.max(10, root.diameter * 0.07)
                         font.family: root.ff
                         font.bold: root.boldValues
@@ -1488,7 +1512,7 @@ Item {
 
                     Text {
                         id: powerTxt2
-                        text: Math.abs(root.power) >= 100 ? 'kw' : 'w'
+                        text: Math.abs(root.power) >= 1000 ? 'kw' : 'w'
                         opacity: 0.8
                         font.pixelSize: Math.max(10, root.diameter * 0.07)
                         font.family: root.ff
@@ -1496,550 +1520,157 @@ Item {
                     }
                 }
 
-                Item {
-                    id: battery
-                    enabled: root.isBatteryScaleValid
+
+                Rectangle {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: root.gaugeHeight * 4
+                    anchors.left: parent.left
+                    anchors.leftMargin: root.gaugeHeight * 3.3
 
-                    Rectangle {
+                    Row {
+                        anchors.left: parent.left
+                        width: tempMotorTextBlock.width + tfetsIcoBlock.width
+                        height: tfetsIcoBlock.height
+                        spacing: 3
 
-                        id: batBlock
-                        width: root.diameter * 0.30
-                        height: root.diameter * 0.07
-                        border.color: root.borderColor
-                        border.width: 2
-                        x: -batBlock.width / 2
-                        radius: 3
-                        color: root.battGaugeColor
+                        Item {
+                            id: tfetsIcoBlock
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: tfetsIco.width + 3
+                            height: tfetsIco.height
 
-                        Rectangle {
-                            opacity: root.baseOpacity
-                            radius: 2
+                            Image {
+                                id: tfetsIco
+                                smooth: true
+                                source: "qrc:/res/icons/motor.svg"
+                                sourceSize.width: root.diameter * 0.05
+                                sourceSize.height: root.diameter * 0.05
+                                visible: false
 
-                            anchors.left: batBlock.left
-                            anchors.leftMargin: parent.border.width
-                            anchors.topMargin: parent.border.width
-                            anchors.verticalCenter: batBlock.verticalCenter
-
-                            property bool battD: root.isBatteryBlinking
-                            property string battDColor: root.battDangerColor
-
-                            onBattDChanged: {
-                                battDAnimation.loops = battD ? Animation.Infinite : 1;
-                                if (!battD) battDColor = root.battDangerColor;
                             }
-
-                            ColorAnimation on battDColor {
-                                id: battDAnimation
-                                running: root.isBatteryBlinking
-                                from: root.battWarningColor
-                                to: root.battDangerColor
-                                duration: root.gaugesColorAnimation
-                                loops: Animation.Infinite
+                            ColorOverlay {
+                                anchors.fill: tfetsIco
+                                source: tfetsIco
+                                color: Material.color(Material.Blue)
                             }
-
-                            height: batBlock.height - parent.border.width * 2
-                            color: root.isBatteryWarning || root.isBatteryBlinking ? battDColor : root.battColor
-                            width: (batBlock.width - parent.border.width * 2) * root.batteryPercents / 100
                         }
 
                         Item {
-                            anchors.left: parent.left
+                            id: tempMotorTextBlock
+                            width: tempMotorText.width
+                            height: parent.height
                             anchors.verticalCenter: parent.verticalCenter
 
                             Text {
+                                id: tempMotorText
+                                text: prettyNumber(root.tempMotor) + 'C'
+                                font.pixelSize: Math.max(10, root.diameter * 0.04)
+                                color: root.tempMotor > 80 ? root.dangerColor : root.textColor;
                                 anchors.verticalCenter: parent.verticalCenter
-                                anchors.left: parent.left
-                                anchors.leftMargin: 6
-
-                                font.pixelSize: Math.max(10, root.diameter * 0.037)
-                                id: tBat
-                                text: qsTr("%1 x %2").arg(root.batteryCellVolts.toFixed(2)).arg(root.batteryCells)
-
                             }
                         }
+                    }
+                }
+
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: root.gaugeHeight * 4
+                    anchors.right: parent.right
+                    anchors.rightMargin: root.gaugeHeight * 3.3
+
+                    Row {
+                        anchors.right: parent.right
+                        width: tmotIcoBlock.width + tfetsTextBlock.block
+                        height: tmotIcoBlock.height
+                        spacing: 3
+
 
                         Item {
-                            anchors.right: parent.right
+                            id: tmotIcoBlock
                             anchors.verticalCenter: parent.verticalCenter
-                            Text {
-                                anchors.right: parent.right
-                                anchors.verticalCenter: parent.verticalCenter
-                                anchors.rightMargin: 6
+                            width: tmotIco.width + 3
+                            height: tmotIco.height
 
-                                font.pixelSize: Math.max(10, root.diameter * 0.037)
-                                id: tBatPercent
-                                text: root.batteryPercents.toFixed(0) + '%'
+                            Image {
+                                id: tmotIco
+                                smooth: true
+                                source: "qrc:/res/icons/mcu.svg"
+                                sourceSize.width: root.diameter * 0.05
+                                sourceSize.height: root.diameter * 0.05
+                                visible: false
                             }
-                        }
 
-                        Rectangle {
-                            anchors.left: batBlock.right
-                            anchors.verticalCenter: batBlock.verticalCenter
-                            color: root.borderColor
-                            height: root.diameter * 0.035
-                            width: 3
-                            border.color: root.borderColor
-                        }
-                    }
-
-                    Rectangle {
-                        width: batBlock.width
-                        y: batBlock.height + 2
-                        x: -batBlock.width / 2
-
-                        Item {
-                            id: inArrow
-                            height: 20
-
-                            anchors.left: parent.left
-                            anchors.leftMargin: batBlock.width / 12
-                            width: inArrowT.width
-
-                            Text {
-                                id: inArrowT
-                                font.pixelSize: Math.max(10, root.diameter * 0.037)
-                                font.bold: true
-                                rotation: -90
-                                text: '>>'
-                                color: 'red';
+                            ColorOverlay {
+                                anchors.fill: tmotIco
+                                source: tmotIco
+                                color: Material.color(Material.Blue)
                             }
                         }
 
                         Item {
-                            id: outArrow
-                            height: 20
-                            anchors.right: parent.right
-                            anchors.rightMargin: batBlock.width / 12
-                            width: outArrowT.width
+                            id: tfetsTextBlock
+                            width: tfetsText.width
+                            height: parent.height
+                            anchors.verticalCenter: parent.verticalCenter
 
                             Text {
-                                id: outArrowT
-                                font.pixelSize: Math.max(10, root.diameter * 0.037)
-                                font.bold: true
-                                rotation: 90
-                                text: '>>'
-                                color: 'red';
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        width: batBlock.width
-                        y: batBlock.height * 2
-                        x: -batBlock.width / 2
-
-                        Item {
-                            id: inWh
-                            height: 20
-                            anchors.left: parent.left
-                            anchors.leftMargin: batBlock.width / 15
-
-                            Text {
-                                anchors.left: parent.left
-                                anchors.verticalCenter: parent.verticalCenter
-                                id: inWhT
+                                id: tfetsText
+                                text: prettyNumber(root.tempFets, 1) + 'C'
                                 font.pixelSize: Math.max(10, root.diameter * 0.04)
-                                text: "%1".arg((root.whIn).toFixed(1))
+                                color: root.tempFets > 80 ? root.dangerColor : root.textColor;
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: root.gaugeHeight * 2.7
+
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: tbatIcoBlock.width + tbatTextBlock.block
+                        height: tbatIcoBlock.height
+                        spacing: 3
+
+                        Item {
+                            id: tbatIcoBlock
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: tbatIco.width + 3
+                            height: tbatIco.height
+
+                            Image {
+                                id: tbatIco
+                                smooth: true
+                                source: "qrc:/res/icons/battery.svg"
+                                sourceSize.width: root.diameter * 0.05
+                                sourceSize.height: root.diameter * 0.05
+                                visible: false
+                            }
+
+                            ColorOverlay {
+                                anchors.fill: tbatIco
+                                source: tbatIco
+                                color: Material.color(Material.Blue)
                             }
                         }
 
                         Item {
-                            height: 20
-                            x: parent.width / 2 - wh.width / 2
+                            id: tbatTextBlock
+                            width: tbatText.width
+                            height: parent.height
+                            anchors.verticalCenter: parent.verticalCenter
 
                             Text {
-                                id: wh
-                                anchors.verticalCenter: parent.verticalCenter
+                                id: tbatText
+                                text: root.prettyNumber(root.tempBat, 1) + 'C'
                                 font.pixelSize: Math.max(10, root.diameter * 0.04)
-                                text: 'wh'
-                            }
-
-                        }
-
-                        Item {
-                            id: outWh
-                            height: 20
-                            anchors.right: parent.right
-                            anchors.rightMargin: batBlock.width / 15
-
-                            Text {
-                                anchors.right: parent.right
+                                color: root.tempBat > 80 ? root.dangerColor : root.textColor;
                                 anchors.verticalCenter: parent.verticalCenter
-                                id: outWhT
-                                font.pixelSize: Math.max(10, root.diameter * 0.04)
-                                text: "%1".arg((root.whOut).toFixed(1))
-                            }
-
-                        }
-                    }
-                }
-            }
-        }
-
-        /**
-          Debug sliderSpeed
-         */
-        Rectangle {
-            width: parent.width
-            height: parent.height
-
-            visible: root.debug
-
-            Grid {
-                columns: 4
-                anchors.fill: parent
-                spacing: 5
-
-                Column {
-                    spacing: 10
-
-                    Column {
-                        spacing: 5
-
-                        Text {
-                            text: 'Rope val'
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Slider {
-                            id: sliderRope
-                            minimumValue: root.minRopeMeters
-                            maximumValue: root.maxRopeMeters
-                            value: root.ropeMeters
-
-                            onValueChanged: {
-                                var res = ropeToAng(value);
-                                root.ropeMeters = value;
-                            }
-                        }
-                    }
-
-                    Column {
-                        spacing: 5
-
-                        Text {
-                            text: 'Kg val'
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Slider {
-                            id: sliderKg
-                            minimumValue: root.minMotorKg
-                            maximumValue: root.maxMotorKg
-                            value: root.motorKg
-                            Layout.fillWidth: true
-
-                            onValueChanged: {
-                                var res = kgToAng(value);
-                                root.motorKg = value;
-                            }
-                        }
-                    }
-
-                    Column {
-                        spacing: 5
-
-                        Text {
-                            text: 'Power val'
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Slider {
-                            id: sliderPower
-                            minimumValue: root.minPower
-                            maximumValue: root.maxPower
-                            value: root.power
-
-                            onValueChanged: {
-                                root.power = value;
-                            }
-                        }
-                    }
-
-                    Column {
-                        spacing: 5
-
-                        Text {
-                            text: 'Speed val'
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Slider {
-                            id: sliderSpeed
-                            minimumValue: root.minSpeedMs
-                            maximumValue: root.maxSpeedMs
-                            value: root.speedMs
-
-                            onValueChanged: {
-                                var res = speedToAng(value);
-                                root.speedMs = value;
-                            }
-                        }
-                    }   
-                }
-
-                Column {
-                    spacing: 10
-
-                    Column {
-                        spacing: 5
-
-                        Text {
-                            text: 'Batt val'
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Slider {
-                            minimumValue: 0
-                            maximumValue: 100
-                            value: root.batteryPercents
-
-                            onValueChanged: {
-                                root.batteryPercents = value;
-                            }
-                        }
-                    }
-
-                    Column {
-                        spacing: 5
-
-                        Text {
-                            text: 'CellV val'
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Slider {
-                            minimumValue: 0.00
-                            maximumValue: 15.00
-                            value: root.batteryCellVolts
-
-                            onValueChanged: {
-                                root.batteryCellVolts = value;
-                            }
-                        }
-                    }
-
-                    Column {
-                        spacing: 5
-
-                        Text {
-                            text: 'Cell Count'
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Slider {
-                            minimumValue: 0
-                            maximumValue: 100
-                            value: root.batteryCells
-
-                            onValueChanged: {
-                                root.batteryCells = value;
-                            }
-                        }
-                    }
-
-                    Column {
-                        spacing: 5
-
-                        Text {
-                            text: 'WH in'
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Slider {
-                            minimumValue: 0.0
-                            maximumValue: 100.0
-                            value: root.whIn
-
-                            onValueChanged: {
-                                root.whIn = value;
-                            }
-                        }
-                    }
-
-                    Column {
-                        spacing: 5
-
-                        Text {
-                            text: 'WH out'
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Slider {
-                            minimumValue: 0.0
-                            maximumValue: 100.0
-                            value: root.whOut
-
-                            onValueChanged: {
-                                root.whOut = value;
-                            }
-                        }
-                    }
-                }
-
-                Column {
-                    spacing: 10
-
-                    Column {
-                        spacing: 5
-
-                        Text {
-                            text: 'Warning Gauges'
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Slider {
-                            minimumValue: 0
-                            maximumValue: 1
-                            stepSize: 1
-                            value: 0
-
-                            onValueChanged: {
-                                root.ropeWarning = !!value;
-                                root.powerWarning = !!value;
-                                root.motorKgWarning= !!value;
-                                root.speedWarning = !!value;
-                                root.isBatteryWarning = !!value
-                            }
-                        }
-                    }
-
-                    Column {
-                        spacing: 5
-
-                        Text {
-                            text: 'Blink Gauges'
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Slider {
-                            minimumValue: 0
-                            maximumValue: 1
-                            stepSize: 1
-                            value: 0
-
-                            onValueChanged: {
-                                root.ropeDanger = !!value;
-                                root.powerDanger = !!value;
-                                root.motorKgDanger = !!value;
-                                root.speedDanger = !!value;
-                                root.isBatteryBlinking = !!value
-                            }
-                        }
-                    }
-
-                    Column {
-                        Text {
-                            text: 'Speed max'
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Slider {
-
-                            minimumValue: 0
-                            maximumValue: 100
-                            value: root.maxSpeedMs
-
-                            onValueChanged: {
-                                root.maxSpeedMs = value;
-                            }
-                        }
-                    }
-                }
-
-                Column {
-                    spacing: 10
-
-                    Column {
-                        Text {
-                            text: 'Kg step'
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Slider {
-
-                            minimumValue: 1
-                            maximumValue: 20
-                            value: root.motorKgLabelStepSize
-
-                            onValueChanged: {
-                                root.motorKgLabelStepSize = value;
-                            }
-                        }
-                    }
-
-
-                    Column {
-                        spacing: 10
-
-                        Text {
-                            text: 'MaxKg'
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Slider {
-
-                            minimumValue: 0
-                            maximumValue: 200
-                            value: root.maxMotorKg
-
-                            onValueChanged: {
-                                root.maxMotorKg = value;
-                            }
-                        }
-                    }
-
-                    Column {
-
-                        Text {
-                            text: 'Power step'
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Slider {
-
-                            minimumValue: 1
-                            maximumValue: 20
-                            value: root.powerLabelStepSize
-
-                            onValueChanged: {
-                                root.powerLabelStepSize = parseInt(value);
-                            }
-                        }
-                    }
-
-                    Column {
-                        Text {
-                            text: 'Power max'
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Slider {
-                            minimumValue: 0
-                            maximumValue: 100000
-                            value: root.maxPower
-
-                            onValueChanged: {
-                                root.maxPower = value;
-                            }
-                        }
-                    }
-                    Column {
-                        Text {
-                            text: 'Power min'
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Slider {
-                            minimumValue: -100000
-                            maximumValue: 0
-                            value: root.minPower
-
-                            onValueChanged: {
-                                root.minPower = value;
                             }
                         }
                     }
