@@ -180,7 +180,7 @@ Page {
 
         RowLayout {
             id: debug
-            visible: true
+            visible: false
 
             Rectangle {
                 width: parent.width
