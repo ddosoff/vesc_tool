@@ -180,11 +180,12 @@ Page {
 
         RowLayout {
             id: debug
-            visible: false
+
 
             Rectangle {
                 width: parent.width
                 height: parent.height
+                visible: false
 
                 Grid {
                     columns: 4
