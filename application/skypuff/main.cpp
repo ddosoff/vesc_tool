@@ -85,6 +85,7 @@ int main(int argc, char *argv[])
 #endif
     qmlRegisterType<Commands>("Vedder.vesc.commands", 1, 0, "Commands");
     qmlRegisterType<ConfigParams>("Vedder.vesc.configparams", 1, 0, "ConfigParams");
+    qRegisterMetaType<QMLable_skypuff_config>();
     
     engine.load(QUrl(QLatin1String("qrc:/res/main.qml")));
     if (engine.rootObjects().isEmpty())
