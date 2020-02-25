@@ -2,6 +2,7 @@ import QtQuick 2.0
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 import Qt.labs.platform 1.0
+import QtQuick.Dialogs 1.2
 
 import Vedder.vesc.vescinterface 1.0
 import Vedder.vesc.utility 1.0
@@ -614,7 +615,7 @@ Page {
         }
     }
 
-    function fillAnd(fileName) {
+    function sendOrSave(fileName) {
         var cfg = Skypuff.emptySettings()
 
         // This part should be first to update units conversion params
@@ -709,52 +710,144 @@ Page {
         antisex_reduce_per_step_kg.value = cfg.antisex_reduce_per_step_kg
     }
 
-    FileDialog {
-        id: fileDialog
+    // Open settings file picker
+    Popup {
+        id: openSettingsFileDialog
+        modal: true
+        anchors.centerIn: parent
+        contentWidth: parent.width - 50
+        contentHeight: parent.height - 50
 
-        title: "Please choose a settings file"
-        nameFilters: ["Skypuff settings (*.ini)"]
-        defaultSuffix: 'ini'
-        folder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
-        onAccepted: {
-            if(fileDialog.fileMode === FileDialog.OpenFile)
-                applyCfg(Skypuff.loadSettings(fileDialog.file))
-            else if(fileDialog.fileMode === FileDialog.SaveFile) {
-                fillAnd(fileDialog.file)
+        FilePicker {
+            anchors.fill: parent
+            showDotAndDotDot: false
+            showHidden: false
+            nameFilters: "*.ini"
+            folder: StandardPaths.writableLocation(StandardPaths.DownloadLocation).toString()
+
+            onFileSelected: {
+                openSettingsFileDialog.close()
+                applyCfg(Skypuff.loadSettings(fileName))
+            }
+        }
+    }
+
+    // Confirm settings overwrite
+    Popup {
+        id: overwriteDialog
+        modal: true
+        anchors.centerIn: parent
+        contentWidth: parent.width - 50
+
+        ColumnLayout {
+            anchors.fill: parent
+
+            Label {
+                Layout.margins: 10
+                text: qsTr('Confirm overwrite')
+                font.bold: true
+            }
+
+            Text {
+                Layout.margins: 10
+                Layout.fillWidth: true
+                elide: Text.ElideMiddle
+                wrapMode: Text.WordWrap
+                text: qsTr("File '%1' already exists. Do you want to replace it?").arg(newFileName.text)
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.margins: 20
+                Button {
+                    text: qsTr('Cancel')
+                    onClicked: overwriteDialog.close()
+                }
+                Item {
+                    Layout.fillWidth: true
+                }
+                Button {
+                    text: qsTr('Save')
+                    onClicked: {
+                        overwriteDialog.close()
+                        sendOrSave(newFileName.text)
+                    }
+                }
+            }
+        }
+    }
+
+    // Enter settings file name
+    Popup {
+        id: newFileDialog
+        modal: true
+        anchors.centerIn: parent
+        contentWidth: parent.width - 50
+
+        ColumnLayout {
+            anchors.fill: parent
+
+            Label {
+                text: qsTr("Choose a file name (*.ini)...")
+                font.bold: true
+            }
+
+            TextField {
+                Layout.fillWidth: true
+                Layout.margins: 20
+
+                id: newFileName
+
+                text: Skypuff.defaultSettingsFileName()
+                focus: true
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.margins: 5
+                Button {
+                    text: qsTr('Cancel')
+                    onClicked: newFileDialog.close()
+                }
+                Item {
+                    Layout.fillWidth: true
+                }
+                Button {
+                    text: qsTr('Save')
+                    onClicked: {
+                        newFileDialog.close()
+                        if(Skypuff.isFileExists(newFileName.text))
+                            overwriteDialog.open()
+                        else
+                            sendOrSave(newFileName.text)
+                    }
+                }
             }
         }
     }
 
     footer: RowLayout {
+        function showPermissionErr() {
+            VescIf.emitMessageDialog(
+                        qsTr("File Permissions"),
+                        qsTr("Unable to request file system permission."),
+                        false, false)
+        }
+
         Button {
             Layout.leftMargin: 10
             Layout.bottomMargin: 5
             text: qsTr("Open")
-            enabled: Skypuff.state !== "DISCONNECTED"
 
-            onClicked: {
-                fileDialog.fileMode = FileDialog.OpenFile
-                fileDialog.open()
-            }
+            onClicked: Utility.requestFilePermission() ? openSettingsFileDialog.open() : showPermissionErr()
         }
         Button {
             Layout.leftMargin: 10
             Layout.bottomMargin: 5
             text: qsTr("Save as")
-            enabled: Skypuff.state !== "DISCONNECTED"
 
-            onClicked: {
-                if (Utility.requestFilePermission()) {
-                    fileDialog.fileMode = FileDialog.SaveFile
-                    fileDialog.open()
-                } else {
-                    VescIf.emitMessageDialog(
-                                "File Permissions",
-                                "Unable to request file system permission.",
-                                false, false)
-                }
-            }
+            onClicked: Utility.requestFilePermission() ? newFileDialog.open() : showPermissionErr()
         }
+
         Item {
             Layout.fillWidth: true
         }
@@ -765,7 +858,7 @@ Page {
             enabled: Skypuff.state !== "DISCONNECTED"
             text: qsTr("Send")
 
-            onClicked: fillAnd()
+            onClicked: sendOrSave()
         }
     }
 

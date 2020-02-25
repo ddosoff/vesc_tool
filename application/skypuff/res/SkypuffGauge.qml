@@ -1631,6 +1631,8 @@ Item {
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: root.gaugeHeight * 2.7
 
+                    visible: root.tempBat > -200
+
                     Row {
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: tbatIcoBlock.width + tbatTextBlock.block

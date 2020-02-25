@@ -103,7 +103,7 @@ Page {
             Layout.fillWidth: true
             Layout.margins: 10
 
-            TextInput {
+            TextField {
                 id: stringInput
                 Layout.fillWidth: true
                 focus: true
