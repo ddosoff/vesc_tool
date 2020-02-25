@@ -94,10 +94,8 @@ Page {
         }
 
 
-        RowLayout {
-            Layout.leftMargin: 10
-            Layout.topMargin: 10
-
+        GaugeDebug {
+            gauge: sGauge
             SkypuffGauge {
                 id: sGauge
                 Layout.fillWidth: true
