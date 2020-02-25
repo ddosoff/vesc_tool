@@ -28,5 +28,10 @@
         <file>res/icons/battery.svg</file>
         <file>res/SkypuffBattery.qml</file>
         <file>res/icons/motor.svg</file>
+        <file>res/GaugeDebug.qml</file>
+        <file>res/icons/ic_folder_open_black_48dp.png</file>
+        <file>res/icons/ic_insert_drive_file_black_48dp.png</file>
+        <file>res/FilePicker.qml</file>
+        <file>res/utils.js</file>
     </qresource>
 </RCC>

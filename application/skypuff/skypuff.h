@@ -91,6 +91,8 @@ public:
     Q_INVOKABLE QMLable_skypuff_config emptySettings() {return QMLable_skypuff_config();}
     Q_INVOKABLE void sendSettings(const QMLable_skypuff_config& cfg);
     Q_INVOKABLE QMLable_skypuff_config loadSettings(const QString & fileName);
+    Q_INVOKABLE QString defaultSettingsFileName();
+    Q_INVOKABLE bool isFileExists(const QString & fileName);
     Q_INVOKABLE bool saveSettings(const QString & fileName, const QMLable_skypuff_config& c);
     Q_INVOKABLE QVariantList serialPortsToQml();
     Q_INVOKABLE bool connectSerial(QString port, int baudrate = 115200);

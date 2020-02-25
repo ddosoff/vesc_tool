@@ -15,6 +15,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <QSound>
+#include <QTimerEvent>
+#include <QStandardPaths>
+#include <QDir>
+#include <QFileInfo>
 #include "skypuff.h"
 
 Skypuff::Skypuff(VescInterface *v) : QObject(),
@@ -260,9 +264,22 @@ QMLable_skypuff_config Skypuff::loadSettings(const QString & fileName)
     return c;
 }
 
+QString Skypuff::defaultSettingsFileName()
+{
+    QFileInfo fi(QDir(QStandardPaths::writableLocation(QStandardPaths::DownloadLocation)), "skypuff.ini");
+
+    return fi.absoluteFilePath();
+}
+
+bool Skypuff::isFileExists(const QString & fileName)
+{
+    QFileInfo fi(fileName);
+    return fi.exists();
+}
+
 bool Skypuff::saveSettings(const QString & fileName, const QMLable_skypuff_config& c)
 {
-    QSettings f(QUrl(fileName).toLocalFile(), QSettings::IniFormat);
+    QSettings f(fileName, QSettings::IniFormat);
     if(f.status() != QSettings::NoError)
         return false;
 
