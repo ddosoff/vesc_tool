@@ -94,88 +94,65 @@ Page {
         }
 
 
-        GaugeDebug {
-            gauge: sGauge
-            SkypuffGauge {
-                id: sGauge
-                Layout.fillWidth: true
-                Layout.preferredHeight: page.width - 20
 
-                maxPower: 5000
-                minPower: -2200
 
-                //debug: true
-                debugBlink: true
+        SkypuffGauge {
+            id: sGauge
 
-                // Temps
-                tempFets: Skypuff.tempFets
-                tempMotor: Skypuff.tempMotor
-                tempBat: Skypuff.tempBat
+            //Layout.preferredHeight: page.width - 20
 
-                Connections {
-                    target: Skypuff
+            rootDiameter: page.width
 
-                    onMotorModeChanged: { sGauge.motorMode = Skypuff.motorMode }
-                    onMotorKgChanged: { sGauge.motorKg = Math.abs(Skypuff.motorKg) }
-                    onSpeedMsChanged: { sGauge.speedMs = Skypuff.speedMs }
-                    onPowerChanged: { sGauge.power = Skypuff.power }
 
-                    onLeftMetersChanged: { sGauge.leftRopeMeters = Skypuff.leftMeters.toFixed(1) }
-                    onDrawnMetersChanged: { sGauge.ropeMeters = Skypuff.drawnMeters }
-                    onRopeMetersChanged: { sGauge.maxRopeMeters = Skypuff.ropeMeters.toFixed() }
 
-                    // Warning and Blink (bool) | I don't know names of this params
-                    //onMotorKgWarningChanged: { sGauge.motorKgWarning = false } // Warning
-                    //onMotorKgDangerChanged: { sGauge.motorKgDanger = false } // Blink
-                    //onRopeWarningChanged: { sGauge.ropeWarning = false }
-                    //onRopeDangerChanged: { sGauge.ropeDanger = false }
-                    //onPowerWarningChanged: { sGauge.powerWarning = false }
-                    //onPowerDangerChanged: { sGauge.powerDanger = false }
-                    //onSpeedWarningChanged: { sGauge.speedWarning = false }
-                    //onSpeedDangerChanged: { sGauge.speedDanger = false }
+            // Temps
+            tempFets: Skypuff.tempFets
+            tempMotor: Skypuff.tempMotor
+            tempBat: Skypuff.tempBat
 
-                    onSettingsChanged: {
-                        sGauge.maxMotorKg = cfg.motor_max_kg
-                        sGauge.maxPower = cfg.power_max
-                        sGauge.minPower = cfg.power_min
-                    }
-                }
-            }
-        }
 
-        RowLayout {
-            Layout.topMargin: 10
+            Connections {
+                target: Skypuff
 
-            Item {
-                Layout.fillWidth: true
-            }
+                onMotorModeChanged: { sGauge.motorMode = Skypuff.motorMode }
+                onMotorKgChanged: { sGauge.motorKg = Math.abs(Skypuff.motorKg) }
+                onSpeedMsChanged: { sGauge.speedMs = Skypuff.speedMs }
+                onPowerChanged: { sGauge.power = Skypuff.power }
 
-            SkypuffBattery {
-                id: sBattery
-                //Layout.fillWidth: true
-                Layout.preferredHeight: page.width / 13
-                Layout.preferredWidth: page.width / 3
+                onLeftMetersChanged: { sGauge.leftRopeMeters = Skypuff.leftMeters.toFixed(1) }
+                onDrawnMetersChanged: { sGauge.ropeMeters = Skypuff.drawnMeters }
+                onRopeMetersChanged: { sGauge.maxRopeMeters = Skypuff.ropeMeters.toFixed() }
 
-                Connections {
-                    target: Skypuff
+                // Warning and Blink (bool) | I don't know names of this params
+                //onMotorKgWarningChanged: { sGauge.motorKgWarning = false } // Warning
+                //onMotorKgDangerChanged: { sGauge.motorKgDanger = false } // Blink
+                //onRopeWarningChanged: { sGauge.ropeWarning = false }
+                //onRopeDangerChanged: { sGauge.ropeDanger = false }
+                //onPowerWarningChanged: { sGauge.powerWarning = false }
+                //onPowerDangerChanged: { sGauge.powerDanger = false }
+                //onSpeedWarningChanged: { sGauge.speedWarning = false }
+                //onSpeedDangerChanged: { sGauge.speedDanger = false }
 
-                    onIsBatteryBlinkingChanged: { sBattery.isBatteryBlinking = Skypuff.isBatteryBlinking }
-                    onIsBatteryWarningChanged: { sBattery.isBatteryWarning = Skypuff.isBatteryWarning }
-                    onIsBatteryScaleValidChanged: { sBattery.isBatteryScaleValid = Skypuff.isBatteryScaleValid }
+                onIsBatteryBlinkingChanged: { sGauge.isBatteryBlinking = Skypuff.isBatteryBlinking }
+                onIsBatteryWarningChanged: { sGauge.isBatteryWarning = Skypuff.isBatteryWarning }
+                onIsBatteryScaleValidChanged: { sGauge.isBatteryScaleValid = Skypuff.isBatteryScaleValid }
 
-                    onWhInChanged: { sBattery.whIn = Skypuff.whOut }
-                    onWhOutChanged: { sBattery.whOut = Skypuff.whIn }
-                    onBatteryPercentsChanged: { sBattery.batteryPercents = Skypuff.batteryPercents }
-                    onBatteryCellVoltsChanged: { sBattery.batteryCellVolts = Skypuff.batteryCellVolts }
+                onWhInChanged: { sGauge.whIn = Skypuff.whOut }
+                onWhOutChanged: { sGauge.whOut = Skypuff.whIn }
+                onBatteryPercentsChanged: { sGauge.batteryPercents = Skypuff.batteryPercents }
+                onBatteryCellVoltsChanged: { sGauge.batteryCellVolts = Skypuff.batteryCellVolts }
 
-                    onSettingsChanged: {
-                        sBattery.batteryCells = cfg.battery_cells
-                    }
+                onSettingsChanged: {
+                    sGauge.maxMotorKg = cfg.motor_max_kg
+                    sGauge.maxPower = cfg.power_max
+                    sGauge.minPower = cfg.power_min
+                    sGauge.batteryCells = cfg.battery_cells
                 }
             }
 
-            Item {
-                Layout.fillWidth: true
+            GaugeDebug {
+                gauge: sGauge
+                visible: false
             }
         }
 

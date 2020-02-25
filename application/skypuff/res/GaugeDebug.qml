@@ -18,13 +18,34 @@ ColumnLayout {
 
         Slider {
             id: sliderRope
-            from: sGauge.minRopeMeters
-            to: sGauge.maxRopeMeters
-            value: sGauge.ropeMeters
+            from: gauge.minRopeMeters
+            to: gauge.maxRopeMeters
+            value: gauge.ropeMeters
+
+            onValueChanged: {
+                gauge.ropeMeters = value;
+            }
+        }
+    }
+
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: 5
+
+        Text {
+            text: 'Kg val'
+        }
+
+        Slider {
+            id: sliderKg
+            from: gauge.minMotorKg
+            to: gauge.maxMotorKg
+            value: gauge.motorKg
+            Layout.fillWidth: true
 
             onValueChanged: {
 
-                sGauge.ropeMeters = value;
+                gauge.motorKg = value;
             }
         }
     }
@@ -33,23 +54,7 @@ ColumnLayout {
             Column {
                 spacing: 5
 
-                Text {
-                    text: 'Kg val'
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
 
-                Slider {
-                    id: sliderKg
-                    from: sGauge.minMotorKg
-                    to: sGauge.maxMotorKg
-                    value: sGauge.motorKg
-                    Layout.fillWidth: true
-
-                    onValueChanged: {
-
-                        sGauge.motorKg = value;
-                    }
-                }
             }
 
             Column {
