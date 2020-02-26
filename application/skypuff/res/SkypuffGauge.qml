@@ -1717,12 +1717,12 @@ Item {
 
             Item {
                 id: outWh
-                anchors.right: outArrow.right
-                anchors.rightMargin: -outWhT.width - 10
+                anchors.left: outArrow.left
+                anchors.leftMargin: -outWhT.width - 10
                 anchors.verticalCenter: parent.verticalCenter
 
                 Text {
-                    anchors.right: parent.right
+                    anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
                     id: outWhT
                     font.pixelSize: batteryBlock.whFontSize
@@ -1730,15 +1730,17 @@ Item {
                 }
             }
 
+
+
             Item {
-                id: inArrow
+                id: outArrow
                 anchors.left: parent.left
-                anchors.leftMargin: -inArrow.width - 10
+                anchors.leftMargin: -outArrow.width - 10
                 anchors.verticalCenter: parent.verticalCenter
-                width: inArrowT.width
+                width: outArrowT.width
 
                 Text {
-                    id: inArrowT
+                    id: outArrowT
                     font.pixelSize: batteryBlock.arrowFontSize
                     font.bold: true
                     anchors.verticalCenter: parent.verticalCenter
@@ -1842,15 +1844,15 @@ Item {
             }
 
             Item {
-                id: outArrow
+                id: inArrow
                 anchors.right: parent.right
-                anchors.rightMargin: -outArrow.width - 10
+                anchors.rightMargin: -inArrow.width - 10
                 anchors.verticalCenter: parent.verticalCenter
 
-                width: outArrowT.width
+                width: inArrowT.width
 
                 Text {
-                    id: outArrowT
+                    id: inArrowT
                     font.pixelSize: batteryBlock.arrowFontSize
                     font.bold: true
                     anchors.verticalCenter: parent.verticalCenter
@@ -1861,12 +1863,12 @@ Item {
 
             Item {
                 id: inWh
-                anchors.left: inArrow.left
-                anchors.leftMargin: -inWhT.width - 10
+                anchors.right: inArrow.right
+                anchors.rightMargin: -inWhT.width - 10
                 anchors.verticalCenter: parent.verticalCenter
 
                 Text {
-                    anchors.left: parent.left
+                    anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
                     id: inWhT
                     font.pixelSize: batteryBlock.whFontSize
