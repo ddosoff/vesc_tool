@@ -17,20 +17,24 @@ Page {
     ColumnLayout {
         anchors.fill: parent
 
-
         BigRoundButton {
             id: bStop
-            text: qsTr("Stop")
-            Layout.fillWidth: true
-            Layout.topMargin: -5
             enabled: false
+            radius: 0
 
+            text: qsTr("Stop")
+            font.pixelSize: page.width * 0.04
+
+            Layout.preferredHeight: page.width * 0.17
+            Layout.fillWidth: true
+            background.anchors.fill: bStop
             Material.background: '#EF9A9A'
 
             onClicked: {Skypuff.sendTerminal("set MANUAL_BRAKING")}
         }
 
         Label {
+            visible: false
             id: lState
             text: Skypuff.stateText
 
@@ -47,6 +51,7 @@ Page {
         // or blinking faults
         Text {
             id: tStatus
+            visible: false
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
 
@@ -93,23 +98,23 @@ Page {
             }
         }
 
-
-
-
         SkypuffGauge {
             id: sGauge
 
-            //Layout.preferredHeight: page.width - 20
-
             rootDiameter: page.width
-
-
+            sideMargin: 20
+            topMargin: 20
+            batteryTopMargin: 20
 
             // Temps
             tempFets: Skypuff.tempFets
             tempMotor: Skypuff.tempMotor
             tempBat: Skypuff.tempBat
 
+            stateText: Skypuff.stateText
+
+            maxPower: 5300
+            minPower: -2222
 
             Connections {
                 target: Skypuff
@@ -147,6 +152,10 @@ Page {
                     sGauge.maxPower = cfg.power_max
                     sGauge.minPower = cfg.power_min
                     sGauge.batteryCells = cfg.battery_cells
+                }
+
+                onStateChanged: {
+                    sGauge.state = newState
                 }
             }
 
@@ -224,23 +233,38 @@ Page {
         }
 
         RowLayout {
+            id: buttons
+            spacing: 0
+            property string bgColor: '#A5D6A7'
+            property real fontSize: page.width * 0.04
+            property real bHeight: page.width * 0.17
+
             BigRoundButton {
                 id: bSetZero
+                visible: false
+                radius: 0
+
                 text: qsTr("Set zero here")
+                font.pixelSize: buttons.fontSize
 
                 Layout.fillWidth: true
-                visible: false
-                Material.background: '#A5D6A7'
+                Layout.preferredHeight: buttons.bHeight
+                background.anchors.fill: bSetZero
+                Material.background: buttons.bgColor
 
                 onClicked: {Skypuff.sendTerminal("set_zero")}
             }
 
             BigRoundButton {
                 id: bPrePull
-
-                Layout.fillWidth: true
+                radius: 0
                 enabled: false
-                Material.background: '#A5D6A7'
+
+                font.pixelSize: buttons.fontSize
+                Layout.preferredHeight: buttons.bHeight
+                Layout.fillWidth: true
+                background.anchors.fill: bPrePull
+                Material.background: buttons.bgColor
 
                 state: "PRE_PULL"
                 states: [
@@ -255,11 +279,26 @@ Page {
 
             BigRoundButton {
                 id: bUnwinding
+                radius: 0
+                enabled: false
+
                 text: qsTr("Unwinding")
+                font.pixelSize: buttons.fontSize
 
                 Layout.fillWidth: true
-                enabled: false
-                Material.background: '#A5D6A7'
+                Material.background: buttons.bgColor
+                Layout.preferredHeight: buttons.bHeight
+                background.anchors.fill: bUnwinding
+
+                CustomBorder {
+                    visible: parent.enabled
+                    commonBorder: false
+                    lBorderwidth: 1
+                    rBorderwidth: 0
+                    tBorderwidth: 0
+                    bBorderwidth: 0
+                    borderColor: Qt.darker(buttons.bgColor, 1.5)
+                }
 
                 state: "UNWINDING"
                 states: [

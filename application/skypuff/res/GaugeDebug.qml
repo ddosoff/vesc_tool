@@ -5,7 +5,6 @@ import QtQuick.Layouts 1.12
 // Test Gauge element
 ColumnLayout {
     id: debug
-
     property var gauge
 
     RowLayout {

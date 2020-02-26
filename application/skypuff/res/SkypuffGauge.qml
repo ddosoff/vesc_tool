@@ -2,21 +2,15 @@ import QtQuick 2.12
 import QtQuick.Controls 1.4
 import QtQuick.Controls.Styles 1.4
 import QtQuick.Extras 1.4
-
 import QtQml 2.2
-
 import QtQuick.Controls.Material 2.12
-
-
 import QtGraphicalEffects 1.0;
 import QtQuick.Layouts 1.1
-
 
 
 Item {
     id:root
     SystemPalette {id: systemPalette; colorGroup: SystemPalette.Active}
-
 
     property real speedMs: 0
     property real maxSpeedMs: 20
@@ -40,10 +34,13 @@ Item {
     property real tempBat: 0
 
     property string motorMode: 'Not Connected'
+    property string state: 'DISCONNECTED'
+    property string stateText: 'Disconnected'
 
     property real batteryPercents: 0
     property real batteryCellVolts: 0.0
     property int batteryCells: 0
+
     property real whIn: 0.0
     property real whOut: 0.0
 
@@ -65,10 +62,9 @@ Item {
     property string textColor: 'black'
 
     // Default for all scales
-    property string defaultColor: '#4CAF50' // base color (green)
-    property string dangerColor: 'red'      // attention color (red)
-    property string warningColor: '#dbdee3' // blink color (yellow)
-
+    property string defaultColor: '#4CAF50' // base color
+    property string dangerColor: 'red'      // attention color
+    property string warningColor: '#dbdee3' // blink color
     property int gaugesColorAnimation: 1000  // freq of blinking
 
     // Rope
@@ -101,13 +97,13 @@ Item {
         Default view
     ********************/
 
-    // Use minimum value
     property int rootDiameter: 200
-    property int margin: 20
-    property int diameter: rootDiameter - margin
+    property int sideMargin: 20
+    property int topMargin: 20
+    property int batteryTopMargin: 20
+    property int diameter: rootDiameter - sideMargin
     implicitWidth: diameter
-    implicitHeight: diameter + batBlock.height * 1.5
-
+    implicitHeight: diameter + (battery.height * 1.5) + topMargin
 
     property string borderColor: '#515151'      // Color of all borders
     property string color: '#efeded'            // Main backgroundColor
@@ -152,13 +148,12 @@ Item {
 
     /********************/
 
-
     function getWhValStr(val) {
         if (val >= 1000) {
-            return prettyNumber(val / 1000) + ' kWh';
+            return prettyNumber(val / 1000) + ' kwh';
         }
 
-        return prettyNumber(val) + ' Wh';
+        return prettyNumber(val) + ' wh';
     }
 
     function setMaxRopeMeters() {
@@ -309,8 +304,6 @@ Item {
         return (value === root.minPower ? res + 0.1 : res);
     }
 
-
-
     Item {
         id: gaugeBlock
         width: diameter
@@ -332,8 +325,12 @@ Item {
             color: root.color
             border.color: root.borderColor
             border.width: 3
-            x: root.margin / 2
+            x: root.sideMargin / 2
+            y: root.topMargin
 
+            /**
+              2 diagonal lines
+              */
             Item {
                 id: diagonalLine
                 anchors.fill: parent
@@ -826,8 +823,6 @@ Item {
                             context.stroke();
                         }
                     }
-                    //onWidthChanged:  { requestPaint(); }
-                    //onHeightChanged: { requestPaint(); }
                 }
 
                 /**
@@ -1166,9 +1161,7 @@ Item {
                         labelInset: root.gaugeHeight
                         labelStepSize: root.powerLabelStepSize * 1000
 
-
                         foreground: null
-
                         minorTickmark: null
 
                         tickmarkLabel:  Text {
@@ -1188,7 +1181,7 @@ Item {
                             implicitWidth: outerRadius * 0.01
                             implicitHeight:  (styleData.value  === root.maxPower || styleData.value  === root.minPower)
                                 ? root.gaugeHeight * 1.7
-                                : implicitWidth * ((styleData.value % (root.powerLabelStepSize)) ? 3 : 6)
+                                : implicitWidth * ((styleData.value % (root.powerLabelStepSize * 1000)) ? 3 : 6)
                             color: root.gaugeFontColor
                         }
 
@@ -1470,12 +1463,13 @@ Item {
               Motor mode
               */
             Text {
-                text: root.motorMode
+                text: root.stateText
                 anchors.horizontalCenter: parent.horizontalCenter
 
                 anchors.top: parent.top
                 anchors.topMargin: root.gaugeHeight * 3.3
                 font.pixelSize: Math.max(10, root.diameter * 0.06)
+                color: root.state === "MANUAL_BRAKING" ? root.warningColor : root.textColor;
                 font.family: root.ff
             }
 
@@ -1694,150 +1688,159 @@ Item {
         }
     }
 
-    Rectangle {
-        id: batBlock
+    Item {
+        id: batteryBlock
         width: root.diameter / 3
         height: root.diameter / 13
-        border.color: root.borderColor
-        border.width: 2
-        anchors.topMargin: batBlock.height / 2
+
+        anchors.topMargin: root.batteryTopMargin
         anchors.horizontalCenter: root.horizontalCenter
         anchors.top: gaugeBlock.bottom
 
-        radius: 3
-        color: root.battGaugeColor
-
-
-        Item {
-            id: outWh
-            anchors.right: outArrow.right
-            anchors.rightMargin: -outWhT.width - 10
-            anchors.verticalCenter: parent.verticalCenter
-
-            Text {
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                id: outWhT
-                font.pixelSize: Math.max(10, batBlock.height * 0.6)
-                text: root.getWhValStr(root.whOut)
-            }
-        }
-
-        Item {
-            id: inArrow
-            anchors.left: parent.left
-            anchors.leftMargin: -inArrow.width - 10
-            anchors.verticalCenter: parent.verticalCenter
-            width: inArrowT.width
-
-            Text {
-                id: inArrowT
-                font.pixelSize: Math.max(10, batBlock.height * 0.6)
-                font.bold: true
-                anchors.verticalCenter: parent.verticalCenter
-                text: '>>'
-                color: 'red';
-            }
-        }
-
         Rectangle {
-            opacity: root.baseOpacity
-            radius: 2
+            id: battery
+            width: parent.width
+            height: parent.height
 
-            anchors.left: batBlock.left
-            anchors.leftMargin: parent.border.width
-            anchors.topMargin: parent.border.width
-            anchors.verticalCenter: batBlock.verticalCenter
-
-            property bool battD: root.isBatteryBlinking
-            property string battDColor: root.battDangerColor
-
-            onBattDChanged: {
-                battDAnimation.loops = battD ? Animation.Infinite : 1;
-                if (!battD) battDColor = root.battDangerColor;
-            }
-
-            ColorAnimation on battDColor {
-                id: battDAnimation
-                running: root.isBatteryBlinking
-                from: root.battDangerColor
-                to: root.battWarningColor
-                duration: root.gaugesColorAnimation
-                loops: Animation.Infinite
-            }
-
-            height: batBlock.height - parent.border.width * 2
-            color: root.isBatteryWarning || root.isBatteryBlinking ? battDColor : root.battColor
-            width: (batBlock.width - parent.border.width * 2) * root.batteryPercents / 100
-        }
-
-        Item {
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.left: parent.left
-                anchors.leftMargin: 6
-
-                font.pixelSize: Math.max(10, batBlock.height * 0.5)
-                id: tBat
-                text: qsTr("%1 x %2").arg(root.batteryCellVolts.toFixed(2)).arg(root.batteryCells)
-            }
-        }
-
-        Item {
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            Text {
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.rightMargin: 6
-                font.pixelSize: Math.max(10, batBlock.height * 0.5)
-                id: tBatPercent
-                text: root.batteryPercents.toFixed(0) + '%'
-            }
-        }
-
-        Rectangle {
-            anchors.left: batBlock.right
-            anchors.verticalCenter: batBlock.verticalCenter
-            color: root.borderColor
-            height: batBlock.height * 0.5
-            width: 3
             border.color: root.borderColor
-        }
+            border.width: 2
+            x: root.sideMargin / 2
+            y: root.topMargin
 
-        Item {
-            id: outArrow
-            anchors.right: parent.right
-            anchors.rightMargin: -outArrow.width - 10
-            anchors.verticalCenter: parent.verticalCenter
+            radius: 3
+            color: root.battGaugeColor
 
-            width: outArrowT.width
-
-            Text {
-                id: outArrowT
-                font.pixelSize: Math.max(10, batBlock.height * 0.6)
-                font.bold: true
+            Item {
+                id: outWh
+                anchors.right: outArrow.right
+                anchors.rightMargin: -outWhT.width - 10
                 anchors.verticalCenter: parent.verticalCenter
-                text: '>>'
-                color: 'red';
+
+                Text {
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    id: outWhT
+                    font.pixelSize: Math.max(10, battery.height * 0.6)
+                    text: root.getWhValStr(root.whOut)
+                }
             }
-        }
 
-        Item {
-            id: inWh
-            anchors.left: inArrow.left
-            anchors.leftMargin: -inWhT.width - 10
-            anchors.verticalCenter: parent.verticalCenter
+            Item {
+                id: inArrow
+                anchors.left: parent.left
+                anchors.leftMargin: -inArrow.width - 10
+                anchors.verticalCenter: parent.verticalCenter
+                width: inArrowT.width
 
-            Text {
+                Text {
+                    id: inArrowT
+                    font.pixelSize: Math.max(10, battery.height * 0.4)
+                    font.bold: true
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: '>>'
+                    color: 'red';
+                }
+            }
+
+            Rectangle {
+                opacity: root.baseOpacity
+                radius: 2
+
+                anchors.left: battery.left
+                anchors.leftMargin: parent.border.width
+                anchors.topMargin: parent.border.width
+                anchors.verticalCenter: battery.verticalCenter
+
+                property bool battD: root.isBatteryBlinking
+                property string battDColor: root.battDangerColor
+
+                onBattDChanged: {
+                    battDAnimation.loops = battD ? Animation.Infinite : 1;
+                    if (!battD) battDColor = root.battDangerColor;
+                }
+
+                ColorAnimation on battDColor {
+                    id: battDAnimation
+                    running: root.isBatteryBlinking
+                    from: root.battDangerColor
+                    to: root.battWarningColor
+                    duration: root.gaugesColorAnimation
+                    loops: Animation.Infinite
+                }
+
+                height: battery.height - parent.border.width * 2
+                color: root.isBatteryWarning || root.isBatteryBlinking ? battDColor : root.battColor
+                width: (battery.width - parent.border.width * 2) * root.batteryPercents / 100
+            }
+
+            Item {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                id: inWhT
-                font.pixelSize: Math.max(10, batBlock.height * 0.6)
-                text: root.getWhValStr(root.whIn)
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.left: parent.left
+                    anchors.leftMargin: 6
+
+                    font.pixelSize: Math.max(10, battery.height * 0.5)
+                    id: tBat
+                    text: qsTr("%1 x %2").arg(root.batteryCellVolts.toFixed(2)).arg(root.batteryCells)
+                }
+            }
+
+            Item {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                Text {
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.rightMargin: 6
+                    font.pixelSize: Math.max(10, battery.height * 0.5)
+                    id: tBatPercent
+                    text: root.batteryPercents.toFixed(0) + '%'
+                }
+            }
+
+            Rectangle {
+                anchors.left: battery.right
+                anchors.verticalCenter: battery.verticalCenter
+                color: root.borderColor
+                height: battery.height * 0.5
+                width: 3
+                border.color: root.borderColor
+            }
+
+            Item {
+                id: outArrow
+                anchors.right: parent.right
+                anchors.rightMargin: -outArrow.width - 10
+                anchors.verticalCenter: parent.verticalCenter
+
+                width: outArrowT.width
+
+                Text {
+                    id: outArrowT
+                    font.pixelSize: Math.max(10, battery.height * 0.4)
+                    font.bold: true
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: '>>'
+                    color: 'red';
+                }
+            }
+
+            Item {
+                id: inWh
+                anchors.left: inArrow.left
+                anchors.leftMargin: -inWhT.width - 10
+                anchors.verticalCenter: parent.verticalCenter
+
+                Text {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    id: inWhT
+                    font.pixelSize: Math.max(10, battery.height * 0.6)
+                    text: root.getWhValStr(root.whIn)
+                }
             }
         }
     }
