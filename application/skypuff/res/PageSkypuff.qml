@@ -101,6 +101,8 @@ Page {
         SkypuffGauge {
             id: sGauge
 
+            debug: false
+
             rootDiameter: page.width
             sideMargin: 20
             topMargin: 20
@@ -157,11 +159,6 @@ Page {
                 onStateChanged: {
                     sGauge.state = newState
                 }
-            }
-
-            GaugeDebug {
-                gauge: sGauge
-                visible: false
             }
         }
 
@@ -235,7 +232,8 @@ Page {
         RowLayout {
             id: buttons
             spacing: 0
-            property string bgColor: '#A5D6A7'
+            property string bgGreenColor: '#A5D6A7'
+            property string bgBlueColor: '#90CAF9'
             property real fontSize: page.width * 0.04
             property real bHeight: page.width * 0.17
 
@@ -250,7 +248,7 @@ Page {
                 Layout.fillWidth: true
                 Layout.preferredHeight: buttons.bHeight
                 background.anchors.fill: bSetZero
-                Material.background: buttons.bgColor
+                Material.background: buttons.bgBlueColor
 
                 onClicked: {Skypuff.sendTerminal("set_zero")}
             }
@@ -264,7 +262,7 @@ Page {
                 Layout.preferredHeight: buttons.bHeight
                 Layout.fillWidth: true
                 background.anchors.fill: bPrePull
-                Material.background: buttons.bgColor
+                Material.background: buttons.bgBlueColor
 
                 state: "PRE_PULL"
                 states: [
@@ -286,7 +284,7 @@ Page {
                 font.pixelSize: buttons.fontSize
 
                 Layout.fillWidth: true
-                Material.background: buttons.bgColor
+                Material.background: buttons.bgGreenColor
                 Layout.preferredHeight: buttons.bHeight
                 background.anchors.fill: bUnwinding
 
@@ -297,7 +295,7 @@ Page {
                     rBorderwidth: 0
                     tBorderwidth: 0
                     bBorderwidth: 0
-                    borderColor: Qt.darker(buttons.bgColor, 1.5)
+                    borderColor: Qt.darker(buttons.bgGreenColor, 1)
                 }
 
                 state: "UNWINDING"

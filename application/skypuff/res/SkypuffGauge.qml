@@ -103,7 +103,7 @@ Item {
     property int batteryTopMargin: 20
     property int diameter: rootDiameter - sideMargin
     implicitWidth: diameter
-    implicitHeight: diameter + (battery.height * 1.5) + topMargin
+    implicitHeight: diameter + (battery.height * 1.5) + topMargin + (debug ? debugBlock.height + 20 : 0)
 
     property string borderColor: '#515151'      // Color of all borders
     property string color: '#efeded'            // Main backgroundColor
@@ -1690,12 +1690,17 @@ Item {
 
     Item {
         id: batteryBlock
-        width: root.diameter / 3
-        height: root.diameter / 13
+        width: root.diameter / 2.6
+        height: root.diameter / 11.5
 
         anchors.topMargin: root.batteryTopMargin
         anchors.horizontalCenter: root.horizontalCenter
         anchors.top: gaugeBlock.bottom
+
+        property real battFontSize: Math.max(10, battery.height * 0.51)
+        property real whFontSize: Math.max(10, battery.height * 0.55)
+        property real arrowFontSize: Math.max(10, battery.height * 0.45)
+
 
         Rectangle {
             id: battery
@@ -1708,7 +1713,7 @@ Item {
             y: root.topMargin
 
             radius: 3
-            color: root.battGaugeColor
+            color: root.innerColor
 
             Item {
                 id: outWh
@@ -1720,7 +1725,7 @@ Item {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
                     id: outWhT
-                    font.pixelSize: Math.max(10, battery.height * 0.6)
+                    font.pixelSize: batteryBlock.whFontSize
                     text: root.getWhValStr(root.whOut)
                 }
             }
@@ -1734,7 +1739,7 @@ Item {
 
                 Text {
                     id: inArrowT
-                    font.pixelSize: Math.max(10, battery.height * 0.4)
+                    font.pixelSize: batteryBlock.arrowFontSize
                     font.bold: true
                     anchors.verticalCenter: parent.verticalCenter
                     text: '>>'
@@ -1773,6 +1778,32 @@ Item {
                 width: (battery.width - parent.border.width * 2) * root.batteryPercents / 100
             }
 
+            /*Item {
+                id: chargeIcoBlock
+                opacity: 0.5
+                anchors.horizontalCenter:  battery.horizontalCenter
+                width: chargeIco.width + 3
+                height: chargeIco.height
+                y: -10
+
+
+                Image {
+                    id: chargeIco
+                    smooth: true
+                    source: "qrc:/res/icons/flash.svg"
+                    sourceSize.width: battery.height + 10
+                    sourceSize.height: battery.height + 20
+                    visible: false
+
+                }
+
+                ColorOverlay {
+                    anchors.fill: chargeIco
+                    source: chargeIco
+                    color: root.borderColor
+                }
+            }*/
+
             Item {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
@@ -1782,7 +1813,7 @@ Item {
                     anchors.left: parent.left
                     anchors.leftMargin: 6
 
-                    font.pixelSize: Math.max(10, battery.height * 0.5)
+                    font.pixelSize: batteryBlock.battFontSize
                     id: tBat
                     text: qsTr("%1 x %2").arg(root.batteryCellVolts.toFixed(2)).arg(root.batteryCells)
                 }
@@ -1795,7 +1826,7 @@ Item {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.rightMargin: 6
-                    font.pixelSize: Math.max(10, battery.height * 0.5)
+                    font.pixelSize: batteryBlock.battFontSize
                     id: tBatPercent
                     text: root.batteryPercents.toFixed(0) + '%'
                 }
@@ -1820,7 +1851,7 @@ Item {
 
                 Text {
                     id: outArrowT
-                    font.pixelSize: Math.max(10, battery.height * 0.4)
+                    font.pixelSize: batteryBlock.arrowFontSize
                     font.bold: true
                     anchors.verticalCenter: parent.verticalCenter
                     text: '>>'
@@ -1838,10 +1869,20 @@ Item {
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
                     id: inWhT
-                    font.pixelSize: Math.max(10, battery.height * 0.6)
+                    font.pixelSize: batteryBlock.whFontSize
                     text: root.getWhValStr(root.whIn)
                 }
             }
         }
+    }
+
+    GaugeDebug {
+        id: debugBlock
+        gauge: root
+        visible: root.debug
+
+        anchors.topMargin: root.batteryTopMargin
+        anchors.horizontalCenter: root.horizontalCenter
+        anchors.top: batteryBlock.bottom
     }
 }
