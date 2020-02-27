@@ -171,7 +171,7 @@ Item {
     }
 
     function getPowerLimits(val) {
-        var k = 2000;
+        var k = 1000;
         return Math.ceil(parseInt(Math.abs(val), 10) / k) * k
     }
 
@@ -187,18 +187,35 @@ Item {
 
 
 
-        var diff = root.maxPower - root.minPower;
-
+        var diff = root.maxPower + Math.abs(root.minPower);
         console.log(diff)
 
-        if (Math.abs(root.minPower) > 20000) {
+        //step = diff / 6000
+
+        //+14 -8
+
+        if (diff % 2000 === 0) step = 2
+        if (diff % 3000 === 0) step = 3
+        if (diff % 4000 === 0) step = 4
+        if (diff % 5000 === 0) step = 5
+
+        if (diff > 10000) {
+            step *= 2;
+        }
+
+
+        /*else if (diff > 20000) {
+            step *= 10;
+        }*/
+
+        /*if (Math.abs(root.minPower) > 20000) {
             var  k = 1000000 % root.minPower === 0 && Math.abs(root.minPower) <= 50000 ? 10 : 4;
             step = Math.ceil(parseInt(root.minPower, 10) / k / 10 ) * 10;
         } else {
             step = root.minPower / 5000;
         }
 
-        step = Math.abs(step);
+        step = Math.abs(step);*/
 
 
 
@@ -217,7 +234,7 @@ Item {
         }*/
 
         console.log(step)
-        return step;
+        return parseInt(step, 10);
     }
 
     function setMaxPower() {
@@ -1898,15 +1915,5 @@ Item {
                 }
             }
         }
-    }
-
-    GaugeDebug {
-        id: debugBlock
-        gauge: root
-        visible: root.debug
-
-        anchors.topMargin: root.batteryTopMargin
-        anchors.horizontalCenter: root.horizontalCenter
-        anchors.top: batteryBlock.bottom
     }
 }
