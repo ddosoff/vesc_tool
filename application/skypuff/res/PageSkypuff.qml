@@ -101,7 +101,7 @@ Page {
         SkypuffGauge {
             id: sGauge
 
-            debug: false
+            debug: true
 
             rootDiameter: page.width
             sideMargin: 20
@@ -114,9 +114,6 @@ Page {
             tempBat: Skypuff.tempBat
 
             stateText: Skypuff.stateText
-
-            maxPower: 5300
-            minPower: -2222
 
             Connections {
                 target: Skypuff

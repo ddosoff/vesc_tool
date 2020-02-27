@@ -235,11 +235,10 @@ GridLayout {
     }
 
     Slider {
-        from: 1
-        to: 20
+        from: 0
+        to: 50
         value: gauge.motorKgLabelStepSize
         Layout.fillWidth: true
-
 
         onValueChanged: {
             gauge.motorKgLabelStepSize = value;
@@ -254,9 +253,10 @@ GridLayout {
 
     Slider {
         from: 0
-        to: 100000
+        to: 30000
         value: gauge.maxPower
         Layout.fillWidth: true
+        stepSize: 2000
 
         onValueChanged: {
             gauge.maxPower = value;
@@ -270,10 +270,11 @@ GridLayout {
     }
 
     Slider {
-        from: -100000
+        from: -30000
         to: 0
         value: gauge.minPower
         Layout.fillWidth: true
+        stepSize: 2000
 
         onValueChanged: {
             gauge.minPower = value;

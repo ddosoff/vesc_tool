@@ -181,10 +181,30 @@ Item {
     }
 
     function getPowerStep() {
-        var step = 10;
+        var step = 4;
+
+
+
+
+
         var diff = root.maxPower - root.minPower;
 
-        if (diff <= 12000) {
+        console.log(diff)
+
+        if (Math.abs(root.minPower) > 20000) {
+            var  k = 1000000 % root.minPower === 0 && Math.abs(root.minPower) <= 50000 ? 10 : 4;
+            step = Math.ceil(parseInt(root.minPower, 10) / k / 10 ) * 10;
+        } else {
+            step = root.minPower / 5000;
+        }
+
+        step = Math.abs(step);
+
+
+
+
+
+        /*if (diff <= 12000) {
             step = 2
         } else if (diff === 16000 ) {
             step = 3
@@ -194,8 +214,9 @@ Item {
             step = 20;
         } else if (diff > 100000) {
             step = 40;
-        }
+        }*/
 
+        console.log(step)
         return step;
     }
 
@@ -1176,7 +1197,7 @@ Item {
                         }
 
                         tickmark: Rectangle {
-                            visible: styleData.value % 1000 === 0
+                            visible: styleData.value % 2000 === 0
                             antialiasing: true
                             implicitWidth: outerRadius * 0.01
                             implicitHeight:  (styleData.value  === root.maxPower || styleData.value  === root.minPower)
@@ -1700,6 +1721,7 @@ Item {
         property real battFontSize: Math.max(10, battery.height * 0.51)
         property real whFontSize: Math.max(10, battery.height * 0.55)
         property real arrowFontSize: Math.max(10, battery.height * 0.45)
+        property real margin: 10
 
 
         Rectangle {
@@ -1718,7 +1740,7 @@ Item {
             Item {
                 id: outWh
                 anchors.left: outArrow.left
-                anchors.leftMargin: -outWhT.width - 10
+                anchors.leftMargin: -outWhT.width - batteryBlock.margin
                 anchors.verticalCenter: parent.verticalCenter
 
                 Text {
@@ -1735,7 +1757,7 @@ Item {
             Item {
                 id: outArrow
                 anchors.left: parent.left
-                anchors.leftMargin: -outArrow.width - 10
+                anchors.leftMargin: -outArrow.width - batteryBlock.margin
                 anchors.verticalCenter: parent.verticalCenter
                 width: outArrowT.width
 
@@ -1846,7 +1868,7 @@ Item {
             Item {
                 id: inArrow
                 anchors.right: parent.right
-                anchors.rightMargin: -inArrow.width - 10
+                anchors.rightMargin: -inArrow.width - batteryBlock.margin
                 anchors.verticalCenter: parent.verticalCenter
 
                 width: inArrowT.width
@@ -1864,7 +1886,7 @@ Item {
             Item {
                 id: inWh
                 anchors.right: inArrow.right
-                anchors.rightMargin: -inWhT.width - 10
+                anchors.rightMargin: -inWhT.width - batteryBlock.margin
                 anchors.verticalCenter: parent.verticalCenter
 
                 Text {
