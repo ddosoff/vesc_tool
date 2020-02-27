@@ -52,7 +52,7 @@ Page {
                 Layout.preferredHeight: page.bHeight
                 Layout.fillWidth: true
                 background.anchors.fill: bStop
-                Material.background: page.bgRedColor
+                Material.background: '#FFE082'
 
                 CustomBorder {
                     visible: parent.enabled
@@ -61,7 +61,7 @@ Page {
                     rBorderwidth: 0
                     tBorderwidth: 0
                     bBorderwidth: 0
-                    borderColor: Qt.darker(page.bgRedColor, 1.2)
+                    borderColor: Qt.darker('#FFE082', 1.2)
                 }
 
                 onClicked: {Skypuff.sendTerminal("set MANUAL_BRAKING")}
@@ -194,6 +194,14 @@ Page {
             }
         }
 
+        GaugeDebug {
+            id: debugBlock
+            gauge: sGauge
+            visible: true
+
+
+        }
+
         // Vertical space
         Item {
             Layout.fillHeight: true
@@ -322,7 +330,7 @@ Page {
                     rBorderwidth: 0
                     tBorderwidth: 0
                     bBorderwidth: 0
-                    borderColor: Qt.darker(page.bgGreenColor, 1)
+                    borderColor: Qt.darker(page.bgGreenColor, 1.2)
                 }
 
                 state: "UNWINDING"
