@@ -11,26 +11,61 @@ Page {
     id: page
     state: "DISCONNECTED"
 
+    property string bgGreenColor: '#A5D6A7'
+    property string bgBlueColor: '#90CAF9'
+    property string bgRedColor: '#EF9A9A'
+    property real bFontSize: page.width * 0.04
+    property real bHeight: page.width * 0.17
+
     // Get normal text color from this palette
     SystemPalette {id: systemPalette; colorGroup: SystemPalette.Active}
 
     ColumnLayout {
         anchors.fill: parent
 
-        BigRoundButton {
-            id: bStop
-            enabled: false
-            radius: 0
+        RowLayout {
+            spacing: 0
 
-            text: qsTr("Stop")
-            font.pixelSize: page.width * 0.04
+            BigRoundButton {
+                id: bCut
+                enabled: true
+                radius: 0
 
-            Layout.preferredHeight: page.width * 0.17
-            Layout.fillWidth: true
-            background.anchors.fill: bStop
-            Material.background: '#EF9A9A'
+                text: qsTr("Cut")
+                font.pixelSize: page.bFontSize
+                Layout.preferredHeight: page.bHeight
+                Layout.fillWidth: true
+                Layout.preferredWidth: page.width / 10
+                background.anchors.fill: bCut
+                Material.background: page.bgRedColor
 
-            onClicked: {Skypuff.sendTerminal("set MANUAL_BRAKING")}
+                onClicked: {Skypuff.sendTerminal("set MANUAL_BRAKING")}
+            }
+
+            BigRoundButton {
+                id: bStop
+                enabled: true
+                radius: 0
+
+                text: qsTr("Stop")
+                font.pixelSize: page.bFontSize
+                Layout.preferredHeight: page.bHeight
+                Layout.fillWidth: true
+                background.anchors.fill: bStop
+                Material.background: page.bgRedColor
+
+                CustomBorder {
+                    visible: parent.enabled
+                    commonBorder: false
+                    lBorderwidth: 1
+                    rBorderwidth: 0
+                    tBorderwidth: 0
+                    bBorderwidth: 0
+                    borderColor: Qt.darker(page.bgRedColor, 1.2)
+                }
+
+                onClicked: {Skypuff.sendTerminal("set MANUAL_BRAKING")}
+            }
         }
 
         Label {
@@ -101,7 +136,7 @@ Page {
         SkypuffGauge {
             id: sGauge
 
-            debug: true
+            debug: false
 
             rootDiameter: page.width
             sideMargin: 20
@@ -227,12 +262,7 @@ Page {
         }
 
         RowLayout {
-            id: buttons
             spacing: 0
-            property string bgGreenColor: '#A5D6A7'
-            property string bgBlueColor: '#90CAF9'
-            property real fontSize: page.width * 0.04
-            property real bHeight: page.width * 0.17
 
             BigRoundButton {
                 id: bSetZero
@@ -240,12 +270,12 @@ Page {
                 radius: 0
 
                 text: qsTr("Set zero here")
-                font.pixelSize: buttons.fontSize
+                font.pixelSize: page.bFontSize
 
                 Layout.fillWidth: true
-                Layout.preferredHeight: buttons.bHeight
+                Layout.preferredHeight: page.bHeight
                 background.anchors.fill: bSetZero
-                Material.background: buttons.bgBlueColor
+                Material.background: page.bgBlueColor
 
                 onClicked: {Skypuff.sendTerminal("set_zero")}
             }
@@ -253,13 +283,13 @@ Page {
             BigRoundButton {
                 id: bPrePull
                 radius: 0
-                enabled: false
+                enabled: true
 
-                font.pixelSize: buttons.fontSize
-                Layout.preferredHeight: buttons.bHeight
+                font.pixelSize: page.bFontSize
+                Layout.preferredHeight: page.bHeight
                 Layout.fillWidth: true
                 background.anchors.fill: bPrePull
-                Material.background: buttons.bgBlueColor
+                Material.background: page.bgBlueColor
 
                 state: "PRE_PULL"
                 states: [
@@ -275,14 +305,14 @@ Page {
             BigRoundButton {
                 id: bUnwinding
                 radius: 0
-                enabled: false
+                enabled: true
 
                 text: qsTr("Unwinding")
-                font.pixelSize: buttons.fontSize
+                font.pixelSize: page.bFontSize
 
                 Layout.fillWidth: true
-                Material.background: buttons.bgGreenColor
-                Layout.preferredHeight: buttons.bHeight
+                Material.background: page.bgGreenColor
+                Layout.preferredHeight: page.bHeight
                 background.anchors.fill: bUnwinding
 
                 CustomBorder {
@@ -292,7 +322,7 @@ Page {
                     rBorderwidth: 0
                     tBorderwidth: 0
                     bBorderwidth: 0
-                    borderColor: Qt.darker(buttons.bgGreenColor, 1)
+                    borderColor: Qt.darker(page.bgGreenColor, 1)
                 }
 
                 state: "UNWINDING"
