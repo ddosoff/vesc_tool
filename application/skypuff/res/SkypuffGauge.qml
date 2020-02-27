@@ -170,70 +170,47 @@ Item {
         }
     }
 
-    function getPowerLimits(val) {
-        var k = 1000;
-        return Math.ceil(parseInt(Math.abs(val), 10) / k) * k
-    }
-
     function getSpeedLimit() {
         root.maxSpeedMs = Math.ceil(parseInt(Math.abs(root.maxSpeedMs), 10) / 10) * 10;
         root.minSpeedMs = root.maxSpeedMs * -1;
     }
 
+    function getPowerLimits(val) {
+        var k = 1000;
+        var res = Math.ceil(parseInt(Math.abs(val), 10) / k) * k;
+
+        // Getting rid of bad numbers.
+        // For example: 14k is a bad number because in range 2k-6k it divides only by 2k and by itself
+        if (isPrime(res, 1000)) {
+            res += 2000;
+        }
+
+        return res;
+    }
+
+    function isPrime(num, k = 1) {
+      for (var i = 3 * k; i <= 6 * k; i += 1 * k) {
+        if (num % i === 0) return false;
+      }
+      return true;
+    }
+
     function getPowerStep() {
-        var step = 4;
-
-
-
-
+        var step;
 
         var diff = root.maxPower + Math.abs(root.minPower);
-        console.log(diff)
+        var power = Math.abs(root.minPower);
 
-        //step = diff / 6000
+        // Looking for the maximum possible step
+        for (var a = 2; a <= 6; a++) {
+            if (power % (a * 1000)  === 0) step = a;
+        }
 
-        //+14 -8
-
-        if (diff % 2000 === 0) step = 2
-        if (diff % 3000 === 0) step = 3
-        if (diff % 4000 === 0) step = 4
-        if (diff % 5000 === 0) step = 5
-
-        if (diff > 10000) {
+        // If gauge divided more than 6 part
+        if (diff / (step * 1000)  > 6) {
             step *= 2;
         }
 
-
-        /*else if (diff > 20000) {
-            step *= 10;
-        }*/
-
-        /*if (Math.abs(root.minPower) > 20000) {
-            var  k = 1000000 % root.minPower === 0 && Math.abs(root.minPower) <= 50000 ? 10 : 4;
-            step = Math.ceil(parseInt(root.minPower, 10) / k / 10 ) * 10;
-        } else {
-            step = root.minPower / 5000;
-        }
-
-        step = Math.abs(step);*/
-
-
-
-
-
-        /*if (diff <= 12000) {
-            step = 2
-        } else if (diff === 16000 ) {
-            step = 3
-        } else if (diff === 14000 || diff === 18000) {
-            step = 4
-        } else if (diff > 60000) {
-            step = 20;
-        } else if (diff > 100000) {
-            step = 40;
-        }*/
-
-        console.log(step)
         return parseInt(step, 10);
     }
 
@@ -1198,6 +1175,7 @@ Item {
                         maximumValueAngle: dl1.rotation
                         labelInset: root.gaugeHeight
                         labelStepSize: root.powerLabelStepSize * 1000
+                        tickmarkStepSize: 100
 
                         foreground: null
                         minorTickmark: null
@@ -1214,7 +1192,7 @@ Item {
                         }
 
                         tickmark: Rectangle {
-                            visible: styleData.value % 2000 === 0
+                            visible: styleData.value % ((root.maxPower + Math.abs(root.minPower)) > 30000 ? 2000 : 1000) === 0
                             antialiasing: true
                             implicitWidth: outerRadius * 0.01
                             implicitHeight:  (styleData.value  === root.maxPower || styleData.value  === root.minPower)

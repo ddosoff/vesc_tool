@@ -359,7 +359,7 @@ GridLayout {
     Slider {
         id: maxPower
         from: 0
-        to: 30000
+        to: 20000
         value: gauge.maxPower
         Layout.fillWidth: true
         stepSize: 2000
@@ -383,7 +383,7 @@ GridLayout {
 
     Slider {
         id: minPower
-        from: -30000
+        from: -20000
         to: 0
         value: gauge.minPower
         Layout.fillWidth: true
