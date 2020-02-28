@@ -8,12 +8,14 @@ GridLayout {
 
     property var gauge
     property int fontSize: 13
+    property int valFontSize: 12
+
     property int leftMargin: gauge.sideMargin / 2
 
     width: gauge.diameter
 
     columns: 3
-    columnSpacing: -10
+    columnSpacing: 0
     rowSpacing: -20
 
     Layout.fillWidth: true
@@ -31,14 +33,14 @@ GridLayout {
     }
 
     Label {
-        text: 'Rope val'
+        text: 'Rope val:'
         font.pixelSize: debug.fontSize
         Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(ropeMeters.value)
-        font.pixelSize: debug.fontSize
+        font.pixelSize: debug.valFontSize
         Layout.leftMargin: debug.leftMargin
     }
 
@@ -55,14 +57,14 @@ GridLayout {
     }
 
     Label {
-        text: 'KG val'
+        text: 'KG val:'
         font.pixelSize: debug.fontSize
         Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(motorKg.value)
-        font.pixelSize: debug.fontSize
+        font.pixelSize: debug.valFontSize
         Layout.leftMargin: debug.leftMargin
     }
 
@@ -79,14 +81,14 @@ GridLayout {
     }
 
     Label {
-        text: 'Power val'
+        text: 'Power val:'
         font.pixelSize: debug.fontSize
         Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(power.value)
-        font.pixelSize: debug.fontSize
+        font.pixelSize: debug.valFontSize
         Layout.leftMargin: debug.leftMargin
     }
 
@@ -103,14 +105,14 @@ GridLayout {
     }
 
     Label {
-        text: 'Speed val'
+        text: 'Speed val:'
         font.pixelSize: debug.fontSize
         Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(speedMs.value)
-        font.pixelSize: debug.fontSize
+        font.pixelSize: debug.valFontSize
         Layout.leftMargin: debug.leftMargin
     }
 
@@ -127,14 +129,14 @@ GridLayout {
     }
 
     Label {
-        text: 'Temps val'
+        text: 'Temps val:'
         font.pixelSize: debug.fontSize
         Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(temp.value)
-        font.pixelSize: debug.fontSize
+        font.pixelSize: debug.valFontSize
         Layout.leftMargin: debug.leftMargin
     }
 
@@ -153,14 +155,14 @@ GridLayout {
     }
 
     Label {
-        text: 'Batt val'
+        text: 'Batt val:'
         font.pixelSize: debug.fontSize
         Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(batteryPercents.value)
-        font.pixelSize: debug.fontSize
+        font.pixelSize: debug.valFontSize
         Layout.leftMargin: debug.leftMargin
     }
 
@@ -177,14 +179,14 @@ GridLayout {
     }
 
     Label {
-        text: 'CellV val'
+        text: 'CellV val:'
         font.pixelSize: debug.fontSize
         Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(batteryCellVolts.value)
-        font.pixelSize: debug.fontSize
+        font.pixelSize: debug.valFontSize
         Layout.leftMargin: debug.leftMargin
     }
 
@@ -201,14 +203,14 @@ GridLayout {
     }
 
     Label {
-        text: 'Cell Count'
+        text: 'Cell Count:'
         font.pixelSize: debug.fontSize
         Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(batteryCells.value)
-        font.pixelSize: debug.fontSize
+        font.pixelSize: debug.valFontSize
         Layout.leftMargin: debug.leftMargin
     }
 
@@ -225,14 +227,14 @@ GridLayout {
     }
 
     Label {
-        text: 'WH in'
+        text: 'WH in:'
         font.pixelSize: debug.fontSize
         Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(whIn.value)
-        font.pixelSize: debug.fontSize
+        font.pixelSize: debug.valFontSize
         Layout.leftMargin: debug.leftMargin
     }
 
@@ -249,14 +251,14 @@ GridLayout {
     }
 
     Label {
-        text: 'WH out'
+        text: 'WH out:'
         font.pixelSize: debug.fontSize
         Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(whOut.value)
-        font.pixelSize: debug.fontSize
+        font.pixelSize: debug.valFontSize
         Layout.leftMargin: debug.leftMargin
     }
 
@@ -273,14 +275,14 @@ GridLayout {
     }
 
     Label {
-        text: 'Speed max'
+        text: 'Speed max:'
         font.pixelSize: debug.fontSize
         Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(maxSpeedMs.value)
-        font.pixelSize: debug.fontSize
+        font.pixelSize: debug.valFontSize
         Layout.leftMargin: debug.leftMargin
     }
 
@@ -297,14 +299,14 @@ GridLayout {
     }
 
     Label {
-        text: 'KG max'
+        text: 'KG max:'
         font.pixelSize: debug.fontSize
         Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(maxMotorKg.value)
-        font.pixelSize: debug.fontSize
+        font.pixelSize: debug.valFontSize
         Layout.leftMargin: debug.leftMargin
     }
 
@@ -321,14 +323,14 @@ GridLayout {
     }
 
     Label {
-        text: 'KG step'
+        text: 'KG step:'
         font.pixelSize: debug.fontSize
         Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(motorKgLabelStepSize.value)
-        font.pixelSize: debug.fontSize
+        font.pixelSize: debug.valFontSize
         Layout.leftMargin: debug.leftMargin
     }
 
@@ -345,14 +347,14 @@ GridLayout {
     }
 
     Label {
-        text: 'Power max'
+        text: 'Power max:'
         font.pixelSize: debug.fontSize
         Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(maxPower.value)
-        font.pixelSize: debug.fontSize
+        font.pixelSize: debug.valFontSize
         Layout.leftMargin: debug.leftMargin
     }
 
@@ -370,14 +372,14 @@ GridLayout {
     }
 
     Label {
-        text: 'Power min'
+        text: 'Power min:'
         font.pixelSize: debug.fontSize
         Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(minPower.value)
-        font.pixelSize: debug.fontSize
+        font.pixelSize: debug.valFontSize
         Layout.leftMargin: debug.leftMargin
     }
 
@@ -395,14 +397,14 @@ GridLayout {
     }
 
     Label {
-        text: 'Power step'
+        text: 'Power step:'
         font.pixelSize: debug.fontSize
         Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(powerLabelStepSize.value)
-        font.pixelSize: debug.fontSize
+        font.pixelSize: debug.valFontSize
         Layout.leftMargin: debug.leftMargin
     }
 
@@ -420,67 +422,30 @@ GridLayout {
     }
 
     CheckBox {
+        text: qsTr("Warn")
+        checked: false
 
-        text: qsTr("Warning")
-        checked: true
+        nextCheckState: {
+            var value = checkState === Qt.Checked;
+            gauge.ropeWarning = value;
+            gauge.powerWarning = value;
+            gauge.motorKgWarning= value;
+            gauge.speedWarning = value;
+            gauge.isBatteryWarning = value;
+        }
     }
     CheckBox {
-        text: qsTr("Danger")
-        checked: true
-    }
+        text: qsTr("Dng")
+        checked: false
 
-
-/*
-Column {
-    spacing: 10
-
-    Column {
-        spacing: 5
-
-        Text {
-            text: 'Warning Gauges'
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
-
-        Slider {
-            from: 0
-            to: 1
-            stepSize: 1
-            value: 0
-
-            onValueChanged: {
-                sGauge.ropeWarning = !!value;
-                sGauge.powerWarning = !!value;
-                sGauge.motorKgWarning= !!value;
-                sGauge.speedWarning = !!value;
-                sBattery.isBatteryWarning = !!value
-            }
+        nextCheckState: {
+            var value = checkState === Qt.Checked;
+            gauge.ropeDanger = value;
+            gauge.powerDanger = value;
+            gauge.motorKgDanger = value;
+            gauge.speedDanger = value;
+            gauge.isBatteryBlinking = value;
         }
     }
 
-    Column {
-        spacing: 5
-
-        Text {
-            text: 'Blink Gauges'
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
-
-        Slider {
-            from: 0
-            to: 1
-            stepSize: 1
-            value: 0
-
-            onValueChanged: {
-                sGauge.ropeDanger = !!value;
-                sGauge.powerDanger = !!value;
-                sGauge.motorKgDanger = !!value;
-                sGauge.speedDanger = !!value;
-                sBattery.isBatteryBlinking = !!value
-            }
-        }
-    }
-
-    */
 }
