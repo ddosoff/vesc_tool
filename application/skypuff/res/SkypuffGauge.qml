@@ -189,10 +189,21 @@ Item {
     }
 
     function isPrime(num, k = 1) {
+      if (num === 2 * k) return false;
+
       for (var i = 3 * k; i <= 6 * k; i += 1 * k) {
         if (num % i === 0) return false;
       }
       return true;
+    }
+
+    function getDivider(val, maxStep, k = 1) {
+        var step = 2;
+        for (var d = 2; d <= maxStep; d++) {
+            if (val % (d * k)  === 0) step = d;
+        }
+
+        return step;
     }
 
     function getPowerStep() {
@@ -202,14 +213,16 @@ Item {
         var power = Math.abs(root.minPower);
 
         // Looking for the maximum possible step
-        for (var a = 2; a <= 6; a++) {
-            if (power % (a * 1000)  === 0) step = a;
-        }
+        step = getDivider(power, 5, 1000);
 
         // If gauge divided more than 6 part
         if (diff / (step * 1000)  > 6) {
-            step *= 2;
+            step = getDivider(power, 10, 1000);
         }
+
+        // Custom steps
+        if (diff <= 10000) step = 2;
+        if (diff <= 4000) step = 1;
 
         return parseInt(step, 10);
     }
