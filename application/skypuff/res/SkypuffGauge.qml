@@ -98,17 +98,19 @@ Item {
     ********************/
 
     property int rootDiameter: 200
-    property int sideMargin: 20
-    property int topMargin: 20
+    property int paddingLeft: 20
+    property int paddingRight: 20
+    property int marginTop: 20
+
     property int batteryTopMargin: 20
-    property int diameter: rootDiameter - sideMargin
+    property int diameter: rootDiameter - paddingLeft - paddingRight
+
     implicitWidth: diameter
-    implicitHeight: diameter + (battery.height * 1.5) + topMargin + (debug ? debugBlock.height + 20 : 0)
+    implicitHeight: diameter + (batteryBlock.height * 1.5) + marginTop
 
     property string borderColor: '#515151'      // Color of all borders
     property string color: '#efeded'            // Main backgroundColor
     property int diagLAnc: 55                   // Angle of diagonal lines from 12 hours
-    property string ff: 'Roboto'                // Font family
 
     /********************
             Gauge
@@ -353,8 +355,8 @@ Item {
             color: root.color
             border.color: root.borderColor
             border.width: 3
-            x: root.sideMargin / 2
-            y: root.topMargin
+            x: root.paddingLeft
+            y: root.marginTop
 
             /**
               2 diagonal lines
@@ -1116,7 +1118,6 @@ Item {
                             text: this.getText()
                             rotation: root.kgToAng(styleData.value)
                             antialiasing: true
-                            font.family: root.ff
                         }
 
                         /**
@@ -1201,7 +1202,6 @@ Item {
                             rotation: root.powerToAng(styleData.value )
                             color: gauge.getTLColor(Math.abs(styleData.value), root.maxPower)
                             antialiasing: true
-                            font.family: root.ff
                         }
 
                         tickmark: Rectangle {
@@ -1266,7 +1266,6 @@ Item {
                             rotation: styleData.value !== root.maxSpeedMs ? root.speedToAng(styleData.value) - 180 - 90 : root.speedToAng(styleData.value)  - 90
                             color: root.gaugeFontColor
                             antialiasing: true
-                            font.family: root.ff
                         }
 
                         tickmark: Rectangle {
@@ -1340,7 +1339,6 @@ Item {
                             rotation: this.getAng(styleData.value)
                             color: root.gaugeFontColor
                             antialiasing: true
-                            font.family: root.ff
                         }
 
                         tickmark: Rectangle {
@@ -1476,14 +1474,12 @@ Item {
                 Text {
                     text: root.prettyNumber(root.speedMs)
                     font.pixelSize: Math.max(10, root.diameter * 0.05)
-                    font.family: root.ff
                     font.bold: root.boldValues
                 }
 
                 Text {
                     text: 'ms'
                     font.pixelSize: Math.max(10, root.diameter * 0.05)
-                    font.family: root.ff
                     font.bold: root.boldValues
                 }
             }
@@ -1499,7 +1495,6 @@ Item {
                 anchors.topMargin: root.gaugeHeight * 3.3
                 font.pixelSize: Math.max(10, root.diameter * 0.06)
                 color: root.state === "MANUAL_BRAKING" ? root.warningColor : root.textColor;
-                font.family: root.ff
             }
 
             /**
@@ -1516,7 +1511,6 @@ Item {
                     id: motoKgTxt1
                     text: root.prettyNumber(root.motorKg, root.motorKg >= 25 ? 0 : 1)
                     font.pixelSize: Math.max(10, root.diameter * 0.07)
-                    font.family: root.ff
                     font.bold: root.boldValues
                 }
 
@@ -1525,7 +1519,6 @@ Item {
                     text: 'kg'
                     opacity: 0.8
                     font.pixelSize: Math.max(10, root.diameter * 0.07)
-                    font.family: root.ff
                     font.bold: root.boldValues
                 }
             }
@@ -1543,7 +1536,6 @@ Item {
                     id: powerTxt1
                     text: root.prettyNumber(Math.abs(root.power) >= 1000 ? root.power / 1000 : root.power, Math.abs(root.power) < 1000 ? 0 : 1)
                     font.pixelSize: Math.max(10, root.diameter * 0.07)
-                    font.family: root.ff
                     font.bold: root.boldValues
                 }
 
@@ -1552,7 +1544,6 @@ Item {
                     text: Math.abs(root.power) >= 1000 ? 'kw' : 'w'
                     opacity: 0.8
                     font.pixelSize: Math.max(10, root.diameter * 0.07)
-                    font.family: root.ff
                     font.bold: root.boldValues
                 }
             }
@@ -1717,194 +1708,9 @@ Item {
         }
     }
 
-    Item {
+    SkypuffBattery {
         id: batteryBlock
-        width: root.diameter / 2.6
-        height: root.diameter / 11.5
-
-        anchors.topMargin: root.batteryTopMargin
-        anchors.horizontalCenter: root.horizontalCenter
-        anchors.top: gaugeBlock.bottom
-
-        property real battFontSize: Math.max(10, battery.height * 0.51)
-        property real whFontSize: Math.max(10, battery.height * 0.55)
-        property real arrowFontSize: Math.max(10, battery.height * 0.45)
-        property real margin: 10
-
-
-        Rectangle {
-            id: battery
-            width: parent.width
-            height: parent.height
-
-            border.color: root.borderColor
-            border.width: 2
-            x: root.sideMargin / 2
-            y: root.topMargin
-
-            radius: 3
-            color: root.innerColor
-
-            Item {
-                id: outWh
-                anchors.left: outArrow.left
-                anchors.leftMargin: -outWhT.width - batteryBlock.margin
-                anchors.verticalCenter: parent.verticalCenter
-
-                Text {
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-                    id: outWhT
-                    font.pixelSize: batteryBlock.whFontSize
-                    text: root.getWhValStr(root.whOut)
-                }
-            }
-
-
-
-            Item {
-                id: outArrow
-                anchors.left: parent.left
-                anchors.leftMargin: -outArrow.width - batteryBlock.margin
-                anchors.verticalCenter: parent.verticalCenter
-                width: outArrowT.width
-
-                Text {
-                    id: outArrowT
-                    font.pixelSize: batteryBlock.arrowFontSize
-                    font.bold: true
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: '>>'
-                    color: 'red';
-                }
-            }
-
-            Rectangle {
-                opacity: root.baseOpacity
-                radius: 2
-
-                anchors.left: battery.left
-                anchors.leftMargin: parent.border.width
-                anchors.topMargin: parent.border.width
-                anchors.verticalCenter: battery.verticalCenter
-
-                property bool battD: root.isBatteryBlinking
-                property string battDColor: root.battDangerColor
-
-                onBattDChanged: {
-                    battDAnimation.loops = battD ? Animation.Infinite : 1;
-                    if (!battD) battDColor = root.battDangerColor;
-                }
-
-                ColorAnimation on battDColor {
-                    id: battDAnimation
-                    running: root.isBatteryBlinking
-                    from: root.battDangerColor
-                    to: root.battWarningColor
-                    duration: root.gaugesColorAnimation
-                    loops: Animation.Infinite
-                }
-
-                height: battery.height - parent.border.width * 2
-                color: root.isBatteryWarning || root.isBatteryBlinking ? battDColor : root.battColor
-                width: (battery.width - parent.border.width * 2) * root.batteryPercents / 100
-            }
-
-            /*Item {
-                id: chargeIcoBlock
-                opacity: 0.5
-                anchors.horizontalCenter:  battery.horizontalCenter
-                width: chargeIco.width + 3
-                height: chargeIco.height
-                y: -10
-
-
-                Image {
-                    id: chargeIco
-                    smooth: true
-                    source: "qrc:/res/icons/flash.svg"
-                    sourceSize.width: battery.height + 10
-                    sourceSize.height: battery.height + 20
-                    visible: false
-
-                }
-
-                ColorOverlay {
-                    anchors.fill: chargeIco
-                    source: chargeIco
-                    color: root.borderColor
-                }
-            }*/
-
-            Item {
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.left: parent.left
-                    anchors.leftMargin: 6
-
-                    font.pixelSize: batteryBlock.battFontSize
-                    id: tBat
-                    text: qsTr("%1 x %2").arg(root.batteryCellVolts.toFixed(2)).arg(root.batteryCells)
-                }
-            }
-
-            Item {
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                Text {
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.rightMargin: 6
-                    font.pixelSize: batteryBlock.battFontSize
-                    id: tBatPercent
-                    text: root.batteryPercents.toFixed(0) + '%'
-                }
-            }
-
-            Rectangle {
-                anchors.left: battery.right
-                anchors.verticalCenter: battery.verticalCenter
-                color: root.borderColor
-                height: battery.height * 0.5
-                width: 3
-                border.color: root.borderColor
-            }
-
-            Item {
-                id: inArrow
-                anchors.right: parent.right
-                anchors.rightMargin: -inArrow.width - batteryBlock.margin
-                anchors.verticalCenter: parent.verticalCenter
-
-                width: inArrowT.width
-
-                Text {
-                    id: inArrowT
-                    font.pixelSize: batteryBlock.arrowFontSize
-                    font.bold: true
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: '>>'
-                    color: 'red';
-                }
-            }
-
-            Item {
-                id: inWh
-                anchors.right: inArrow.right
-                anchors.rightMargin: -inWhT.width - batteryBlock.margin
-                anchors.verticalCenter: parent.verticalCenter
-
-                Text {
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    id: inWhT
-                    font.pixelSize: batteryBlock.whFontSize
-                    text: root.getWhValStr(root.whIn)
-                }
-            }
-        }
+        gauge: root
     }
+
 }

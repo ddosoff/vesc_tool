@@ -135,13 +135,13 @@ Page {
 
         SkypuffGauge {
             id: sGauge
-
             debug: false
 
             rootDiameter: page.width
-            sideMargin: 20
-            topMargin: 20
-            batteryTopMargin: 20
+
+            paddingLeft: 10
+            paddingRight: 10
+            marginTop: 20
 
             // Temps
             tempFets: Skypuff.tempFets
@@ -198,8 +198,6 @@ Page {
             id: debugBlock
             gauge: sGauge
             visible: true
-
-
         }
 
         // Vertical space

@@ -10,12 +10,13 @@ GridLayout {
     property int fontSize: 13
     property int valFontSize: 12
 
-    property int leftMargin: gauge.sideMargin / 2
+    Layout.leftMargin: gauge.paddingLeft
+    Layout.rightMargin: gauge.paddingRight
 
     width: gauge.diameter
 
     columns: 3
-    columnSpacing: 0
+    columnSpacing: 5
     rowSpacing: -20
 
     Layout.fillWidth: true
@@ -35,13 +36,12 @@ GridLayout {
     Label {
         text: 'Rope val:'
         font.pixelSize: debug.fontSize
-        Layout.leftMargin: debug.leftMargin
+
     }
 
     Label {
         text: prettyNumber(ropeMeters.value)
         font.pixelSize: debug.valFontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Slider {
@@ -50,6 +50,7 @@ GridLayout {
         to: gauge.maxRopeMeters
         value: gauge.ropeMeters
         Layout.fillWidth: true
+        Layout.rightMargin: debug.paddingLeft
 
         onValueChanged: {
             gauge.ropeMeters = value;
@@ -59,13 +60,11 @@ GridLayout {
     Label {
         text: 'KG val:'
         font.pixelSize: debug.fontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(motorKg.value)
         font.pixelSize: debug.valFontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Slider {
@@ -74,6 +73,7 @@ GridLayout {
         to: gauge.maxMotorKg
         value: gauge.motorKg
         Layout.fillWidth: true
+        Layout.rightMargin: debug.paddingLeft
 
         onValueChanged: {
             gauge.motorKg = value;
@@ -83,13 +83,11 @@ GridLayout {
     Label {
         text: 'Power val:'
         font.pixelSize: debug.fontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(power.value)
         font.pixelSize: debug.valFontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Slider {
@@ -98,6 +96,7 @@ GridLayout {
         to: gauge.maxPower
         value: gauge.power
         Layout.fillWidth: true
+        Layout.rightMargin: debug.paddingLeft
 
         onValueChanged: {
             gauge.power = value;
@@ -107,13 +106,11 @@ GridLayout {
     Label {
         text: 'Speed val:'
         font.pixelSize: debug.fontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(speedMs.value)
         font.pixelSize: debug.valFontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Slider {
@@ -122,6 +119,7 @@ GridLayout {
         to: gauge.maxSpeedMs
         value: gauge.speedMs
         Layout.fillWidth: true
+        Layout.rightMargin: debug.paddingLeft
 
         onValueChanged: {
             gauge.speedMs = value;
@@ -131,13 +129,11 @@ GridLayout {
     Label {
         text: 'Temps val:'
         font.pixelSize: debug.fontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(temp.value)
         font.pixelSize: debug.valFontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Slider {
@@ -146,7 +142,7 @@ GridLayout {
         to: 150
         value: 0
         Layout.fillWidth: true
-
+        Layout.rightMargin: debug.paddingLeft
         onValueChanged: {
             gauge.tempBat = value;
             gauge.tempFets = value;
@@ -157,13 +153,12 @@ GridLayout {
     Label {
         text: 'Batt val:'
         font.pixelSize: debug.fontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(batteryPercents.value)
         font.pixelSize: debug.valFontSize
-        Layout.leftMargin: debug.leftMargin
+
     }
 
     Slider {
@@ -172,6 +167,7 @@ GridLayout {
         to: 100
         value: gauge.batteryPercents
         Layout.fillWidth: true
+        Layout.rightMargin: debug.paddingLeft
 
         onValueChanged: {
             gauge.batteryPercents = value;
@@ -181,13 +177,12 @@ GridLayout {
     Label {
         text: 'CellV val:'
         font.pixelSize: debug.fontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(batteryCellVolts.value)
         font.pixelSize: debug.valFontSize
-        Layout.leftMargin: debug.leftMargin
+
     }
 
     Slider {
@@ -196,6 +191,7 @@ GridLayout {
         to: 15
         value: gauge.batteryCellVolts
         Layout.fillWidth: true
+        Layout.rightMargin: debug.paddingLeft
 
         onValueChanged: {
             gauge.batteryCellVolts = value;
@@ -205,13 +201,12 @@ GridLayout {
     Label {
         text: 'Cell Count:'
         font.pixelSize: debug.fontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(batteryCells.value)
         font.pixelSize: debug.valFontSize
-        Layout.leftMargin: debug.leftMargin
+
     }
 
     Slider {
@@ -220,6 +215,7 @@ GridLayout {
         to: 100
         value: gauge.batteryCells
         Layout.fillWidth: true
+        Layout.rightMargin: debug.paddingLeft
 
         onValueChanged: {
             gauge.batteryCells = value;
@@ -229,13 +225,11 @@ GridLayout {
     Label {
         text: 'WH in:'
         font.pixelSize: debug.fontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(whIn.value)
         font.pixelSize: debug.valFontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Slider {
@@ -244,6 +238,7 @@ GridLayout {
         to: 100000
         value: gauge.whIn
         Layout.fillWidth: true
+        Layout.rightMargin: debug.paddingLeft
 
         onValueChanged: {
             gauge.whIn = value;
@@ -253,13 +248,11 @@ GridLayout {
     Label {
         text: 'WH out:'
         font.pixelSize: debug.fontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(whOut.value)
         font.pixelSize: debug.valFontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Slider {
@@ -268,6 +261,7 @@ GridLayout {
         to: 100000
         value: gauge.whOut
         Layout.fillWidth: true
+        Layout.rightMargin: debug.paddingLeft
 
         onValueChanged: {
             gauge.whOut = value;
@@ -277,13 +271,11 @@ GridLayout {
     Label {
         text: 'Speed max:'
         font.pixelSize: debug.fontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(maxSpeedMs.value)
         font.pixelSize: debug.valFontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Slider {
@@ -292,6 +284,7 @@ GridLayout {
         to: 100
         value: gauge.maxSpeedMs
         Layout.fillWidth: true
+        Layout.rightMargin: debug.paddingLeft
 
         onValueChanged: {
             gauge.maxSpeedMs = value;
@@ -301,13 +294,11 @@ GridLayout {
     Label {
         text: 'KG max:'
         font.pixelSize: debug.fontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(maxMotorKg.value)
         font.pixelSize: debug.valFontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Slider {
@@ -316,6 +307,7 @@ GridLayout {
         to: 200
         value: gauge.maxMotorKg
         Layout.fillWidth: true
+        Layout.rightMargin: debug.paddingLeft
 
         onValueChanged: {
             gauge.maxMotorKg = value;
@@ -325,13 +317,11 @@ GridLayout {
     Label {
         text: 'KG step:'
         font.pixelSize: debug.fontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(motorKgLabelStepSize.value)
         font.pixelSize: debug.valFontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Slider {
@@ -340,6 +330,7 @@ GridLayout {
         to: 50
         value: gauge.motorKgLabelStepSize
         Layout.fillWidth: true
+        Layout.rightMargin: debug.paddingLeft
 
         onValueChanged: {
             gauge.motorKgLabelStepSize = value;
@@ -349,13 +340,11 @@ GridLayout {
     Label {
         text: 'Power max:'
         font.pixelSize: debug.fontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(maxPower.value)
         font.pixelSize: debug.valFontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Slider {
@@ -364,6 +353,7 @@ GridLayout {
         to: 20000
         value: gauge.maxPower
         Layout.fillWidth: true
+        Layout.rightMargin: debug.paddingLeft
         stepSize: 2000
 
         onValueChanged: {
@@ -374,13 +364,11 @@ GridLayout {
     Label {
         text: 'Power min:'
         font.pixelSize: debug.fontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(minPower.value)
         font.pixelSize: debug.valFontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Slider {
@@ -389,6 +377,7 @@ GridLayout {
         to: 0
         value: gauge.minPower
         Layout.fillWidth: true
+        Layout.rightMargin: debug.paddingLeft
         stepSize: 2000
 
         onValueChanged: {
@@ -399,13 +388,11 @@ GridLayout {
     Label {
         text: 'Power step:'
         font.pixelSize: debug.fontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Label {
         text: prettyNumber(powerLabelStepSize.value)
         font.pixelSize: debug.valFontSize
-        Layout.leftMargin: debug.leftMargin
     }
 
     Slider {
@@ -414,6 +401,7 @@ GridLayout {
         to: 20
         value: gauge.powerLabelStepSize
         Layout.fillWidth: true
+        Layout.rightMargin: debug.paddingLeft
         stepSize: 1
 
         onValueChanged: {

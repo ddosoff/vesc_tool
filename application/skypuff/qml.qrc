@@ -33,5 +33,6 @@
         <file>res/FilePicker.qml</file>
         <file>res/utils.js</file>
         <file>res/CustomBorder.qml</file>
+        <file>res/SkypuffBattery.qml</file>
     </qresource>
 </RCC>
