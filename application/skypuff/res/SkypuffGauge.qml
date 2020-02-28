@@ -36,6 +36,7 @@ Item {
     property string motorMode: 'Not Connected'
     property string state: 'DISCONNECTED'
     property string stateText: 'Disconnected'
+    property string status
 
     property real batteryPercents: 0
     property real batteryCellVolts: 0.0
@@ -53,21 +54,24 @@ Item {
             Colors
     ********************/
 
-    property real baseOpacity: 0.5  // Opacity is to all colors of the scale
+    property real baseOpacity: 1  // Opacity is to all colors of the scale
 
     property string gaugeDangerFontColor: '#8e1616' // Color for danger ranges
-    property string gaugeFontColor: '#515151'
-    property string gaugeColor: '#C7CFD9'
-    property string battGaugeColor: '#dbdee3'
+    property string gaugeFontColor: '#374759'
+    property string gaugeColor: '#dfe3e8'
+    property string battGaugeColor: '#dfe3e8'
     property string textColor: 'black'
     property string borderColor: '#737E8C'      // Color of all borders
+    property string borderGlowColor: '#C7CFD9'
     property string color: '#F7F7F7'            // Main backgroundColor
     property string innerColor: color
 
+
     // Default for all scales
-    property string defaultColor: '#4CAF50' // base color
-    property string dangerColor: 'red'      // attention color
-    property string warningColor: '#dbdee3' // blink color
+    property string defaultColor: '#A5D6A7'  // base color
+    property string dangerColor: '#ef8383'   // attention color
+    property string dangerTextColor: '#F44336'
+    property string warningColor: '#dbdee3'  // blink color
     property int gaugesColorAnimation: 1000  // freq of blinking
 
     // Rope
@@ -348,6 +352,15 @@ Item {
             root.setMaxRopeMeters();
         }
 
+        RectangularGlow {
+            id: effect
+            anchors.fill: baseLayer
+            glowRadius: 10
+            spread: 0
+            color: root.borderGlowColor
+            cornerRadius: baseLayer.radius + glowRadius
+        }
+
         Rectangle {
             id: baseLayer
             width: root.diameter
@@ -358,6 +371,13 @@ Item {
             border.width: 3
             x: root.paddingLeft
             y: root.marginTop
+
+            layer.enabled: true
+            layer.effect: Glow {
+                samples: 15
+                color: root.borderGlowColor
+                transparentBorder: true
+            }
 
             /**
               2 diagonal lines
@@ -709,13 +729,10 @@ Item {
                         var a = c === 'm' ? -1.2 : 0;
                             a = lc === '.' ? 1.2 : a;
 
-
-
                         context.rotate(angle / (str.length) - convertAngToRadian(a));
                         context.save();
                         context.translate(0, -1 * radius);
 
-                        // '*' will be transparent
                         context.fillStyle = progressBars.ropeTextColor;
                         context.fillText(c, 0, 0);
                         context.restore();
@@ -729,6 +746,7 @@ Item {
                     antialiasing: true
                     contextType: '2d'
                     anchors.fill: parent
+
                     onPaint: {
                         if (context) {
                             context.reset();
@@ -820,7 +838,7 @@ Item {
                             context.lineWidth = root.gaugeHeight * 0.7;
 
                             b = root.motorKgWarning || root.motorKgDanger;
-                            motoKgTxt1.color = motoKgTxt2.color = b ? parent.motorKgDColor : root.textColor;
+                            motoKgTxt1.color = motoKgTxt2.color = b ? root.dangerTextColor : root.textColor;
                             var kgColor = b ? parent.motorKgDColor : root.motorKgColor;
 
                             parent.kgBgColor = kgColor;
@@ -847,7 +865,7 @@ Item {
 
                             b = root.powerWarning || root.powerDanger;
                             var powerColor = b ? parent.powerDColor : root.powerColor;
-                            powerTxt2.color = powerTxt1.color = b ? parent.powerDColor : root.textColor;
+                            powerTxt2.color = powerTxt1.color = b ? root.dangerTextColor : root.textColor;
 
                             parent.powerBgColor = powerColor;
                             context.strokeStyle = powerColor;
@@ -864,6 +882,7 @@ Item {
                     antialiasing: true
                     contextType: '2d'
                     anchors.fill: parent
+
                     onPaint: {
                         if (context) {
                             context.reset();
@@ -921,8 +940,6 @@ Item {
                 contextType: '2d'
                 anchors.fill: parent
 
-
-
                 onPaint: {
                     var centreX = baseLayer.width / 2;
                     var centreY = baseLayer.height / 2;
@@ -970,6 +987,8 @@ Item {
                 antialiasing: true
                 contextType: '2d'
                 anchors.fill: parent
+                z: 1
+                opacity: 0.8
 
 
                 onWidthChanged:  { requestPaint(); }
@@ -984,19 +1003,20 @@ Item {
 
                     context.reset();
                     context.beginPath();
-                    context.font = "%1px sans-serif".arg(Math.max(10, root.diameter * 0.05));
+                    context.font = "%1px sans-serif".arg(Math.max(10, root.diameter * 0.04));
 
 
 
                     context.beginPath();
 
-                    /*progressBars.drawTextAlongArc(
+                    progressBars.drawTextAlongArc(
                         context,
                         'Rope',
                         centreX,
-                        centreY,
-                        baseLayer.radius - root.gaugeHeight,
-                        180 -  90 - dl2.rotation,
+                        centreY + 15,
+                        (circleInner.height - (root.diameter * 0.05)) / 2 ,
+                        //baseLayer.radius - root.gaugeHeight * 1.7,
+                        180  + dl2.rotation + 15,
                         '#515151'
                     );
                 }
@@ -1017,6 +1037,7 @@ Item {
               */
             Item {
                 id: gauge
+
                 anchors {
                     fill: parent
                     margins: gaugeHeight * 0.1
@@ -1156,7 +1177,7 @@ Item {
                             antialiasing: true
                             width: outerRadius * 0.01
                             height: outerRadius
-                            color: progressBars.kgBgColor
+                            color: Qt.darker(progressBars.kgBgColor, 1.4)
                         }
                     }
                 }
@@ -1217,7 +1238,7 @@ Item {
 
                         needle: Rectangle {
                             visible: root.power !== 0
-                            color: progressBars.powerBgColor
+                            color: Qt.darker(progressBars.powerBgColor, 1.4)
                             antialiasing: true
                             width: outerRadius * 0.01
                             height: outerRadius
@@ -1460,7 +1481,7 @@ Item {
                 width: 5
                 height: width
                 radius: 50
-                color: root.borderColor
+                color: root.innerColor
             }
 
             /**
@@ -1486,16 +1507,73 @@ Item {
             }
 
             /**
-              Motor mode
+              State
               */
             Text {
+                id: state
                 text: root.stateText
                 anchors.horizontalCenter: parent.horizontalCenter
-
+                //font.bold: true
                 anchors.top: parent.top
                 anchors.topMargin: root.gaugeHeight * 3.3
                 font.pixelSize: Math.max(10, root.diameter * 0.06)
-                color: root.state === "MANUAL_BRAKING" ? root.warningColor : root.textColor;
+                color: root.state === "MANUAL_BRAKING" ? root.dangerTextColor : root.textColor;
+
+                states: [
+                    State {
+                        name: "up"
+                        when: !!status.text
+                        PropertyChanges {
+                          target: state
+                          anchors.topMargin: root.gaugeHeight * 3.5 - status.height
+                        }
+                    },
+                    State {
+                        name: "down"
+                        when: !status.text
+                        PropertyChanges {
+                          target: state
+                          anchors.topMargin: root.gaugeHeight * 3.3
+                        }
+                    }
+                ]
+
+                transitions: [
+                    Transition {
+                        to: "up"
+                        NumberAnimation {
+                            properties: 'anchors.topMargin';
+                            easing.type: Easing.InOutQuad;
+                            duration: 50
+                        }
+                    },
+                    Transition {
+                        to: "down"
+                        NumberAnimation {
+                            properties: 'anchors.topMargin';
+                            easing.type: Easing.InOutQuad;
+                            duration: 80
+                        }
+                    }
+                ]
+            }
+
+            /**
+              Status
+              */
+            Text {
+                id: status
+                text: root.status
+                visible: !!root.status
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: root.diameter * 0.5
+                //font.bold: true
+                anchors.top: parent.top
+                anchors.topMargin: root.gaugeHeight * 4.7 - status.height
+                font.pixelSize: Math.max(10, root.diameter * 0.035)
+                color:  Qt.lighter(root.textColor);
+                wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
             }
 
             /**
@@ -1511,7 +1589,7 @@ Item {
                 Text {
                     id: motoKgTxt1
                     text: root.prettyNumber(root.motorKg, root.motorKg >= 25 ? 0 : 1)
-                    font.pixelSize: Math.max(10, root.diameter * 0.07)
+                    font.pixelSize: Math.max(10, root.diameter * 0.065)
                     font.bold: root.boldValues
                 }
 
@@ -1519,7 +1597,7 @@ Item {
                     id: motoKgTxt2
                     text: 'kg'
                     opacity: 0.8
-                    font.pixelSize: Math.max(10, root.diameter * 0.07)
+                    font.pixelSize: Math.max(10, root.diameter * 0.065)
                     font.bold: root.boldValues
                 }
             }
@@ -1536,7 +1614,7 @@ Item {
                 Text {
                     id: powerTxt1
                     text: root.prettyNumber(Math.abs(root.power) >= 1000 ? root.power / 1000 : root.power, Math.abs(root.power) < 1000 ? 0 : 1)
-                    font.pixelSize: Math.max(10, root.diameter * 0.07)
+                    font.pixelSize: Math.max(10, root.diameter * 0.065)
                     font.bold: root.boldValues
                 }
 
@@ -1544,7 +1622,7 @@ Item {
                     id: powerTxt2
                     text: Math.abs(root.power) >= 1000 ? 'kw' : 'w'
                     opacity: 0.8
-                    font.pixelSize: Math.max(10, root.diameter * 0.07)
+                    font.pixelSize: Math.max(10, root.diameter * 0.065)
                     font.bold: root.boldValues
                 }
             }
@@ -1595,7 +1673,7 @@ Item {
                             id: tempMotorText
                             text: prettyNumber(root.tempMotor) + 'C'
                             font.pixelSize: Math.max(10, root.diameter * 0.04)
-                            color: root.tempMotor > 80 ? root.dangerColor : root.textColor;
+                            color: root.tempMotor > 80 ? root.dangerTextColor : root.textColor;
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }
@@ -1648,7 +1726,7 @@ Item {
                             id: tfetsText
                             text: prettyNumber(root.tempFets, 1) + 'C'
                             font.pixelSize: Math.max(10, root.diameter * 0.04)
-                            color: root.tempFets > 80 ? root.dangerColor : root.textColor;
+                            color: root.tempFets > 80 ? root.dangerTextColor : root.textColor;
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }
@@ -1700,7 +1778,7 @@ Item {
                             id: tbatText
                             text: root.prettyNumber(root.tempBat, 1) + 'C'
                             font.pixelSize: Math.max(10, root.diameter * 0.04)
-                            color: root.tempBat > 80 ? root.dangerColor : root.textColor;
+                            color: root.tempBat > 80 ? root.dangerTextColor : root.textColor;
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }
@@ -1712,6 +1790,9 @@ Item {
     SkypuffBattery {
         id: batteryBlock
         gauge: root
+
+        isCharging: root.power > 0
+        isDischarging: root.power < 0
     }
 
 }

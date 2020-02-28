@@ -148,7 +148,11 @@ Page {
             tempMotor: Skypuff.tempMotor
             tempBat: Skypuff.tempBat
 
-            stateText: Skypuff.stateText
+            //stateText: Skypuff.stateText
+            //stateText: 'Braking Extension'
+            //status: 'Pulling too high 5Kg (11A) is more 4Kg (10A)'
+
+
 
             Connections {
                 target: Skypuff

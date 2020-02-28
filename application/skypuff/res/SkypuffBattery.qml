@@ -1,4 +1,10 @@
 import QtQuick 2.0
+import QtQuick.Controls 2.4
+import QtQuick.Controls.Material 2.12
+
+
+
+
 
 Item {
     id: batteryBlock
@@ -13,9 +19,12 @@ Item {
 
     property real battFontSize: Math.max(10, battery.height * 0.51)
     property real whFontSize: Math.max(10, battery.height * 0.55)
-    property real arrowFontSize: Math.max(10, battery.height * 0.45)
-    property real margin: 10
+    property real arrowFontSize: Math.max(10, battery.height * 0.5)
 
+    property real margin: 5
+
+    property bool isCharging: false
+    property bool isDischarging: false
 
     Rectangle {
         id: battery
@@ -45,8 +54,6 @@ Item {
             }
         }
 
-
-
         Item {
             id: outArrow
             anchors.left: parent.left
@@ -54,13 +61,37 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             width: outArrowT.width
 
+
             Text {
                 id: outArrowT
+                visible: !batteryBlock.isCharging
                 font.pixelSize: batteryBlock.arrowFontSize
                 font.bold: true
                 anchors.verticalCenter: parent.verticalCenter
-                text: '>>'
-                color: 'red';
+                text: '  >> '
+                color: gauge.textColor;
+            }
+
+            ProgressBar {
+                id: outArrowTProgress
+                visible: batteryBlock.isCharging
+                width: outArrowT.width
+                anchors.verticalCenter: parent.verticalCenter
+                indeterminate: true
+                contentItem.implicitHeight: 8
+                Material.accent: Material.Green
+
+                background: Rectangle {
+                    anchors.left: outArrowTProgress.left
+                    anchors.verticalCenter: outArrowTProgress.verticalCenter
+                    implicitWidth: 50
+                    implicitHeight: 20
+                    color: "#00000000"
+                    radius: 3
+                }
+
+
+                //color:  ? '#4CAF50' : gauge.textColor;
             }
         }
 
@@ -142,11 +173,36 @@ Item {
 
             Text {
                 id: inArrowT
+                visible: !batteryBlock.isDischarging
                 font.pixelSize: batteryBlock.arrowFontSize
+                text: '  >> '
                 font.bold: true
                 anchors.verticalCenter: parent.verticalCenter
-                text: '>>'
-                color: 'red';
+                color: gauge.textColor
+            }
+
+            ProgressBar {
+                id: inArrowTProgress
+                visible: batteryBlock.isDischarging
+                width: inArrowT.width
+                anchors.verticalCenter: parent.verticalCenter
+                indeterminate: true
+                Material.accent: Material.Red
+
+                implicitHeight: 50
+
+                contentItem.implicitHeight: 8
+
+                background: Rectangle {
+                    anchors.left: inArrowTProgress.left
+                    anchors.verticalCenter: inArrowTProgress.verticalCenter
+                    implicitWidth: 50
+                    implicitHeight: 20
+                    color: "#00000000"
+                    radius: 3
+                }
+
+                //color:  ? '#4CAF50' : gauge.textColor;
             }
         }
 
