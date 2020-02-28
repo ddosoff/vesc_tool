@@ -104,12 +104,12 @@ Item {
     property int paddingLeft: 20
     property int paddingRight: 20
     property int marginTop: 20
-
     property int batteryTopMargin: 20
+
     property int diameter: rootDiameter - paddingLeft - paddingRight
 
     implicitWidth: diameter
-    implicitHeight: diameter + (batteryBlock.height * 1.5) + marginTop
+    implicitHeight: diameter + (batteryBlock.height) + marginTop + batteryTopMargin
 
     property int diagLAnc: 55                   // Angle of diagonal lines from 12 hours
 

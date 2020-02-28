@@ -7,9 +7,9 @@ Item {
     width: gauge.diameter / 2.6
     height: gauge.diameter / 11.5
 
-    anchors.topMargin: gauge.batteryTopMargin
+    //anchors.topMargin: gauge.batteryTopMargin
     anchors.horizontalCenter: gauge.horizontalCenter
-    anchors.top: gauge.bottom
+    anchors.bottom: gauge.bottom
 
     property real battFontSize: Math.max(10, battery.height * 0.51)
     property real whFontSize: Math.max(10, battery.height * 0.55)
@@ -25,7 +25,7 @@ Item {
         border.color: gauge.borderColor
         border.width: 2
         x: gauge.paddingLeft
-        y: gauge.marginTop
+
 
         radius: 3
         color: gauge.innerColor
