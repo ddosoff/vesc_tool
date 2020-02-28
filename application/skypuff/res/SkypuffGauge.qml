@@ -54,12 +54,15 @@ Item {
     ********************/
 
     property real baseOpacity: 0.5  // Opacity is to all colors of the scale
-    property string innerColor: '#efeded'
+
     property string gaugeDangerFontColor: '#8e1616' // Color for danger ranges
     property string gaugeFontColor: '#515151'
     property string gaugeColor: '#C7CFD9'
     property string battGaugeColor: '#dbdee3'
     property string textColor: 'black'
+    property string borderColor: '#737E8C'      // Color of all borders
+    property string color: '#F7F7F7'            // Main backgroundColor
+    property string innerColor: color
 
     // Default for all scales
     property string defaultColor: '#4CAF50' // base color
@@ -108,8 +111,6 @@ Item {
     implicitWidth: diameter
     implicitHeight: diameter + (batteryBlock.height * 1.5) + marginTop
 
-    property string borderColor: '#515151'      // Color of all borders
-    property string color: '#efeded'            // Main backgroundColor
     property int diagLAnc: 55                   // Angle of diagonal lines from 12 hours
 
     /********************

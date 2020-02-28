@@ -9,7 +9,7 @@ Item {
 
     anchors.topMargin: gauge.batteryTopMargin
     anchors.horizontalCenter: gauge.horizontalCenter
-    anchors.top: gaugeBlock.bottom
+    anchors.top: gauge.bottom
 
     property real battFontSize: Math.max(10, battery.height * 0.51)
     property real whFontSize: Math.max(10, battery.height * 0.55)
