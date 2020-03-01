@@ -176,11 +176,12 @@ void Skypuff::clearStats()
     minResponceTime = INT_MAX;
     maxResponceTime = INT_MIN;
 
+    aliveStep = 0;
     vBat = 0;
     curTac = 0;
     erpm = 0;
-    amps = 0;
-    power = 0;
+    motorAmps = 0;
+    batteryAmps = 0;
     tempFets = 0;
     tempMotor = 0;
     tempBat = 0;
@@ -240,8 +241,9 @@ void Skypuff::sendAlive()
 {
     VByteArray vb;
 
-    vb.vbAppendUint8(SK_COMM_ALIVE); // Version
-    vb.vbAppendInt32(aliveTimeout);
+    vb.vbAppendUint8((aliveStep % aliveStepsForTemps) ? SK_COMM_ALIVE_POWER_STATS : SK_COMM_ALIVE_TEMP_STATS);
+    vb.vbAppendUint16(aliveTimeout);
+    aliveStep++;
 
     vesc->commands()->sendCustomAppData(vb);
 
@@ -433,8 +435,14 @@ void Skypuff::customAppDataReceived(QByteArray data)
     skypuff_custom_app_data_command command = (skypuff_custom_app_data_command)vb.vbPopFrontUint8();
 
     switch(command) {
-    case SK_COMM_ALIVE:
-        processAlive(vb);
+    case SK_COMM_ALIVE_POWER_STATS:
+        processAlive(vb, false);
+        break;
+    case SK_COMM_ALIVE_TEMP_STATS:
+        processAlive(vb, true);
+        break;
+    case SK_COMM_FAULT:
+        processFault(vb);
         break;
     case SK_COMM_SETTINGS_V1:
         processSettingsV1(vb);
@@ -472,7 +480,28 @@ void Skypuff::updateAliveResponseStats(const int millis)
     }
 }
 
-void Skypuff::processAlive(VByteArray &vb)
+void Skypuff::processFault(VByteArray &vb)
+{
+    // Enough data?
+    const int fault_packet_length = 1;
+    if(vb.length() < fault_packet_length) {
+        vesc->emitMessageDialog(tr("Can't deserialize fault command packet"),
+                                tr("Received %1 bytes, expected %2 bytes!").arg(vb.length()).arg(fault_packet_length),
+                                true);
+        vesc->disconnectPort();
+    }
+
+    setFault((mc_fault_code)vb.vbPopFrontUint8());
+    if(vb.length()) {
+        vesc->emitMessageDialog(tr("Extra bytes received with fault command packet"),
+                                tr("Received %1 extra bytes!").arg(vb.length()),
+                                true);
+        vesc->disconnectPort();
+        return;
+    }
+}
+
+void Skypuff::processAlive(VByteArray &vb, bool temps)
 {
     // alive could be set from UI, timer is not necessary but possible
     if(aliveTimeoutTimerId) {
@@ -485,30 +514,62 @@ void Skypuff::processAlive(VByteArray &vb)
     }
 
     // Enough data?
-    const int alive_length = 1 + 4 * 4;
-    if(vb.length() < alive_length) {
-        vesc->emitMessageDialog(tr("Can't deserialize alive command"),
-                                tr("Received %1 bytes, expected %2 bytes!").arg(vb.length()).arg(alive_length),
+    const int alive_power_packet_length = 4  + 3 * 2;
+    if(vb.length() < alive_power_packet_length) {
+        vesc->emitMessageDialog(tr("Can't deserialize alive power command packet"),
+                                tr("Received %1 bytes, expected %2 bytes!").arg(vb.length()).arg(alive_power_packet_length),
                                 true);
         vesc->disconnectPort();
     }
 
-    smooth_motor_mode newMotorMode = (smooth_motor_mode)vb.vbPopFrontUint8();
     int newTac = vb.vbPopFrontInt32();
-    float newErpm = vb.vbPopFrontDouble32(1e1);
-    float newAmps = vb.vbPopFrontDouble32(1e1);
-    float newPower = vb.vbPopFrontDouble32(1e1);
-
-    if(vb.length()) {
-        vesc->emitMessageDialog(tr("Extra bytes received with alive stats"),
-                                tr("Received %1 extra bytes!").arg(vb.length()),
-                                true);
-        vesc->disconnectPort();
-    }
+    float newErpm = vb.vbPopFrontInt16() * 4;
+    float newMotorAmps = vb.vbPopFrontDouble16(1e1);
+    float newBatteryAmps = vb.vbPopFrontDouble16(1e1);
 
     setPos(newTac);
     setSpeed(newErpm);
-    setMotor(newMotorMode, newAmps, newPower);
+    setPower(newMotorAmps, newBatteryAmps);
+
+    if(!temps && vb.length()) {
+        vesc->emitMessageDialog(tr("Extra bytes received with alive power packet stats"),
+                                tr("Received %1 extra bytes!").arg(vb.length()),
+                                true);
+        vesc->disconnectPort();
+        return;
+    }
+    else if(!temps)
+        return;
+
+    const int alive_temp_packet_length = 4 * 2  + 2 * 4;
+    if(vb.length() < alive_temp_packet_length) {
+        vesc->emitMessageDialog(tr("Can't deserialize alive temp command packet"),
+                                tr("Received %1 bytes, expected %2 bytes!").arg(vb.length()).arg(alive_temp_packet_length),
+                                true);
+        vesc->disconnectPort();
+    }
+
+    float newVBat = vb.vbPopFrontDouble16(1e1);
+    float newFetsTemp = vb.vbPopFrontDouble16(1e1);
+    float newMotorTemp = vb.vbPopFrontDouble16(1e1);
+    float newBatTemp = vb.vbPopFrontDouble16(1e1);
+    float newWhIn = vb.vbPopFrontDouble32(1e3);
+    float newWhOut = vb.vbPopFrontDouble32(1e3);
+
+    if(vb.length()) {
+        vesc->emitMessageDialog(tr("Extra bytes received with alive temp packet"),
+                                tr("Received %1 extra bytes!").arg(vb.length()),
+                                true);
+        vesc->disconnectPort();
+        return;
+    }
+
+    setVBat(newVBat);
+    setTempFets(newFetsTemp);
+    setTempMotor(newMotorTemp);
+    setTempBat(newBatTemp);
+    setWhIn(newWhIn);
+    setWhOut(newWhOut);
 }
 
 void Skypuff::processSettingsV1(VByteArray &vb)
@@ -524,7 +585,7 @@ void Skypuff::processSettingsV1(VByteArray &vb)
     }
 
     // Enough data?
-    const int v1_settings_length = 176;
+    const int v1_settings_length = 145;
     if(vb.length() < v1_settings_length) {
         vesc->emitMessageDialog(tr("Can't deserialize V1 settings"),
                                 tr("Received %1 bytes, expected %2 bytes!").arg(vb.length()).arg(v1_settings_length),
@@ -536,9 +597,11 @@ void Skypuff::processSettingsV1(VByteArray &vb)
     skypuff_state mcu_state;
 
     mcu_state = (skypuff_state)vb.vbPopFrontUint8();
-    fault = (mc_fault_code)vb.vbPopFrontUint8();
+    fault = (mc_fault_code)vb.vbPopFrontUint8(); // Will be updated with scales
 
     cfg.motor_max_current = vb.vbPopFrontDouble16(1e1);
+    cfg.discharge_max_current = vb.vbPopFrontDouble16(1e1);
+    cfg.charge_max_current = vb.vbPopFrontDouble16(1e1);
     cfg.fet_temp_max = vb.vbPopFrontDouble16(1e1);
     cfg.motor_temp_max = vb.vbPopFrontDouble16(1e1);
     cfg.v_in_min = vb.vbPopFrontDouble32(1e2);
@@ -547,20 +610,11 @@ void Skypuff::processSettingsV1(VByteArray &vb)
     cfg.battery_cells = (int)vb.vbPopFrontUint8();
     cfg.battery_type = (int)vb.vbPopFrontUint8();
 
-    vBat = vb.vbPopFrontDouble32(1e2);
-    tempFets = vb.vbPopFrontDouble16(1e1);
-    tempMotor = vb.vbPopFrontDouble16(1e1);
-    tempBat = vb.vbPopFrontDouble16(1e1);
-    whIn = vb.vbPopFrontDouble32(1e4);
-    whOut = vb.vbPopFrontDouble32(1e4);
-
     cfg.deserializeV1(vb);
 
     setState(state_str(mcu_state));
 
     emit settingsChanged(cfg);
-
-    processAlive(vb);
 
     if(vb.length()) {
         vesc->emitMessageDialog(tr("Extra bytes received with V1 settings"),
@@ -706,41 +760,18 @@ void Skypuff::setSpeed(float new_erpm)
     }
 }
 
-void Skypuff::setMotor(const smooth_motor_mode newMode, const float newAmps, const float newPower)
+void Skypuff::setPower(const float newMotorAmps, const float newBatteryAmps)
 {
-    if(smoothMotorMode != newMode) {
-        smoothMotorMode = newMode;
+    if(motorAmps != newMotorAmps) {
+        motorAmps = newMotorAmps;
 
-        motorModeText = motor_mode_str(newMode);
-
-        switch(smoothMotorMode) {
-        case MOTOR_RELEASED:
-            motorModeText = tr("Released");
-            break;
-        case MOTOR_CURRENT:
-            motorModeText = tr("Pull");
-            break;
-        case MOTOR_BRAKING:
-            motorModeText = tr("Brake");
-            break;
-        case MOTOR_SPEED:
-            motorModeText = tr("Speed");
-            break;
-        }
-        emit motorModeChanged(motorModeText);
+        emit motorKgChanged(motorAmps / cfg.amps_per_kg);
     }
 
+    if(batteryAmps != newBatteryAmps) {
+        batteryAmps = newBatteryAmps;
 
-    if(amps != newAmps) {
-        amps = newAmps;
-
-        emit motorKgChanged(amps / cfg.amps_per_kg);
-    }
-
-    if(power != newPower) {
-        power = newPower;
-
-        emit powerChanged(newPower);
+        emit powerChanged(newBatteryAmps * vBat);
     }
 }
 

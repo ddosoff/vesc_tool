@@ -24,10 +24,15 @@
 /* --- This is common file for MCU and UI SkyPUFF apps --- */
 
 // Do not forget to add next settings version command on skypuff_config struct update
+// Skypuff commands into COMM_CUSTOM_APP_DATA
 typedef enum
 {
-    SK_COMM_ALIVE,
-    SK_COMM_SETTINGS_V1,
+    SK_COMM_SETTINGS_V1,       // Receive settings on get_conf
+    SK_COMM_ALIVE_POWER_STATS, // Get alive timeout from UI and send back power stats
+    SK_COMM_ALIVE_TEMP_STATS,  // Get alive timeout from UI and send back power and temp stats
+    SK_COMM_FAULT,             // Send Fault code to UI
+    SK_COMM_MSG,               // Send stats msg to UI
+    SK_COMM_STATE,             // Send/receive new state
 } skypuff_custom_app_data_command;
 
 // Winch FSM
@@ -171,10 +176,16 @@ inline const char *sk_command_str(const skypuff_custom_app_data_command c)
 {
     switch (c)
     {
-    case SK_COMM_ALIVE:
-        return "SK_COMM_ALIVE";
     case SK_COMM_SETTINGS_V1:
         return "SK_COMM_SETTINGS_V1";
+    case SK_COMM_ALIVE_POWER_STATS:
+        return "SK_COMM_ALIVE_POWER_STATS";
+    case SK_COMM_ALIVE_TEMP_STATS:
+        return "SK_COMM_ALIVE_TEMP_STATS";
+    case SK_COMM_FAULT:
+        return "SK_COMM_FAULT";
+    case SK_COMM_MSG:
+        return "SK_COMM_MSG";
     default:
         return "SK_COMM_UNKNOWN";
     }

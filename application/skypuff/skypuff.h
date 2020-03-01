@@ -24,10 +24,11 @@
 #include "vescinterface.h"
 #include "qmlable_skypuff_types.h"
 
-const int aliveTimerDelay = 333; // milliseconds
-const int aliveTimeout = 500;
-const int commandTimeout = 490;
+const int aliveTimerDelay = 300; // milliseconds
+const int aliveTimeout = 700;    // 2 alives per fail
+const int commandTimeout = 690;
 const int aliveAvgN = 10; // number last alive responses to average
+const int aliveStepsForTemps = 4; // Get temps every N steps
 
 
 /*
@@ -60,9 +61,8 @@ class Skypuff : public QObject
     Q_PROPERTY(float drawnMeters READ getDrawnMeters NOTIFY posChanged)
     Q_PROPERTY(float leftMeters READ getLeftMeters NOTIFY posChanged)
     Q_PROPERTY(float speedMs READ getSpeedMs NOTIFY speedChanged)
-    Q_PROPERTY(QString motorMode READ getMotorMode NOTIFY motorModeChanged)
     Q_PROPERTY(float motorKg READ getMotorKg NOTIFY motorKgChanged)
-    Q_PROPERTY(float power READ getPower NOTIFY powerChanged)
+    Q_PROPERTY(float batteryAmps READ getPower NOTIFY powerChanged)
     Q_PROPERTY(float tempFets READ getTempFets NOTIFY tempFetsChanged)
     Q_PROPERTY(float tempMotor READ getTempMotor NOTIFY tempMotorChanged)
     Q_PROPERTY(float tempBat READ getTempBat NOTIFY tempBatChanged)
@@ -112,9 +112,8 @@ signals:
     void brakingRangeChanged(const bool isBrakingRange);
     void posChanged(const float meters);
     void speedChanged(const float ms);
-    void motorModeChanged(const QString& newMotorMode);
     void motorKgChanged(const float kg);
-    void powerChanged(const float power);
+    void powerChanged(const float batteryAmps);
     void tempFetsChanged(const float tempFets);
     void tempMotorChanged(const float tempMotor);
     void tempBatChanged(const float tempBat);
@@ -180,11 +179,9 @@ protected:
 
     QMLable_skypuff_config cfg;
 
-    // Updated with SK_COMM_ALIVE
-    smooth_motor_mode smoothMotorMode;
-    QString motorModeText;
+    int aliveStep;
     int curTac;
-    float erpm, amps, power;
+    float erpm, motorAmps, batteryAmps;
     float tempFets, tempMotor, tempBat;
     float whIn, whOut;
     float vBat;
@@ -212,8 +209,8 @@ protected:
     float getDrawnMeters() {return cfg.tac_steps_to_meters(abs(curTac));}
     float getLeftMeters() {return cfg.tac_steps_to_meters(cfg.rope_length - abs(curTac));}
     float getSpeedMs() {return cfg.erpm_to_ms(erpm);}
-    float getMotorKg() {return amps / cfg.amps_per_kg;}
-    float getPower() {return power;}
+    float getMotorKg() {return motorAmps / cfg.amps_per_kg;}
+    float getPower() {return batteryAmps * vBat;}
     float getTempFets() {return tempFets;}
     float getTempMotor() {return tempMotor;}
     float getTempBat() {return tempBat;}
@@ -221,7 +218,7 @@ protected:
     float getWhOut() {return whOut;}
 
     // Battery
-    bool isBatteryScaleValid() {return cfg.v_in_max;}
+    bool isBatteryScaleValid() {return cfg.v_in_max && vBat;}
     bool isBatteryTooHigh();
     bool isBatteryTooLow();
     bool isBatteryWarning() {return isBatteryTooHigh() || isBatteryTooLow();}
@@ -238,7 +235,6 @@ protected:
     QString getState() {return state;}
     QString getStateText() {return stateText;}
     QString getStatus() {return status;}
-    QString getMotorMode() {return motorModeText;}
     QString getFaultTranslation();
     void playAudio();
 
@@ -251,7 +247,7 @@ protected:
     void setStatus(const QString& mcuStatus);
     void setPos(const int new_pos);
     void setSpeed(const float new_erpm);
-    void setMotor(const smooth_motor_mode newMode, const float newAmps, const float newPower);
+    void setPower(const float newMotorAmps, const float newBatteryAmps);
     void setTempFets(const float newTempFets);
     void setTempMotor(const float newTempMotor);
     void setTempBat(const float newTempBat);
@@ -265,7 +261,8 @@ protected:
     void sendAlive();
     void timerEvent(QTimerEvent *event) override;
     bool parsePrintMessage(QStringRef &str, MessageTypeAndPayload &c);
-    void processAlive(VByteArray &vb);
+    void processAlive(VByteArray &vb, bool temps);
+    void processFault(VByteArray &vb);
     void processSettingsV1(VByteArray &vb);
     void updateAliveResponseStats(const int millis);
 };

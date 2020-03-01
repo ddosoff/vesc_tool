@@ -68,6 +68,7 @@ struct QMLable_skypuff_config : public skypuff_config, public skypuff_drive {
 public:
 
     float motor_max_current;
+    float charge_max_current, discharge_max_current;
     float v_in_max, v_in_min;
     float fet_temp_max, motor_temp_max, bat_temp_max;
     int battery_cells;
@@ -83,6 +84,8 @@ public:
         amps_per_kg = 0;
         rope_length = 0;
         motor_max_current = 0;
+        charge_max_current = 0;
+        discharge_max_current = 0;
         v_in_max = 0;
         v_in_min = 0;
         fet_temp_max = 0;
@@ -90,9 +93,9 @@ public:
         bat_temp_max = 0;
     }
 
-    float get_power_max() const {return v_in_max * motor_max_current;}
+    float get_power_max() const {return v_in_max * discharge_max_current;}
     // Temporary
-    float get_power_min() const {return -v_in_max * motor_max_current;}
+    float get_power_min() const {return v_in_max * charge_max_current;}
 
     int wheel_diameter_to_mm() const {return round(wheel_diameter * (float)1000);}
     void wheel_diameter_from_mm(int mm) {wheel_diameter = (float)mm / (float)1000;}
