@@ -62,7 +62,7 @@ class Skypuff : public QObject
     Q_PROPERTY(float leftMeters READ getLeftMeters NOTIFY posChanged)
     Q_PROPERTY(float speedMs READ getSpeedMs NOTIFY speedChanged)
     Q_PROPERTY(float motorKg READ getMotorKg NOTIFY motorKgChanged)
-    Q_PROPERTY(float batteryAmps READ getPower NOTIFY powerChanged)
+    Q_PROPERTY(float power READ getPower NOTIFY powerChanged)
     Q_PROPERTY(float tempFets READ getTempFets NOTIFY tempFetsChanged)
     Q_PROPERTY(float tempMotor READ getTempMotor NOTIFY tempMotorChanged)
     Q_PROPERTY(float tempBat READ getTempBat NOTIFY tempBatChanged)

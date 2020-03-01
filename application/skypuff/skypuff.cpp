@@ -514,7 +514,7 @@ void Skypuff::processAlive(VByteArray &vb, bool temps)
     }
 
     // Enough data?
-    const int alive_power_packet_length = 4  + 3 * 2;
+    const int alive_power_packet_length = 4 * 2  + 2 * 2;
     if(vb.length() < alive_power_packet_length) {
         vesc->emitMessageDialog(tr("Can't deserialize alive power command packet"),
                                 tr("Received %1 bytes, expected %2 bytes!").arg(vb.length()).arg(alive_power_packet_length),
@@ -525,7 +525,7 @@ void Skypuff::processAlive(VByteArray &vb, bool temps)
     int newTac = vb.vbPopFrontInt32();
     float newErpm = vb.vbPopFrontInt16() * 4;
     float newMotorAmps = vb.vbPopFrontDouble16(1e1);
-    float newBatteryAmps = vb.vbPopFrontDouble16(1e1);
+    float newBatteryAmps = vb.vbPopFrontDouble32(1e3);
 
     setPos(newTac);
     setSpeed(newErpm);
