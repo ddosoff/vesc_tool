@@ -427,6 +427,15 @@ ColumnLayout {
 
         }
         TextField {
+            placeholderText: qsTr("Fault")
+            font.pixelSize: 12
+            Layout.fillWidth: true
+
+            onTextChanged: {
+                gauge.fault = text;
+            }
+        }
+        TextField {
             placeholderText: qsTr("Status")
             font.pixelSize: 12
             Layout.fillWidth: true

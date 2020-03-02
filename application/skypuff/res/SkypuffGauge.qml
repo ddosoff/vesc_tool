@@ -37,6 +37,9 @@ Item {
     property string state: 'DISCONNECTED'
     property string stateText: 'Disconnected'
     property string status
+    property string fault
+
+    property bool isWarningStatus: false
 
     property real batteryPercents: 0
     property real batteryCellVolts: 0.0
@@ -145,6 +148,20 @@ Item {
     property int angK: 1000
 
     /********************/
+
+    onStatusChanged: {
+        status.text = root.status;
+        status.color = root.isWarningStatus ? root.dangerTextColor : root.textColor;
+
+        statusCleaner.restart();
+        faultsBlinker.stop();
+    }
+
+    onFaultChanged:  {
+        status.text = root.fault;
+        faultsBlinker.start();
+
+    }
 
     onMaxMotorKgChanged: root.setMaxMotorKg()
     onMaxRopeMetersChanged: setMaxRopeMeters()
@@ -1040,7 +1057,8 @@ Item {
 
                 anchors {
                     fill: parent
-                    margins: gaugeHeight * 0.1
+                    //margins: gaugeHeight * 0.1
+                    margins: baseLayer.border.width
                 }
 
                 function getTLHY(value, min, max, k = 0.3) {
@@ -1151,7 +1169,7 @@ Item {
                             implicitWidth: outerRadius * ((styleData.value === root.maxMotorKg || styleData.value === root.minMotorKg)
                                 ? 0.005
                                 : 0.01)
-                            implicitHeight:  (styleData.value === root.maxMotorKg || styleData.value === root.minMotorKg)
+                            implicitHeight: (styleData.value === root.maxMotorKg || styleData.value === root.minMotorKg)
                                 ? root.gaugeHeight
                                 : implicitWidth * (styleData.value % (root.motorKgLabelStepSize) ? 3 : 6)
                             color: gauge.getTLColor(styleData.value, root.maxMotorKg)
@@ -1513,10 +1531,11 @@ Item {
                 id: state
                 text: root.stateText
                 anchors.horizontalCenter: parent.horizontalCenter
-                //font.bold: true
+                font.bold: true
                 anchors.top: parent.top
+                antialiasing: true
                 anchors.topMargin: root.gaugeHeight * 3.3
-                font.pixelSize: Math.max(10, root.diameter * 0.06)
+                font.pixelSize: Math.max(10, root.diameter * 0.065)
                 color: root.state === "MANUAL_BRAKING" ? root.dangerTextColor : root.textColor;
 
                 states: [
@@ -1543,7 +1562,7 @@ Item {
                         to: "up"
                         NumberAnimation {
                             properties: 'anchors.topMargin';
-                            easing.type: Easing.InOutQuad;
+                            easing.type: Easing.OutExpo;
                             duration: 50
                         }
                     },
@@ -1551,7 +1570,7 @@ Item {
                         to: "down"
                         NumberAnimation {
                             properties: 'anchors.topMargin';
-                            easing.type: Easing.InOutQuad;
+                            easing.type: Easing.OutExpo;
                             duration: 80
                         }
                     }
@@ -1566,14 +1585,37 @@ Item {
                 text: root.status
                 visible: !!root.status
                 anchors.horizontalCenter: parent.horizontalCenter
+                font.letterSpacing: 0.7
                 width: root.diameter * 0.5
                 //font.bold: true
                 anchors.top: parent.top
                 anchors.topMargin: root.gaugeHeight * 4.7 - status.height
-                font.pixelSize: Math.max(10, root.diameter * 0.035)
+                font.pixelSize: Math.max(10, root.diameter * 0.038)
                 color:  Qt.lighter(root.textColor);
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter
+
+
+                SequentialAnimation on color {
+                    id: faultsBlinker
+                    loops: Animation.Infinite
+                    ColorAnimation { easing.type: Easing.OutExpo; from: root.textColor; to: root.dangerTextColor; duration: 400 }
+                    ColorAnimation { easing.type: Easing.OutExpo; from: root.dangerTextColor; to: root.textColor;  duration: 200 }
+                }
+
+                Timer {
+                    id: statusCleaner
+                    interval: 5 * 1000
+
+                    onTriggered: {
+                        status.text = root.status
+
+                        if(root.status)
+                            faultsBlinker.start()
+                        else
+                            faultsBlinker.stop()
+                    }
+                }
             }
 
             /**

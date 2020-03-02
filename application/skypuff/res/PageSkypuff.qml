@@ -68,7 +68,7 @@ Page {
             }
         }
 
-        Label {
+        /*Label {
             visible: false
             id: lState
             text: Skypuff.stateText
@@ -80,7 +80,7 @@ Page {
             font.bold: true
 
             color: page.state === "MANUAL_BRAKING" ? "red" : systemPalette.text;
-        }
+        }*/
 
         // Status messages from skypuff with normal text color
         // or blinking faults
@@ -152,48 +152,60 @@ Page {
             //stateText: 'Braking Extension'
             //status: 'Pulling too high 5Kg (11A) is more 4Kg (10A)'
 
-
+            status: Skypuff.fault
 
             Connections {
                 target: Skypuff
 
-                    //onMotorModeChanged: { sGauge.motorMode = Skypuff.motorMode }
-                    onMotorKgChanged: { sGauge.motorKg = Math.abs(Skypuff.motorKg) }
-                    onSpeedMsChanged: { sGauge.speedMs = Skypuff.speedMs }
-                    onPowerChanged: { sGauge.power = Skypuff.power }
+                    //onMotorModeChanged: { sGauge.motorMode = Skypuff.motorMode; }
+                    onMotorKgChanged: { sGauge.motorKg = Math.abs(Skypuff.motorKg); }
+                    onSpeedMsChanged: { sGauge.speedMs = Skypuff.speedMs; }
+                    onPowerChanged: { sGauge.power = Skypuff.power; }
 
-                onLeftMetersChanged: { sGauge.leftRopeMeters = Skypuff.leftMeters.toFixed(1) }
-                onDrawnMetersChanged: { sGauge.ropeMeters = Skypuff.drawnMeters }
-                onRopeMetersChanged: { sGauge.maxRopeMeters = Skypuff.ropeMeters.toFixed() }
+                onLeftMetersChanged: { sGauge.leftRopeMeters = Skypuff.leftMeters.toFixed(1); }
+                onDrawnMetersChanged: { sGauge.ropeMeters = Skypuff.drawnMeters; }
+                onRopeMetersChanged: { sGauge.maxRopeMeters = Skypuff.ropeMeters.toFixed(); }
 
                 // Warning and Blink (bool) | I don't know names of this params
-                //onMotorKgWarningChanged: { sGauge.motorKgWarning = false } // Warning
-                //onMotorKgDangerChanged: { sGauge.motorKgDanger = false } // Blink
-                //onRopeWarningChanged: { sGauge.ropeWarning = false }
-                //onRopeDangerChanged: { sGauge.ropeDanger = false }
-                //onPowerWarningChanged: { sGauge.powerWarning = false }
-                //onPowerDangerChanged: { sGauge.powerDanger = false }
-                //onSpeedWarningChanged: { sGauge.speedWarning = false }
-                //onSpeedDangerChanged: { sGauge.speedDanger = false }
+                //onMotorKgWarningChanged: { sGauge.motorKgWarning = false; } // Warning
+                //onMotorKgDangerChanged: { sGauge.motorKgDanger = false; } // Blink
+                //onRopeWarningChanged: { sGauge.ropeWarning = false; }
+                //onRopeDangerChanged: { sGauge.ropeDanger = false; }
+                //onPowerWarningChanged: { sGauge.powerWarning = false; }
+                //onPowerDangerChanged: { sGauge.powerDanger = false; }
+                //onSpeedWarningChanged: { sGauge.speedWarning = false; }
+                //onSpeedDangerChanged: { sGauge.speedDanger = false; }
 
-                onIsBatteryBlinkingChanged: { sGauge.isBatteryBlinking = Skypuff.isBatteryBlinking }
-                onIsBatteryWarningChanged: { sGauge.isBatteryWarning = Skypuff.isBatteryWarning }
-                onIsBatteryScaleValidChanged: { sGauge.isBatteryScaleValid = Skypuff.isBatteryScaleValid }
+                onIsBatteryBlinkingChanged: { sGauge.isBatteryBlinking = Skypuff.isBatteryBlinking; }
+                onIsBatteryWarningChanged: { sGauge.isBatteryWarning = Skypuff.isBatteryWarning; }
+                onIsBatteryScaleValidChanged: { sGauge.isBatteryScaleValid = Skypuff.isBatteryScaleValid; }
 
                 onWhInChanged: { sGauge.whIn = Skypuff.whOut }
                 onWhOutChanged: { sGauge.whOut = Skypuff.whIn }
-                onBatteryPercentsChanged: { sGauge.batteryPercents = Skypuff.batteryPercents }
-                onBatteryCellVoltsChanged: { sGauge.batteryCellVolts = Skypuff.batteryCellVolts }
+                onBatteryPercentsChanged: { sGauge.batteryPercents = Skypuff.batteryPercents; }
+                onBatteryCellVoltsChanged: { sGauge.batteryCellVolts = Skypuff.batteryCellVolts; }
 
                 onSettingsChanged: {
-                    sGauge.maxMotorKg = cfg.motor_max_kg
-                    sGauge.maxPower = cfg.power_max
-                    sGauge.minPower = cfg.power_min
-                    sGauge.batteryCells = cfg.battery_cells
+                    sGauge.maxMotorKg = cfg.motor_max_kg;
+                    sGauge.maxPower = cfg.power_max;
+                    sGauge.minPower = cfg.power_min;
+                    sGauge.batteryCells = cfg.battery_cells;
                 }
 
                 onStateChanged: {
-                    sGauge.state = newState
+                    sGauge.state = newState;
+                }
+
+                onStatusChanged: {
+                    sGauge.status = newStatus;
+                    sGauge.isWarningStatus = isWarning;
+                }
+
+                onFaultChanged:  {
+                    if(newFault) {
+                        tStatus.text = newFault;
+                    }
+
                 }
             }
         }
