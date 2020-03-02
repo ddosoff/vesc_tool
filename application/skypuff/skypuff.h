@@ -52,6 +52,7 @@ class Skypuff : public QObject
     Q_PROPERTY(QString state READ getState NOTIFY stateChanged)
     // Translated state
     Q_PROPERTY(QString stateText READ getStateText NOTIFY stateTextChanged)
+    Q_PROPERTY(QString status READ getStatusText NOTIFY statusChanged)
 
     // To enable transitions to braking, if pos below or equal braking_length + braking_extension_length
     Q_PROPERTY(bool isBrakingExtensionRange READ isBrakingExtensionRange NOTIFY brakingExtensionRangeChanged)
@@ -134,7 +135,7 @@ signals:
     void avgResponseMillisChanged(const float millis);
 
 protected slots:
-    void printReceived(QString str);
+    //void printReceived(QString str);
     void customAppDataReceived(QByteArray data);
     void portConnectedChanged();
     void logVescDialog(const QString & title, const QString & text);
@@ -173,10 +174,6 @@ protected:
     int minResponceTime;
     int maxResponceTime;
 
-    // Calculate average alive response
-
-    QString lastCmd;
-
     QMLable_skypuff_config cfg;
 
     int aliveStep;
@@ -187,13 +184,7 @@ protected:
     float vBat;
     mc_fault_code fault, playingFault;
 
-
-    // Tons of regexps to parse terminal prints
-    QRegExp reBraking, rePull, rePos, reSpeed, rePullingHigh;
-    QRegExp reUnwindedFromSlowing, rePrePullTimeout, reMotionDetected;
-    QRegExp reTakeoffTimeout;
-
-    QString state;
+    skypuff_state state;
     QString stateText;
     QString status;
 
@@ -232,9 +223,9 @@ protected:
     int getMaxResponseMillis() const {return maxResponceTime == INT_MIN ? 0 : maxResponceTime;}
     float getAvgResponseMillis() const {return sumResponceTime == 0 ? 0 : (float)sumResponceTime / (float)aliveResponseTimes.count();}
 
-    QString getState() {return state;}
+    QString getState() {return state_str(state);}
     QString getStateText() {return stateText;}
-    QString getStatus() {return status;}
+    QString getStatusText() {return status;}
     QString getFaultTranslation();
     void playAudio();
 
@@ -243,7 +234,7 @@ protected:
     void clearStats();
 
     // Setters
-    void setState(const QString& newState);
+    void setState(const skypuff_state newState);
     void setStatus(const QString& mcuStatus);
     void setPos(const int new_pos);
     void setSpeed(const float new_erpm);
@@ -256,13 +247,20 @@ protected:
     void setFault(const mc_fault_code newFault);
     void setVBat(const float newVBat);
 
-    // Helpers
+    void timerEvent(QTimerEvent *event) override;
+
+    // Protocol
     void sendGetConf();
     void sendAlive();
-    void timerEvent(QTimerEvent *event) override;
-    bool parsePrintMessage(QStringRef &str, MessageTypeAndPayload &c);
     void processAlive(VByteArray &vb, bool temps);
     void processFault(VByteArray &vb);
+    void processState(VByteArray &vb);
+    void processPullingTooHigh(VByteArray &vb);
+    void processUnwindedToOpposite(VByteArray &vb);
+    void processUnwindedFromSlowing(VByteArray &vb);
+    void processDetectingMotion(VByteArray &vb);
+    void processTooSlowSpeedUp(VByteArray &vb);
+    void processSettingsApplied(VByteArray &vb);
     void processSettingsV1(VByteArray &vb);
     void updateAliveResponseStats(const int millis);
 };
