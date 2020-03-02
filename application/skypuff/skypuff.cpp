@@ -1011,10 +1011,11 @@ void Skypuff::setVBat(const float newVBat)
 
 void Skypuff::setStatus(const QString& newStatus)
 {
-    if(status != newStatus) {
+    // Do not filter same messages!
+    //if(status != newStatus) {
         status = newStatus;
         emit statusChanged(newStatus);
-    }
+    //}
 }
 
 QVariantList Skypuff::serialPortsToQml()
