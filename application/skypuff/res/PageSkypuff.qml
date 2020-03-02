@@ -11,26 +11,65 @@ Page {
     id: page
     state: "DISCONNECTED"
 
+    property string bgGreenColor: '#A5D6A7'
+    property string bgBlueColor: '#90CAF9'
+    property string bgRedColor: '#EF9A9A'
+    property real bFontSize: page.width * 0.04
+    property real bHeight: page.width * 0.17
+
     // Get normal text color from this palette
     SystemPalette {id: systemPalette; colorGroup: SystemPalette.Active}
 
     ColumnLayout {
         anchors.fill: parent
 
+        RowLayout {
+            spacing: 0
 
-        BigRoundButton {
-            id: bStop
-            text: qsTr("Stop")
-            Layout.fillWidth: true
-            Layout.topMargin: -5
-            enabled: false
+            BigRoundButton {
+                id: bCut
+                enabled: true
+                radius: 0
 
-            Material.background: '#EF9A9A'
+                text: qsTr("Cut")
+                font.pixelSize: page.bFontSize
+                Layout.preferredHeight: page.bHeight
+                Layout.fillWidth: true
+                Layout.preferredWidth: page.width / 10
+                background.anchors.fill: bCut
+                Material.background: page.bgRedColor
 
-            onClicked: {Skypuff.sendTerminal("set MANUAL_BRAKING")}
+                onClicked: {Skypuff.sendTerminal("set MANUAL_BRAKING")}
+            }
+
+            BigRoundButton {
+                id: bStop
+                enabled: true
+                radius: 0
+
+                text: qsTr("Stop")
+                font.pixelSize: page.bFontSize
+                Layout.preferredHeight: page.bHeight
+                Layout.fillWidth: true
+                background.anchors.fill: bStop
+                Material.background: '#FFE082'
+
+                CustomBorder {
+                    visible: parent.enabled
+                    commonBorder: false
+                    lBorderwidth: 1
+                    rBorderwidth: 0
+                    tBorderwidth: 0
+                    bBorderwidth: 0
+                    borderColor: Qt.darker('#FFE082', 1.2)
+                }
+
+                onClicked: {Skypuff.sendTerminal("set MANUAL_BRAKING")}
+            }
         }
 
-        Label {
+        /*Label {
+            visible: false
             id: lState
             text: Skypuff.stateText
 
@@ -41,12 +80,13 @@ Page {
             font.bold: true
 
             color: page.state === "MANUAL_BRAKING" ? "red" : systemPalette.text;
-        }
+        }*/
 
         // Status messages from skypuff with normal text color
         // or blinking faults
         Text {
             id: tStatus
+            visible: false
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
 
@@ -93,90 +133,87 @@ Page {
             }
         }
 
+        SkypuffGauge {
+            id: sGauge
+            debug: false
 
-        GaugeDebug {
-            gauge: sGauge
-            SkypuffGauge {
-                id: sGauge
-                Layout.fillWidth: true
-                Layout.preferredHeight: page.width - 20
+            rootDiameter: page.width
 
-                maxPower: 5000
-                minPower: -2200
+            paddingLeft: 10
+            paddingRight: 10
+            marginTop: 20
 
-                //debug: true
-                debugBlink: true
+            // Temps
+            tempFets: Skypuff.tempFets
+            tempMotor: Skypuff.tempMotor
+            tempBat: Skypuff.tempBat
 
-                // Temps
-                tempFets: Skypuff.tempFets
-                tempMotor: Skypuff.tempMotor
-                tempBat: Skypuff.tempBat
+            //stateText: Skypuff.stateText
+            //stateText: 'Braking Extension'
+            //status: 'Pulling too high 5Kg (11A) is more 4Kg (10A)'
 
-                Connections {
-                    target: Skypuff
+            status: Skypuff.fault
 
-                    //onMotorModeChanged: { sGauge.motorMode = Skypuff.motorMode }
-                    onMotorKgChanged: { sGauge.motorKg = Math.abs(Skypuff.motorKg) }
-                    onSpeedMsChanged: { sGauge.speedMs = Skypuff.speedMs }
-                    onPowerChanged: { sGauge.power = Skypuff.power }
+            Connections {
+                target: Skypuff
 
-                    onLeftMetersChanged: { sGauge.leftRopeMeters = Skypuff.leftMeters.toFixed(1) }
-                    onDrawnMetersChanged: { sGauge.ropeMeters = Skypuff.drawnMeters }
-                    onRopeMetersChanged: { sGauge.maxRopeMeters = Skypuff.ropeMeters.toFixed() }
+                    //onMotorModeChanged: { sGauge.motorMode = Skypuff.motorMode; }
+                    onMotorKgChanged: { sGauge.motorKg = Math.abs(Skypuff.motorKg); }
+                    onSpeedMsChanged: { sGauge.speedMs = Skypuff.speedMs; }
+                    onPowerChanged: { sGauge.power = Skypuff.power; }
 
-                    // Warning and Blink (bool) | I don't know names of this params
-                    //onMotorKgWarningChanged: { sGauge.motorKgWarning = false } // Warning
-                    //onMotorKgDangerChanged: { sGauge.motorKgDanger = false } // Blink
-                    //onRopeWarningChanged: { sGauge.ropeWarning = false }
-                    //onRopeDangerChanged: { sGauge.ropeDanger = false }
-                    //onPowerWarningChanged: { sGauge.powerWarning = false }
-                    //onPowerDangerChanged: { sGauge.powerDanger = false }
-                    //onSpeedWarningChanged: { sGauge.speedWarning = false }
-                    //onSpeedDangerChanged: { sGauge.speedDanger = false }
+                onLeftMetersChanged: { sGauge.leftRopeMeters = Skypuff.leftMeters.toFixed(1); }
+                onDrawnMetersChanged: { sGauge.ropeMeters = Skypuff.drawnMeters; }
+                onRopeMetersChanged: { sGauge.maxRopeMeters = Skypuff.ropeMeters.toFixed(); }
 
-                    onSettingsChanged: {
-                        sGauge.maxMotorKg = cfg.motor_max_kg
-                        sGauge.maxPower = cfg.power_max
-                        sGauge.minPower = cfg.power_min
+                // Warning and Blink (bool) | I don't know names of this params
+                //onMotorKgWarningChanged: { sGauge.motorKgWarning = false; } // Warning
+                //onMotorKgDangerChanged: { sGauge.motorKgDanger = false; } // Blink
+                //onRopeWarningChanged: { sGauge.ropeWarning = false; }
+                //onRopeDangerChanged: { sGauge.ropeDanger = false; }
+                //onPowerWarningChanged: { sGauge.powerWarning = false; }
+                //onPowerDangerChanged: { sGauge.powerDanger = false; }
+                //onSpeedWarningChanged: { sGauge.speedWarning = false; }
+                //onSpeedDangerChanged: { sGauge.speedDanger = false; }
+
+                onIsBatteryBlinkingChanged: { sGauge.isBatteryBlinking = Skypuff.isBatteryBlinking; }
+                onIsBatteryWarningChanged: { sGauge.isBatteryWarning = Skypuff.isBatteryWarning; }
+                onIsBatteryScaleValidChanged: { sGauge.isBatteryScaleValid = Skypuff.isBatteryScaleValid; }
+
+                onWhInChanged: { sGauge.whIn = Skypuff.whOut }
+                onWhOutChanged: { sGauge.whOut = Skypuff.whIn }
+                onBatteryPercentsChanged: { sGauge.batteryPercents = Skypuff.batteryPercents; }
+                onBatteryCellVoltsChanged: { sGauge.batteryCellVolts = Skypuff.batteryCellVolts; }
+
+                onSettingsChanged: {
+                    sGauge.maxMotorKg = cfg.motor_max_kg;
+                    sGauge.maxPower = cfg.power_max;
+                    sGauge.minPower = cfg.power_min;
+                    sGauge.batteryCells = cfg.battery_cells;
+                }
+
+                onStateChanged: {
+                    sGauge.state = newState;
+                }
+
+                onStatusChanged: {
+                    sGauge.status = newStatus;
+                    sGauge.isWarningStatus = isWarning;
+                }
+
+                onFaultChanged:  {
+                    if(newFault) {
+                        tStatus.text = newFault;
                     }
+
                 }
             }
         }
 
-        RowLayout {
-            Layout.topMargin: 10
-
-            Item {
-                Layout.fillWidth: true
-            }
-
-            SkypuffBattery {
-                id: sBattery
-                //Layout.fillWidth: true
-                Layout.preferredHeight: page.width / 13
-                Layout.preferredWidth: page.width / 3
-
-                Connections {
-                    target: Skypuff
-
-                    onIsBatteryBlinkingChanged: { sBattery.isBatteryBlinking = Skypuff.isBatteryBlinking }
-                    onIsBatteryWarningChanged: { sBattery.isBatteryWarning = Skypuff.isBatteryWarning }
-                    onIsBatteryScaleValidChanged: { sBattery.isBatteryScaleValid = Skypuff.isBatteryScaleValid }
-
-                    onWhInChanged: { sBattery.whIn = Skypuff.whOut }
-                    onWhOutChanged: { sBattery.whOut = Skypuff.whIn }
-                    onBatteryPercentsChanged: { sBattery.batteryPercents = Skypuff.batteryPercents }
-                    onBatteryCellVoltsChanged: { sBattery.batteryCellVolts = Skypuff.batteryCellVolts }
-
-                    onSettingsChanged: {
-                        sBattery.batteryCells = cfg.battery_cells
-                    }
-                }
-            }
-
-            Item {
-                Layout.fillWidth: true
-            }
+        GaugeDebug {
+            id: debugBlock
+            gauge: sGauge
+            visible: true
         }
 
         // Vertical space
@@ -247,23 +284,34 @@ Page {
         }
 
         RowLayout {
+            spacing: 0
+
             BigRoundButton {
                 id: bSetZero
+                visible: false
+                radius: 0
+
                 text: qsTr("Set zero here")
+                font.pixelSize: page.bFontSize
 
                 Layout.fillWidth: true
-                visible: false
-                Material.background: '#A5D6A7'
+                Layout.preferredHeight: page.bHeight
+                background.anchors.fill: bSetZero
+                Material.background: page.bgBlueColor
 
                 onClicked: {Skypuff.sendTerminal("set_zero")}
             }
 
             BigRoundButton {
                 id: bPrePull
+                radius: 0
+                enabled: true
 
+                font.pixelSize: page.bFontSize
+                Layout.preferredHeight: page.bHeight
                 Layout.fillWidth: true
-                enabled: false
-                Material.background: '#A5D6A7'
+                background.anchors.fill: bPrePull
+                Material.background: page.bgBlueColor
 
                 state: "PRE_PULL"
                 states: [
@@ -278,11 +326,26 @@ Page {
 
             BigRoundButton {
                 id: bUnwinding
+                radius: 0
+                enabled: true
+
                 text: qsTr("Unwinding")
+                font.pixelSize: page.bFontSize
 
                 Layout.fillWidth: true
-                enabled: false
-                Material.background: '#A5D6A7'
+                Material.background: page.bgGreenColor
+                Layout.preferredHeight: page.bHeight
+                background.anchors.fill: bUnwinding
+
+                CustomBorder {
+                    visible: parent.enabled
+                    commonBorder: false
+                    lBorderwidth: 1
+                    rBorderwidth: 0
+                    tBorderwidth: 0
+                    bBorderwidth: 0
+                    borderColor: Qt.darker(page.bgGreenColor, 1.2)
+                }
 
                 state: "UNWINDING"
                 states: [

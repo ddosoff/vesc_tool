@@ -1,131 +1,129 @@
 import QtQuick 2.0
-
-Rectangle {
-    id: root
-    enabled: root.isBatteryScaleValid
-
-    property int diameter: width < height ? width : height
-
-    property real batteryPercents: 0
-    property real batteryCellVolts: 0.0
-    property int batteryCells: 0
-    property real whIn: 0.0
-    property real whOut: 0.0
-
-    property bool isBatteryBlinking: false
-    property bool isBatteryWarning: false
-    property bool isBatteryScaleValid: false
-
-    property real baseOpacity: 0.5  // Opacity is to all colors of the scale
-    property string battGaugeColor: '#dbdee3'
-    property string borderColor: '#515151'
-
-    // Default for all scales
-    property string defaultColor: '#4CAF50' // base color (green)
-    property string dangerColor: 'red'      // attention color (red)
-    property string warningColor: '#dbdee3' // blink color (yellow)
-
-    property int gaugesColorAnimation: 1000  // freq of blinking
+import QtQuick.Controls 2.4
+import QtQuick.Controls.Material 2.12
 
 
-    // Battery
-    property string battColor: root.defaultColor
-    property string battWarningColor: root.warningColor
-    property string battDangerColor: root.dangerColor
-
-    function prettyNumber(number, tf = 1) {
-        if (!number || !!isNaN(number)) return 0;
-
-        if (Math.abs(number) < 1 && number !== 0 && tf === 1) {
-            tf = 2;
-        } else if (Number.isInteger(number) && tf === 1) {
-            tf = 0;
-        }
-
-        return parseFloat(number.toFixed(tf));
-    }
 
 
-    function getWhValStr(val) {
-        if (val >= 1000) {
-            return prettyNumber(val / 1000) + ' kWh';
-        }
 
-        return prettyNumber(val) + ' Wh';
-    }
+Item {
+    id: batteryBlock
+    property var gauge
+
+    width: gauge.diameter / 2.6
+    height: gauge.diameter / 11.5
+
+    //anchors.topMargin: gauge.batteryTopMargin
+    anchors.horizontalCenter: gauge.horizontalCenter
+    anchors.bottom: gauge.bottom
+
+    property real battFontSize: Math.max(10, battery.height * 0.51)
+    property real whFontSize: Math.max(10, battery.height * 0.55)
+    property real arrowFontSize: Math.max(10, battery.height * 0.5)
+
+    property real margin: 5
+
+    property bool isCharging: false
+    property bool isDischarging: false
 
     Rectangle {
-        id: batBlock
-        width: root.width
-        height: root.height
-        border.color: root.borderColor
+        id: battery
+        width: parent.width
+        height: parent.height
+
+        border.color: gauge.borderColor
         border.width: 2
+        x: gauge.paddingLeft
+
 
         radius: 3
-        color: root.battGaugeColor
+        color: gauge.innerColor
 
         Item {
-            id: inWh
-            anchors.left: inArrow.left
-            anchors.leftMargin: -inWhT.width - 10
+            id: outWh
+            anchors.left: outArrow.left
+            anchors.leftMargin: -outWhT.width - batteryBlock.margin
             anchors.verticalCenter: parent.verticalCenter
 
             Text {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                id: inWhT
-                font.pixelSize: Math.max(10, root.diameter * 0.6)
-                text: root.getWhValStr(root.whIn)
+                id: outWhT
+                font.pixelSize: batteryBlock.whFontSize
+                text: gauge.getWhValStr(gauge.whOut)
             }
         }
 
-
         Item {
-            id: inArrow
+            id: outArrow
             anchors.left: parent.left
-            anchors.leftMargin: -inArrow.width - 10
+            anchors.leftMargin: -outArrow.width - batteryBlock.margin
             anchors.verticalCenter: parent.verticalCenter
-            width: inArrowT.width
+            width: outArrowT.width
+
 
             Text {
-                id: inArrowT
-                font.pixelSize: Math.max(10, root.diameter * 0.6)
+                id: outArrowT
+                visible: !batteryBlock.isCharging
+                font.pixelSize: batteryBlock.arrowFontSize
                 font.bold: true
                 anchors.verticalCenter: parent.verticalCenter
-                text: '>>'
-                color: 'red';
+                text: '  >> '
+                color: gauge.textColor;
+            }
+
+            ProgressBar {
+                id: outArrowTProgress
+                visible: batteryBlock.isCharging
+                width: outArrowT.width
+                anchors.verticalCenter: parent.verticalCenter
+                indeterminate: true
+                contentItem.implicitHeight: 8
+                Material.accent: Material.Green
+
+                background: Rectangle {
+                    anchors.left: outArrowTProgress.left
+                    anchors.verticalCenter: outArrowTProgress.verticalCenter
+                    implicitWidth: 50
+                    implicitHeight: 20
+                    color: "#00000000"
+                    radius: 3
+                }
+
+
+                //color:  ? '#4CAF50' : gauge.textColor;
             }
         }
 
         Rectangle {
-            opacity: root.baseOpacity
+            opacity: gauge.baseOpacity
             radius: 2
 
-            anchors.left: batBlock.left
+            anchors.left: battery.left
             anchors.leftMargin: parent.border.width
             anchors.topMargin: parent.border.width
-            anchors.verticalCenter: batBlock.verticalCenter
+            anchors.verticalCenter: battery.verticalCenter
 
-            property bool battD: root.isBatteryBlinking
-            property string battDColor: root.battDangerColor
+            property bool battD: gauge.isBatteryBlinking
+            property string battDColor: gauge.battDangerColor
 
             onBattDChanged: {
                 battDAnimation.loops = battD ? Animation.Infinite : 1;
-                if (!battD) battDColor = root.battDangerColor;
+                if (!battD) battDColor = gauge.battDangerColor;
             }
 
             ColorAnimation on battDColor {
                 id: battDAnimation
-                running: root.isBatteryBlinking
-                from: root.battDangerColor
-                to: root.battWarningColor
-                duration: root.gaugesColorAnimation
+                running: gauge.isBatteryBlinking
+                from: gauge.battDangerColor
+                to: gauge.battWarningColor
+                duration: gauge.gaugesColorAnimation
                 loops: Animation.Infinite
             }
 
-            height: batBlock.height - parent.border.width * 2
-            color: root.isBatteryWarning || root.isBatteryBlinking ? battDColor : root.battColor
-            width: (batBlock.width - parent.border.width * 2) * root.batteryPercents / 100
+            height: battery.height - parent.border.width * 2
+            color: gauge.isBatteryWarning || gauge.isBatteryBlinking ? battDColor : gauge.battColor
+            width: (battery.width - parent.border.width * 2) * gauge.batteryPercents / 100
         }
 
         Item {
@@ -137,9 +135,9 @@ Rectangle {
                 anchors.left: parent.left
                 anchors.leftMargin: 6
 
-                font.pixelSize: Math.max(10, root.diameter * 0.5)
+                font.pixelSize: batteryBlock.battFontSize
                 id: tBat
-                text: qsTr("%1 x %2").arg(root.batteryCellVolts.toFixed(2)).arg(root.batteryCells)
+                text: qsTr("%1 x %2").arg(gauge.batteryCellVolts.toFixed(2)).arg(gauge.batteryCells)
             }
         }
 
@@ -150,53 +148,76 @@ Rectangle {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.rightMargin: 6
-                font.pixelSize: Math.max(10, root.diameter * 0.5)
+                font.pixelSize: batteryBlock.battFontSize
                 id: tBatPercent
-                text: root.batteryPercents.toFixed(0) + '%'
+                text: gauge.batteryPercents.toFixed(0) + '%'
             }
         }
 
         Rectangle {
-            anchors.left: batBlock.right
-            anchors.verticalCenter: batBlock.verticalCenter
-            color: root.borderColor
-            height: root.diameter * 0.5
+            anchors.left: battery.right
+            anchors.verticalCenter: battery.verticalCenter
+            color: gauge.borderColor
+            height: battery.height * 0.5
             width: 3
-            border.color: root.borderColor
+            border.color: gauge.borderColor
         }
 
         Item {
-            id: outArrow
-
-
+            id: inArrow
             anchors.right: parent.right
-            anchors.rightMargin: -outArrow.width - 10
+            anchors.rightMargin: -inArrow.width - batteryBlock.margin
             anchors.verticalCenter: parent.verticalCenter
 
-            width: outArrowT.width
+            width: inArrowT.width
 
             Text {
-                id: outArrowT
-                font.pixelSize: Math.max(10, root.diameter * 0.6)
+                id: inArrowT
+                visible: !batteryBlock.isDischarging
+                font.pixelSize: batteryBlock.arrowFontSize
+                text: '  >> '
                 font.bold: true
                 anchors.verticalCenter: parent.verticalCenter
-                text: '>>'
-                color: 'red';
+                color: gauge.textColor
+            }
+
+            ProgressBar {
+                id: inArrowTProgress
+                visible: batteryBlock.isDischarging
+                width: inArrowT.width
+                anchors.verticalCenter: parent.verticalCenter
+                indeterminate: true
+                Material.accent: Material.Red
+
+                implicitHeight: 50
+
+                contentItem.implicitHeight: 8
+
+                background: Rectangle {
+                    anchors.left: inArrowTProgress.left
+                    anchors.verticalCenter: inArrowTProgress.verticalCenter
+                    implicitWidth: 50
+                    implicitHeight: 20
+                    color: "#00000000"
+                    radius: 3
+                }
+
+                //color:  ? '#4CAF50' : gauge.textColor;
             }
         }
 
         Item {
-            id: outWh
-            anchors.right: outArrow.right
-            anchors.rightMargin: -outWhT.width - 10
+            id: inWh
+            anchors.right: inArrow.right
+            anchors.rightMargin: -inWhT.width - batteryBlock.margin
             anchors.verticalCenter: parent.verticalCenter
 
             Text {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                id: outWhT
-                font.pixelSize: Math.max(10, root.diameter * 0.6)
-                text: root.getWhValStr(root.whOut)
+                id: inWhT
+                font.pixelSize: batteryBlock.whFontSize
+                text: gauge.getWhValStr(gauge.whIn)
             }
         }
     }
