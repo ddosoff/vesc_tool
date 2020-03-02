@@ -27,12 +27,17 @@
 // Skypuff commands into COMM_CUSTOM_APP_DATA
 typedef enum
 {
-    SK_COMM_SETTINGS_V1,       // Receive settings on get_conf
-    SK_COMM_ALIVE_POWER_STATS, // Get alive timeout from UI and send back power stats
-    SK_COMM_ALIVE_TEMP_STATS,  // Get alive timeout from UI and send back power and temp stats
-    SK_COMM_FAULT,             // Send Fault code to UI
-    SK_COMM_MSG,               // Send stats msg to UI
-    SK_COMM_STATE,             // Send/receive new state
+    SK_COMM_SETTINGS_V1,           // Receive settings on get_conf
+    SK_COMM_ALIVE_POWER_STATS,     // Get alive timeout from UI and send back power stats
+    SK_COMM_ALIVE_TEMP_STATS,      // Get alive timeout from UI and send back power and temp stats
+    SK_COMM_FAULT,                 // Send Fault code to UI
+    SK_COMM_STATE,                 // Send/receive new state
+    SK_COMM_PULLING_TOO_HIGH,      // Msg to UI
+    SK_COMM_UNWINDED_TO_OPPOSITE,  // Msg to UI
+    SK_COMM_UNWINDED_FROM_SLOWING, // Msg to UI
+    SK_COMM_DETECTING_MOTION,      // Msg to UI
+    SK_COMM_TOO_SLOW_SPEED_UP,     // Msg to UI
+    SK_COMM_SETTINGS_APPLIED,      // Msg to UI
 } skypuff_custom_app_data_command;
 
 // Winch FSM
@@ -57,6 +62,7 @@ typedef enum
 #ifdef DEBUG_SMOOTH_MOTOR
     MANUAL_DEBUG_SMOOTH, // Debug smooth motor movements with 'smooth' terminal commands
 #endif
+    DISCONNECTED, // UI only state
 } skypuff_state;
 
 // Winch settings
@@ -132,7 +138,7 @@ inline const char *state_str(const skypuff_state s)
     switch (s)
     {
     case UNINITIALIZED:
-        return "UNITIALIZED";
+        return "UNINITIALIZED";
     case BRAKING:
         return "BRAKING";
     case BRAKING_EXTENSION:
@@ -184,8 +190,20 @@ inline const char *sk_command_str(const skypuff_custom_app_data_command c)
         return "SK_COMM_ALIVE_TEMP_STATS";
     case SK_COMM_FAULT:
         return "SK_COMM_FAULT";
-    case SK_COMM_MSG:
-        return "SK_COMM_MSG";
+    case SK_COMM_STATE:
+        return "SK_COMM_STATE";
+    case SK_COMM_PULLING_TOO_HIGH:
+        return "SK_COMM_PULLING_TOO_HIGH";
+    case SK_COMM_UNWINDED_TO_OPPOSITE:
+        return "SK_COMM_UNWINDED_TO_OPPOSITE";
+    case SK_COMM_UNWINDED_FROM_SLOWING:
+        return "SK_COMM_UNWINDED_FROM_SLOWING";
+    case SK_COMM_DETECTING_MOTION:
+        return "SK_COMM_DETECTING_MOTION";
+    case SK_COMM_TOO_SLOW_SPEED_UP:
+        return "SK_COMM_TOO_SLOW_SPEED_UP";
+    case SK_COMM_SETTINGS_APPLIED:
+        return "SK_COMM_SETTINGS_APPLIED";
     default:
         return "SK_COMM_UNKNOWN";
     }

@@ -25,17 +25,7 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
     vesc(v),
     aliveTimerId(0),
     aliveTimeoutTimerId(0),
-    getConfTimeoutTimerId(0),
-    // Compile regexps once here
-    reBraking("(\\d.\\.?\\d*)Kg \\((-?\\d+.?\\d*)A"),
-    rePull("(\\d.\\.?\\d*)Kg \\((-?\\d+.?\\d*)A"), // absolute kg, signed amps
-    rePos("(\\d.\\.?\\d*)m \\((-?\\d+) steps"), // absolute meters and signed steps
-    reSpeed("-?(\\d.\\.?\\d*)ms \\((-?\\d+) ERPM"), // absolute ms and signed erpm
-    rePullingHigh("pulling too high .?(\\d+.\\d+)Kg"),
-    reUnwindedFromSlowing("Unwinded from slowing zone .?(\\d+.\\d+)m"),
-    rePrePullTimeout("Pre pull (\\d+.\\d+)s timeout passed"),
-    reMotionDetected("Motion (\\d+.\\d+)m"),
-    reTakeoffTimeout("Takeoff (\\d+.\\d+)s")
+    getConfTimeoutTimerId(0)
 {
     player = new QMediaPlayer(this);
     playlist = new QMediaPlaylist(player);
@@ -57,7 +47,6 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
 
     connect(vesc, SIGNAL(portConnectedChanged()), this, SLOT(portConnectedChanged()));
     connect(vesc, SIGNAL(messageDialog(QString,QString,bool,bool)), this, SLOT(logVescDialog(const QString&,const QString&)));
-    connect(vesc->commands(), SIGNAL(printReceived(QString)), this, SLOT(printReceived(QString)));
     connect(vesc->commands(), SIGNAL(customAppDataReceived(QByteArray)), this, SLOT(customAppDataReceived(QByteArray)));
 
     // Can't use Q_ENUM because skypuff_state declared out of Q_OBJECT class
@@ -78,7 +67,7 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
         h_faults[s] = (mc_fault_code)i;
     }
 
-    setState("DISCONNECTED");
+    setState(DISCONNECTED);
     clearStats();
 
     aliveResponseTimes.setCapacity(aliveAvgN);
@@ -90,49 +79,68 @@ void Skypuff::logVescDialog(const QString & title, const QString & text)
     qWarning() << "  --" << text;
 }
 
-void Skypuff::setState(const QString& newState)
+void Skypuff::setState(const skypuff_state newState)
 {
     if(state != newState) {
         state = newState;
-        emit stateChanged(state);
+        emit stateChanged(state_str(state));
 
         // Translate to UI
-        if(!newState.compare("DISCONNECTED"))
+        switch (newState) {
+        case DISCONNECTED:
             stateText = tr("Disconnected");
-        else if(!newState.compare("BRAKING"))
+            break;
+        case BRAKING:
             stateText = tr("Braking");
-        else if(!newState.compare("MANUAL_BRAKING"))
+            break;
+        case MANUAL_BRAKING:
             stateText = tr("Manual Braking");
-        else if(!newState.compare("MANUAL_SLOW_SPEED_UP"))
+            break;
+        case MANUAL_SLOW_SPEED_UP:
             stateText = tr("Manual Speed Up");
-        else if(!newState.compare("MANUAL_SLOW"))
+            break;
+        case MANUAL_SLOW:
             stateText = tr("Manual Slow");
-        else if(!newState.compare("MANUAL_SLOW_BACK_SPEED_UP"))
+            break;
+        case MANUAL_SLOW_BACK_SPEED_UP:
             stateText = tr("Manual Speed Up Back");
-        else if(!newState.compare("MANUAL_SLOW_BACK"))
+            break;
+        case MANUAL_SLOW_BACK:
             stateText = tr("Manual Slow Back");
-        else if(!newState.compare("BRAKING_EXTENSION"))
+            break;
+        case BRAKING_EXTENSION:
             stateText = tr("Braking Extension");
-        else if(!newState.compare("UNWINDING"))
+            break;
+        case UNWINDING:
             stateText = tr("Unwinding");
-        else if(!newState.compare("REWINDING"))
+            break;
+        case REWINDING:
             stateText = tr("Rewinding");
-        else if(!newState.compare("SLOWING"))
+            break;
+        case SLOWING:
             stateText = tr("Slowing");
-        else if(!newState.compare("SLOW"))
+            break;
+        case SLOW:
             stateText = tr("Slow");
-        else if(!newState.compare("PRE_PULL"))
+            break;
+        case PRE_PULL:
             stateText = tr("Pre Pull");
-        else if(!newState.compare("TAKEOFF_PULL"))
+            break;
+        case TAKEOFF_PULL:
             stateText = tr("Takeoff Pull");
-        else if(!newState.compare("PULL"))
+            break;
+        case PULL:
             stateText = tr("Pull");
-        else if(!newState.compare("FAST_PULL"))
+            break;
+        case FAST_PULL:
             stateText = tr("Fast Pull");
-        else if(!newState.compare("UNITIALIZED"))
+            break;
+        case UNINITIALIZED:
             stateText = tr("No Valid Settings");
-        else
-            stateText = newState;
+            break;
+        default:
+            stateText = state_str(newState);
+        }
 
         emit stateTextChanged(stateText);
     }
@@ -159,7 +167,7 @@ void Skypuff::portConnectedChanged()
         }
 
         // No more fault :)
-        setState("DISCONNECTED");
+        setState(DISCONNECTED);
 
         // Reset scales
         cfg.clearScales();
@@ -190,6 +198,7 @@ void Skypuff::clearStats()
 
     setFault(FAULT_CODE_NONE);
     playingFault = FAULT_CODE_NONE;
+    status.clear();
 }
 
 void Skypuff::timerEvent(QTimerEvent *event)
@@ -295,6 +304,7 @@ void Skypuff::sendSettings(const QMLable_skypuff_config& cfg)
 }
 
 // Parse known command and payload
+/*
 bool Skypuff::parsePrintMessage(QStringRef &str, MessageTypeAndPayload &c)
 {
     int len = str.length();
@@ -331,6 +341,7 @@ bool Skypuff::parsePrintMessage(QStringRef &str, MessageTypeAndPayload &c)
     // Unknown command type, just ignore
     return false;
 }
+
 
 void Skypuff::printReceived(QString str)
 {
@@ -419,6 +430,7 @@ void Skypuff::printReceived(QString str)
         }
     }
 }
+*/
 
 void Skypuff::customAppDataReceived(QByteArray data)
 {
@@ -443,6 +455,27 @@ void Skypuff::customAppDataReceived(QByteArray data)
         break;
     case SK_COMM_FAULT:
         processFault(vb);
+        break;
+    case SK_COMM_STATE:
+        processState(vb);
+        break;
+    case SK_COMM_PULLING_TOO_HIGH:
+        processPullingTooHigh(vb);
+        break;
+    case SK_COMM_UNWINDED_TO_OPPOSITE:
+        processUnwindedToOpposite(vb);
+        break;
+    case SK_COMM_UNWINDED_FROM_SLOWING:
+        processUnwindedFromSlowing(vb);
+        break;
+    case SK_COMM_SETTINGS_APPLIED:
+        processSettingsApplied(vb);
+        break;
+    case SK_COMM_DETECTING_MOTION:
+        processDetectingMotion(vb);
+        break;
+    case SK_COMM_TOO_SLOW_SPEED_UP:
+        processTooSlowSpeedUp(vb);
         break;
     case SK_COMM_SETTINGS_V1:
         processSettingsV1(vb);
@@ -480,6 +513,117 @@ void Skypuff::updateAliveResponseStats(const int millis)
     }
 }
 
+void Skypuff::processPullingTooHigh(VByteArray &vb)
+{
+    // Enough data?
+    const int pulling_too_high_packet_length = 2;
+    if(vb.length() < pulling_too_high_packet_length) {
+        vesc->emitMessageDialog(tr("Can't deserialize pulling to high command packet"),
+                                tr("Received %1 bytes, expected %2 bytes!").arg(vb.length()).arg(pulling_too_high_packet_length),
+                                true);
+        vesc->disconnectPort();
+    }
+
+    float current = vb.vbPopFrontDouble16(1e1);
+
+    if(vb.length()) {
+        vesc->emitMessageDialog(tr("Extra bytes received with pulling too high command packet"),
+                                tr("Received %1 extra bytes!").arg(vb.length()),
+                                true);
+        vesc->disconnectPort();
+        return;
+    }
+
+    setStatus(tr("Pulling too high - %1Kg").arg(QString::number(current / cfg.amps_per_kg, 'g', 2)));
+}
+
+void Skypuff::processUnwindedToOpposite(VByteArray &vb)
+{
+    if(vb.length()) {
+        vesc->emitMessageDialog(tr("Extra bytes received with unwinded to opposite command packet"),
+                                tr("Received %1 extra bytes!").arg(vb.length()),
+                                true);
+        vesc->disconnectPort();
+        return;
+    }
+
+    setStatus(tr("Unwinded to opposite braking zone"));
+}
+
+void Skypuff::processUnwindedFromSlowing(VByteArray &vb)
+{
+    if(vb.length()) {
+        vesc->emitMessageDialog(tr("Extra bytes received with unwinded from slowing command packet"),
+                                tr("Received %1 extra bytes!").arg(vb.length()),
+                                true);
+        vesc->disconnectPort();
+        return;
+    }
+
+    setStatus(tr("Unwinded from slowing zone"));
+}
+
+void Skypuff::processDetectingMotion(VByteArray &vb)
+{
+    if(vb.length()) {
+        vesc->emitMessageDialog(tr("Extra bytes received with detecting motion command packet"),
+                                tr("Received %1 extra bytes!").arg(vb.length()),
+                                true);
+        vesc->disconnectPort();
+        return;
+    }
+
+    setStatus(tr("Detecting motion..."));
+}
+
+void Skypuff::processTooSlowSpeedUp(VByteArray &vb)
+{
+    if(vb.length()) {
+        vesc->emitMessageDialog(tr("Extra bytes received with too slow speed up command packet"),
+                                tr("Received %1 extra bytes!").arg(vb.length()),
+                                true);
+        vesc->disconnectPort();
+        return;
+    }
+
+    setStatus(tr("Too slow speed up"));
+}
+
+void Skypuff::processSettingsApplied(VByteArray &vb)
+{
+    if(vb.length()) {
+        vesc->emitMessageDialog(tr("Extra bytes received with unwinded to opposite command packet"),
+                                tr("Received %1 extra bytes!").arg(vb.length()),
+                                true);
+        vesc->disconnectPort();
+        return;
+    }
+
+    vesc->emitMessageDialog(tr("Settings are set"), tr("Have a nice puffs"), true);
+}
+
+void Skypuff::processState(VByteArray &vb)
+{
+    // Enough data?
+    const int fault_packet_length = 1;
+    if(vb.length() < fault_packet_length) {
+        vesc->emitMessageDialog(tr("Can't deserialize state command packet"),
+                                tr("Received %1 bytes, expected %2 bytes!").arg(vb.length()).arg(fault_packet_length),
+                                true);
+        vesc->disconnectPort();
+    }
+
+    setState((skypuff_state)vb.vbPopFrontUint8());
+
+    if(vb.length()) {
+        vesc->emitMessageDialog(tr("Extra bytes received with state command packet"),
+                                tr("Received %1 extra bytes!").arg(vb.length()),
+                                true);
+        vesc->disconnectPort();
+        return;
+    }
+}
+
 void Skypuff::processFault(VByteArray &vb)
 {
     // Enough data?
@@ -492,6 +636,7 @@ void Skypuff::processFault(VByteArray &vb)
     }
 
     setFault((mc_fault_code)vb.vbPopFrontUint8());
+
     if(vb.length()) {
         vesc->emitMessageDialog(tr("Extra bytes received with fault command packet"),
                                 tr("Received %1 extra bytes!").arg(vb.length()),
@@ -612,7 +757,7 @@ void Skypuff::processSettingsV1(VByteArray &vb)
 
     cfg.deserializeV1(vb);
 
-    setState(state_str(mcu_state));
+    setState(mcu_state);
 
     emit settingsChanged(cfg);
 
@@ -864,32 +1009,12 @@ void Skypuff::setVBat(const float newVBat)
     }
 }
 
-// Translate status messages to UI language
-void Skypuff::setStatus(const QString& mcuStatus)
+void Skypuff::setStatus(const QString& newStatus)
 {
-    QString s = mcuStatus;
-
-    // -- slow pulling too high -1.0Kg (-7.1A) is more 1.0Kg (7.0A)
-    if(rePullingHigh.indexIn(s) != -1)
-        s = tr("Stopped by pulling %1Kg").arg(rePullingHigh.cap(1));
-
-    // -- Unwinded from slowing zone 4.00m (972 steps)
-    else if(reUnwindedFromSlowing.indexIn(s) != -1)
-        s = tr("%1m slowing zone unwinded").arg(reUnwindedFromSlowing.cap(1));
-
-    // -- Pre pull 2.0s timeout passed, saving position
-    else if(rePrePullTimeout.indexIn(s) != -1)
-        s = tr("%1s passed, detecting motion").arg(rePrePullTimeout.cap(1));
-
-    // -- Motion 0.10m (24 steps) detected
-    else if(reMotionDetected.indexIn(s) != -1)
-        s = tr("%1m motion detected").arg(reMotionDetected.cap(1));
-
-    // -- Takeoff 5.0s timeout passed
-    else if(reTakeoffTimeout.indexIn(s) != -1)
-        s = tr("%1s takeoff, normal pull").arg(reTakeoffTimeout.cap(1));
-
-    emit statusChanged(s);
+    if(status != newStatus) {
+        status = newStatus;
+        emit statusChanged(newStatus);
+    }
 }
 
 QVariantList Skypuff::serialPortsToQml()

@@ -463,6 +463,7 @@ Page {
                 bUnwinding.enabled = false
                 bUnwinding.state = "UNWINDING"
                 bPrePull.enabled = false
+                bPrePull.state = "PRE_PULL"
                 break
             case "BRAKING_EXTENSION":
                 bUnwinding.enabled = true
@@ -477,6 +478,7 @@ Page {
             case "SLOWING":
                 bUnwinding.enabled = false
                 bPrePull.enabled = false
+                bPrePull.state = "PRE_PULL"
                 break
             case "PRE_PULL":
                 bPrePull.state = "TAKEOFF_PULL"
