@@ -1613,7 +1613,8 @@ Item {
 
                 Text {
                     id: powerTxt1
-                    text: root.prettyNumber(Math.abs(root.power) >= 1000 ? root.power / 1000 : root.power, Math.abs(root.power) < 1000 ? 0 : 1)
+                        text: root.prettyNumber(Math.abs(root.power) >= 1000 ? root.power / 1000 : root.power, 2)
+                    //text: root.prettyNumber(Math.abs(root.power) >= 1000 ? root.power / 1000 : root.power, Math.abs(root.power) < 1000 ? 0 : 1)
                     font.pixelSize: Math.max(10, root.diameter * 0.065)
                     font.bold: root.boldValues
                 }
