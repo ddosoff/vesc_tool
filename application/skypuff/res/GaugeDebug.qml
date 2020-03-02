@@ -39,6 +39,20 @@ ColumnLayout {
         rowSpacing: -20
         Layout.fillWidth: true
 
+        Item {
+            Layout.fillWidth: true
+        }
+
+        Text {
+            text: '2000000'
+            font.pixelSize: debug.fontSize
+            color: 'transparent'
+        }
+
+        Item {
+            Layout.fillWidth: true
+        }
+
         Label {
             text: 'Rope val:'
             font.pixelSize: debug.fontSize
