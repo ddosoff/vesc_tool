@@ -52,6 +52,10 @@ Item {
     property bool isBatteryWarning: false
     property bool isBatteryScaleValid: false
 
+    property bool showCharginAnimation: false
+
+    property string ff: 'Roboto'
+
 
     /********************
             Colors
@@ -71,7 +75,7 @@ Item {
 
 
     // Default for all scales
-    property string defaultColor: '#A5D6A7'  // base color
+    property string defaultColor: '#A5D6A7'  // base succes color
     property string dangerColor: '#ef8383'   // attention color
     property string dangerTextColor: '#F44336'
     property string warningColor: '#dbdee3'  // blink color
@@ -1155,6 +1159,7 @@ Item {
                             y: gauge.getTLHY(styleData.value, root.minMotorKg, root.maxMotorKg)
                             x: gauge.getTLHX(styleData.value, root.minMotorKg, root.maxMotorKg)
                             color: gauge.getTLColor(styleData.value, root.maxMotorKg)
+                            font.family: root.ff
                             text: this.getText()
                             rotation: root.kgToAng(styleData.value)
                             antialiasing: true
@@ -1236,6 +1241,7 @@ Item {
 
                         tickmarkLabel:  Text {
                             font.pixelSize: gauge.getFontSize()
+                            font.family: root.ff
                             y: gauge.getTLHY(styleData.value , root.minPower, root.maxPower)
                             x: gauge.getTLHX(styleData.value , root.minPower, root.maxPower, -0.13)
                             text: (styleData.value / 1000)  + ((styleData.value === 0) ? 'kw' : '')
@@ -1302,6 +1308,7 @@ Item {
                             font.pixelSize: gauge.getFontSize(0.04)
                             y: gauge.getTLVY(styleData.value, root.minSpeedMs, root.maxSpeedMs, 0.3)
                             x: gauge.getTLVX(styleData.value, root.minSpeedMs, root.maxSpeedMs, -0.3)
+                            font.family: root.ff
                             text: styleData.value + ((styleData.value === 0) ? 'kw' : '')
                             rotation: styleData.value !== root.maxSpeedMs ? root.speedToAng(styleData.value) - 180 - 90 : root.speedToAng(styleData.value)  - 90
                             color: root.gaugeFontColor
@@ -1372,6 +1379,7 @@ Item {
                             }
 
                             visible: this.show(styleData.value)
+                            font.family: root.ff
                             font.pixelSize: gauge.getFontSize(0.04)
                             y: gauge.getTLVY(styleData.value, root.minRopeMeters, root.maxRopeMeters, -0.3)
                             x: gauge.getTLVX(styleData.value, root.minRopeMeters, root.maxRopeMeters, -0.3)
@@ -1513,12 +1521,14 @@ Item {
 
                 Text {
                     text: root.prettyNumber(root.speedMs)
+                    font.family: root.ff
                     font.pixelSize: Math.max(10, root.diameter * 0.05)
                     font.bold: root.boldValues
                 }
 
                 Text {
                     text: 'ms'
+                    font.family: root.ff
                     font.pixelSize: Math.max(10, root.diameter * 0.05)
                     font.bold: root.boldValues
                 }
@@ -1530,13 +1540,14 @@ Item {
             Text {
                 id: state
                 text: root.stateText
+                font.family: root.ff
                 anchors.horizontalCenter: parent.horizontalCenter
-                font.bold: true
                 anchors.top: parent.top
                 antialiasing: true
-                anchors.topMargin: root.gaugeHeight * 3.3
-                font.pixelSize: Math.max(10, root.diameter * 0.065)
+                font.pixelSize: Math.max(10, root.diameter * 0.06)
                 color: root.state === "MANUAL_BRAKING" ? root.dangerTextColor : root.textColor;
+
+                property real mDown: root.gaugeHeight * 2.8
 
                 states: [
                     State {
@@ -1544,7 +1555,7 @@ Item {
                         when: !!status.text
                         PropertyChanges {
                           target: state
-                          anchors.topMargin: root.gaugeHeight * 3.5 - status.height
+                          anchors.topMargin: state.mDown - (statusHeight.height < status.height ? status.height / 2 : 0)
                         }
                     },
                     State {
@@ -1552,7 +1563,7 @@ Item {
                         when: !status.text
                         PropertyChanges {
                           target: state
-                          anchors.topMargin: root.gaugeHeight * 3.3
+                          anchors.topMargin: state.mDown
                         }
                     }
                 ]
@@ -1577,6 +1588,21 @@ Item {
                 ]
             }
 
+            Text {
+                id: statusHeight
+                text: 'status'
+
+                anchors.horizontalCenter: parent.horizontalCenter
+                font.letterSpacing: 0.7
+                font.family: root.ff
+                anchors.top: parent.top
+                anchors.topMargin: root.gaugeHeight * 4.7 - status.height
+                font.pixelSize: Math.max(10, root.diameter * 0.038)
+                color: 'transparent'
+                wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
+            }
+
             /**
               Status
               */
@@ -1586,10 +1612,11 @@ Item {
                 visible: !!root.status
                 anchors.horizontalCenter: parent.horizontalCenter
                 font.letterSpacing: 0.7
+                font.family: root.ff
                 width: root.diameter * 0.5
                 //font.bold: true
                 anchors.top: parent.top
-                anchors.topMargin: root.gaugeHeight * 4.7 - status.height
+                anchors.topMargin: root.gaugeHeight * 4.55 - status.height
                 font.pixelSize: Math.max(10, root.diameter * 0.038)
                 color:  Qt.lighter(root.textColor);
                 wrapMode: Text.WordWrap
@@ -1610,10 +1637,11 @@ Item {
                     onTriggered: {
                         status.text = root.status
 
-                        if(root.status)
-                            faultsBlinker.start()
-                        else
-                            faultsBlinker.stop()
+                        if(root.fault) {
+                            faultsBlinker.start();
+                        } else {
+                            faultsBlinker.stop();
+                        }
                     }
                 }
             }
@@ -1630,16 +1658,18 @@ Item {
 
                 Text {
                     id: motoKgTxt1
+                    font.family: root.ff
                     text: root.prettyNumber(root.motorKg, root.motorKg >= 25 ? 0 : 1)
-                    font.pixelSize: Math.max(10, root.diameter * 0.065)
+                    font.pixelSize: Math.max(10, root.diameter * 0.06)
                     font.bold: root.boldValues
                 }
 
                 Text {
                     id: motoKgTxt2
+                    font.family: root.ff
                     text: 'kg'
                     opacity: 0.8
-                    font.pixelSize: Math.max(10, root.diameter * 0.065)
+                    font.pixelSize: Math.max(10, root.diameter * 0.06)
                     font.bold: root.boldValues
                 }
             }
@@ -1655,17 +1685,18 @@ Item {
 
                 Text {
                     id: powerTxt1
-                        text: root.prettyNumber(Math.abs(root.power) >= 1000 ? root.power / 1000 : root.power, 2)
-                    //text: root.prettyNumber(Math.abs(root.power) >= 1000 ? root.power / 1000 : root.power, Math.abs(root.power) < 1000 ? 0 : 1)
-                    font.pixelSize: Math.max(10, root.diameter * 0.065)
+                    text: root.prettyNumber(Math.abs(root.power) >= 1000 ? root.power / 1000 : root.power, Math.abs(root.power) > 10000 ? 0 : 2)
+                    font.family: root.ff
+                    font.pixelSize: Math.max(10, root.diameter * 0.06)
                     font.bold: root.boldValues
                 }
 
                 Text {
                     id: powerTxt2
                     text: Math.abs(root.power) >= 1000 ? 'kw' : 'w'
+                    font.family: root.ff
                     opacity: 0.8
-                    font.pixelSize: Math.max(10, root.diameter * 0.065)
+                    font.pixelSize: Math.max(10, root.diameter * 0.06)
                     font.bold: root.boldValues
                 }
             }
@@ -1714,6 +1745,7 @@ Item {
 
                         Text {
                             id: tempMotorText
+                            font.family: root.ff
                             text: prettyNumber(root.tempMotor) + 'C'
                             font.pixelSize: Math.max(10, root.diameter * 0.04)
                             color: root.tempMotor > 80 ? root.dangerTextColor : root.textColor;
@@ -1767,6 +1799,7 @@ Item {
 
                         Text {
                             id: tfetsText
+                            font.family: root.ff
                             text: prettyNumber(root.tempFets, 1) + 'C'
                             font.pixelSize: Math.max(10, root.diameter * 0.04)
                             color: root.tempFets > 80 ? root.dangerTextColor : root.textColor;
@@ -1819,6 +1852,7 @@ Item {
 
                         Text {
                             id: tbatText
+                            font.family: root.ff
                             text: root.prettyNumber(root.tempBat, 1) + 'C'
                             font.pixelSize: Math.max(10, root.diameter * 0.04)
                             color: root.tempBat > 80 ? root.dangerTextColor : root.textColor;
@@ -1834,8 +1868,8 @@ Item {
         id: batteryBlock
         gauge: root
 
-        isCharging: root.power > 0
-        isDischarging: root.power < 0
+        isCharging: root.power < 0
+        isDischarging: root.power > 0
     }
 
 }

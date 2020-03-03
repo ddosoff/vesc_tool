@@ -35,7 +35,6 @@ Item {
         border.width: 2
         x: gauge.paddingLeft
 
-
         radius: 3
         color: gauge.innerColor
 
@@ -50,6 +49,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 id: outWhT
                 font.pixelSize: batteryBlock.whFontSize
+                font.family: gauge.ff
                 text: gauge.getWhValStr(gauge.whOut)
             }
         }
@@ -64,17 +64,18 @@ Item {
 
             Text {
                 id: outArrowT
-                visible: !batteryBlock.isCharging
+                visible: !batteryBlock.isCharging || !gauge.showCharginAnimation
                 font.pixelSize: batteryBlock.arrowFontSize
+                font.family: gauge.ff
                 font.bold: true
                 anchors.verticalCenter: parent.verticalCenter
                 text: '  >> '
-                color: gauge.textColor;
+                color: batteryBlock.isCharging ? 'green' : gauge.textColor;
             }
 
             ProgressBar {
                 id: outArrowTProgress
-                visible: batteryBlock.isCharging
+                visible: batteryBlock.isCharging && gauge.showCharginAnimation
                 width: outArrowT.width
                 anchors.verticalCenter: parent.verticalCenter
                 indeterminate: true
@@ -89,9 +90,6 @@ Item {
                     color: "#00000000"
                     radius: 3
                 }
-
-
-                //color:  ? '#4CAF50' : gauge.textColor;
             }
         }
 
@@ -138,6 +136,7 @@ Item {
                 font.pixelSize: batteryBlock.battFontSize
                 id: tBat
                 text: qsTr("%1 x %2").arg(gauge.batteryCellVolts.toFixed(2)).arg(gauge.batteryCells)
+                font.family: gauge.ff
             }
         }
 
@@ -149,6 +148,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.rightMargin: 6
                 font.pixelSize: batteryBlock.battFontSize
+                font.family: gauge.ff
                 id: tBatPercent
                 text: gauge.batteryPercents.toFixed(0) + '%'
             }
@@ -173,17 +173,18 @@ Item {
 
             Text {
                 id: inArrowT
-                visible: !batteryBlock.isDischarging
+                visible: !batteryBlock.isDischarging || !gauge.showCharginAnimation
                 font.pixelSize: batteryBlock.arrowFontSize
+                font.family: gauge.ff
                 text: '  >> '
                 font.bold: true
                 anchors.verticalCenter: parent.verticalCenter
-                color: gauge.textColor
+                color: batteryBlock.isDischarging ? gauge.dangerTextColor : gauge.textColor
             }
 
             ProgressBar {
                 id: inArrowTProgress
-                visible: batteryBlock.isDischarging
+                visible: batteryBlock.isDischarging && gauge.showCharginAnimation
                 width: inArrowT.width
                 anchors.verticalCenter: parent.verticalCenter
                 indeterminate: true
@@ -217,6 +218,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 id: inWhT
                 font.pixelSize: batteryBlock.whFontSize
+                font.family: gauge.ff
                 text: gauge.getWhValStr(gauge.whIn)
             }
         }
