@@ -140,26 +140,8 @@ protected slots:
     void portConnectedChanged();
     void logVescDialog(const QString & title, const QString & text);
 protected:
-
-    // Parsed messages from prints
-    enum MessageType {
-        PARAM_TEXT,
-        PARAM_POS,
-        PARAM_SPEED,
-        PARAM_BRAKING,
-        PARAM_PULL,
-        PARAM_TEMP_FETS,
-        PARAM_TEMP_MOTOR,
-        PARAM_TEMP_BAT,
-        PARAM_WH_IN,
-        PARAM_WH_OUT,
-        PARAM_FAULT,
-        PARAM_V_BAT,
-    };
-    typedef QPair<MessageType, QStringRef> MessageTypeAndPayload;
-    typedef QMap<MessageType, QString> MessagesByType;
-
     VescInterface *vesc;
+
     QMediaPlayer *player;
     QMediaPlaylist *playlist;
 
@@ -187,11 +169,6 @@ protected:
     skypuff_state state;
     QString stateText;
     QString status;
-
-    // Will convert strings to enum values
-    QHash<QString, skypuff_state> h_states;
-    QHash<QString, mc_fault_code> h_faults;
-    QHash<MessageType, QString> messageTypes;
 
     // Getters
     bool isBrakingRange() const {return abs(curTac) <= cfg.braking_length;}
