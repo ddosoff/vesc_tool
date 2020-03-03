@@ -157,10 +157,10 @@ Page {
             Connections {
                 target: Skypuff
 
-                    //onMotorModeChanged: { sGauge.motorMode = Skypuff.motorMode; }
-                    onMotorKgChanged: { sGauge.motorKg = Math.abs(Skypuff.motorKg); }
-                    onSpeedMsChanged: { sGauge.speedMs = Skypuff.speedMs; }
-                    onPowerChanged: { sGauge.power = Skypuff.power; }
+                //onMotorModeChanged: { sGauge.motorMode = Skypuff.motorMode; }
+                onMotorKgChanged: { sGauge.motorKg = Math.abs(Skypuff.motorKg); }
+                onSpeedMsChanged: { sGauge.speedMs = Skypuff.speedMs; }
+                onPowerChanged: { sGauge.power = Skypuff.power; }
 
                 onLeftMetersChanged: { sGauge.leftRopeMeters = Skypuff.leftMeters.toFixed(1); }
                 onDrawnMetersChanged: { sGauge.ropeMeters = Skypuff.drawnMeters; }
