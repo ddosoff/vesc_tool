@@ -49,6 +49,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 id: outWhT
                 font.pixelSize: batteryBlock.whFontSize
+                font.family: gauge.ff
                 text: gauge.getWhValStr(gauge.whOut)
             }
         }
@@ -65,6 +66,7 @@ Item {
                 id: outArrowT
                 visible: !batteryBlock.isCharging || !gauge.showCharginAnimation
                 font.pixelSize: batteryBlock.arrowFontSize
+                font.family: gauge.ff
                 font.bold: true
                 anchors.verticalCenter: parent.verticalCenter
                 text: '  >> '
@@ -134,6 +136,7 @@ Item {
                 font.pixelSize: batteryBlock.battFontSize
                 id: tBat
                 text: qsTr("%1 x %2").arg(gauge.batteryCellVolts.toFixed(2)).arg(gauge.batteryCells)
+                font.family: gauge.ff
             }
         }
 
@@ -145,6 +148,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.rightMargin: 6
                 font.pixelSize: batteryBlock.battFontSize
+                font.family: gauge.ff
                 id: tBatPercent
                 text: gauge.batteryPercents.toFixed(0) + '%'
             }
@@ -171,6 +175,7 @@ Item {
                 id: inArrowT
                 visible: !batteryBlock.isDischarging || !gauge.showCharginAnimation
                 font.pixelSize: batteryBlock.arrowFontSize
+                font.family: gauge.ff
                 text: '  >> '
                 font.bold: true
                 anchors.verticalCenter: parent.verticalCenter
@@ -213,6 +218,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 id: inWhT
                 font.pixelSize: batteryBlock.whFontSize
+                font.family: gauge.ff
                 text: gauge.getWhValStr(gauge.whIn)
             }
         }
