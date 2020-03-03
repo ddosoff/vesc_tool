@@ -189,10 +189,14 @@ Item {
     }
 
     function setMaxMotorKg() {
-        root.maxMotorKg = Math.ceil(parseInt(root.maxMotorKg, 10) / 10) * 10;
+        var s = root.maxMotorKg <= 10 ? 2 : 10
+        root.maxMotorKg = Math.ceil(parseInt(root.maxMotorKg, 10) / s) * s;
+
         if (root.maxMotorKg > 20) {
             var  k = 10000 % root.maxMotorKg === 0 && root.maxMotorKg <= 50 ? 10 : 5;
             root.motorKgLabelStepSize = Math.ceil(parseInt(root.maxMotorKg, 10) / k / 10 ) * 10;
+        } else if (root.maxMotorKg < 10) {
+            root.motorKgLabelStepSize = 2;
         } else {
             root.motorKgLabelStepSize = root.maxMotorKg / 5;
         }
@@ -1141,6 +1145,8 @@ Item {
                         maximumValueAngle: -dl1.rotation
                         labelInset: root.gaugeHeight
                         labelStepSize: root.motorKgLabelStepSize
+
+                        tickmarkStepSize: root.maxMotorKg < 10 ? 2 : 5
 
                         /**
                           Center point
