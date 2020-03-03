@@ -256,11 +256,14 @@ protected:
     void processFault(VByteArray &vb);
     void processState(VByteArray &vb);
     void processPullingTooHigh(VByteArray &vb);
+    void processOutOfLimits(VByteArray &vb);
     void processUnwindedToOpposite(VByteArray &vb);
     void processUnwindedFromSlowing(VByteArray &vb);
     void processDetectingMotion(VByteArray &vb);
     void processTooSlowSpeedUp(VByteArray &vb);
     void processSettingsApplied(VByteArray &vb);
+    void processZeroIsSet(VByteArray &vb);
+    void processForceIsSet(VByteArray &vb);
     void processSettingsV1(VByteArray &vb);
     void updateAliveResponseStats(const int millis);
 };

@@ -97,19 +97,19 @@ void Skypuff::setState(const skypuff_state newState)
             stateText = tr("Manual Braking");
             break;
         case MANUAL_SLOW_SPEED_UP:
-            stateText = tr("Manual Speed Up");
+            stateText = tr("Speed Up");
             break;
         case MANUAL_SLOW:
             stateText = tr("Manual Slow");
             break;
         case MANUAL_SLOW_BACK_SPEED_UP:
-            stateText = tr("Manual Speed Up Back");
+            stateText = tr("Speed Up Back");
             break;
         case MANUAL_SLOW_BACK:
-            stateText = tr("Manual Slow Back");
+            stateText = tr("Slow Back");
             break;
         case BRAKING_EXTENSION:
-            stateText = tr("Braking Extension");
+            stateText = tr("Braking Ext");
             break;
         case UNWINDING:
             stateText = tr("Unwinding");
@@ -462,6 +462,12 @@ void Skypuff::customAppDataReceived(QByteArray data)
     case SK_COMM_PULLING_TOO_HIGH:
         processPullingTooHigh(vb);
         break;
+    case SK_COMM_OUT_OF_LIMITS:
+        processOutOfLimits(vb);
+        break;
+    case SK_COMM_FORCE_IS_SET:
+        processForceIsSet(vb);
+        break;
     case SK_COMM_UNWINDED_TO_OPPOSITE:
         processUnwindedToOpposite(vb);
         break;
@@ -476,6 +482,9 @@ void Skypuff::customAppDataReceived(QByteArray data)
         break;
     case SK_COMM_TOO_SLOW_SPEED_UP:
         processTooSlowSpeedUp(vb);
+        break;
+    case SK_COMM_ZERO_IS_SET:
+        processZeroIsSet(vb);
         break;
     case SK_COMM_SETTINGS_V1:
         processSettingsV1(vb);
@@ -534,7 +543,7 @@ void Skypuff::processPullingTooHigh(VByteArray &vb)
         return;
     }
 
-    setStatus(tr("Pulling too high - %1Kg").arg(QString::number(current / cfg.amps_per_kg, 'g', 2)));
+    setStatus(tr("Pulling too high - %1Kg").arg((double)(current / cfg.amps_per_kg), 0, 'f', 2));
 }
 
 void Skypuff::processUnwindedToOpposite(VByteArray &vb)
@@ -547,7 +556,7 @@ void Skypuff::processUnwindedToOpposite(VByteArray &vb)
         return;
     }
 
-    setStatus(tr("Unwinded to opposite braking zone"));
+    setStatus(tr("Opposite braking zone"));
 }
 
 void Skypuff::processUnwindedFromSlowing(VByteArray &vb)
@@ -560,7 +569,7 @@ void Skypuff::processUnwindedFromSlowing(VByteArray &vb)
         return;
     }
 
-    setStatus(tr("Unwinded from slowing zone"));
+    setStatus(tr("Slowing zone passed"));
 }
 
 void Skypuff::processDetectingMotion(VByteArray &vb)
@@ -589,6 +598,52 @@ void Skypuff::processTooSlowSpeedUp(VByteArray &vb)
     setStatus(tr("Too slow speed up"));
 }
 
+void Skypuff::processForceIsSet(VByteArray &vb)
+{
+    // Enough data?
+    const int force_is_set_packet_length = 4;
+    if(vb.length() < force_is_set_packet_length) {
+        vesc->emitMessageDialog(tr("Can't deserialize force is set command packet"),
+                                tr("Received %1 bytes, expected %2 bytes!").arg(vb.length()).arg(force_is_set_packet_length),
+                                true);
+        vesc->disconnectPort();
+    }
+
+    // Calculate amps_per_sec
+    float pull_current = vb.vbPopFrontDouble16(1e1);
+    float amps_per_sec = vb.vbPopFrontDouble16(1e1);
+
+    setStatus(tr("%1Kg (%2A, %3A/sec)").
+                arg(pull_current / cfg.amps_per_kg, 0, 'f', 2).
+                arg(pull_current, 0, 'f', 1).
+                arg(amps_per_sec, 0, 'f', 1));
+
+    //setStatus(tr("%1Kg (%2A) is set").
+    //            arg(lastForceKg, 0, 'f', 2).
+    //            arg(pull_current, 0, 'f', 1));
+
+    if(vb.length()) {
+        vesc->emitMessageDialog(tr("Extra bytes received with force is set command packet"),
+                                tr("Received %1 extra bytes!").arg(vb.length()),
+                                true);
+        vesc->disconnectPort();
+        return;
+    }
+}
+
+void Skypuff::processZeroIsSet(VByteArray &vb)
+{
+    if(vb.length()) {
+        vesc->emitMessageDialog(tr("Extra bytes received with zero is set command packet"),
+                                tr("Received %1 extra bytes!").arg(vb.length()),
+                                true);
+        vesc->disconnectPort();
+        return;
+    }
+
+    setStatus(tr("Zero is set"));
+}
+
 void Skypuff::processSettingsApplied(VByteArray &vb)
 {
     if(vb.length()) {
@@ -600,6 +655,22 @@ void Skypuff::processSettingsApplied(VByteArray &vb)
     }
 
     vesc->emitMessageDialog(tr("Settings are set"), tr("Have a nice puffs"), true);
+}
+
+void Skypuff::processOutOfLimits(VByteArray &vb)
+{
+    // Enough data?
+    const int pulling_too_high_packet_length = 1;
+    if(vb.length() < pulling_too_high_packet_length) {
+        vesc->emitMessageDialog(tr("Can't deserialize out of limits command packet"),
+                                tr("Received %1 bytes, expected %2 bytes!").arg(vb.length()).arg(pulling_too_high_packet_length),
+                                true);
+        vesc->disconnectPort();
+    }
+
+    QString msg = QString::fromUtf8(vb);
+
+    vesc->emitMessageDialog(tr("Configuration is out of limits"), msg, false);
 }
 
 void Skypuff::processState(VByteArray &vb)

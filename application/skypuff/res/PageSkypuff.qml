@@ -210,11 +210,13 @@ Page {
             }
         }
 
+        /*
         GaugeDebug {
             id: debugBlock
             gauge: sGauge
             visible: true
         }
+        //*/
 
         // Vertical space
         Item {
@@ -244,7 +246,7 @@ Page {
                 text: "←";
                 enabled: parent.isManualSlowButtonsEnabled()
                 visible: parent.isManualSlowButtonsVisible()
-                onClicked: {Skypuff.sendTerminal("set manual_slow")}
+                onClicked: Skypuff.sendTerminal("set manual_slow")
                 Material.background: '#A5D6A7'
             }
 
@@ -266,7 +268,7 @@ Page {
                 from: 1
                 suffix: qsTr("Kg")
 
-                onValueModified: {Skypuff.sendTerminal("force %1".arg(value))}
+                onValueModified: Skypuff.sendTerminal("force %1".arg(value))
             }
 
             Item {
@@ -278,7 +280,7 @@ Page {
                 text: "→";
                 enabled: parent.isManualSlowButtonsEnabled()
                 visible: parent.isManualSlowButtonsVisible()
-                onClicked: {Skypuff.sendTerminal("set manual_slow_back")}
+                onClicked: Skypuff.sendTerminal("set manual_slow_back")
                 Material.background: '#A5D6A7'
             }
         }

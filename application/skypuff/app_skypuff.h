@@ -24,20 +24,23 @@
 /* --- This is common file for MCU and UI SkyPUFF apps --- */
 
 // Do not forget to add next settings version command on skypuff_config struct update
-// Skypuff commands into COMM_CUSTOM_APP_DATA
+// Skypuff commands with COMM_CUSTOM_APP_DATA
 typedef enum
 {
-    SK_COMM_SETTINGS_V1,           // Receive settings on get_conf
-    SK_COMM_ALIVE_POWER_STATS,     // Get alive timeout from UI and send back power stats
-    SK_COMM_ALIVE_TEMP_STATS,      // Get alive timeout from UI and send back power and temp stats
-    SK_COMM_FAULT,                 // Send Fault code to UI
-    SK_COMM_STATE,                 // Send/receive new state
-    SK_COMM_PULLING_TOO_HIGH,      // Msg to UI
-    SK_COMM_UNWINDED_TO_OPPOSITE,  // Msg to UI
-    SK_COMM_UNWINDED_FROM_SLOWING, // Msg to UI
-    SK_COMM_DETECTING_MOTION,      // Msg to UI
-    SK_COMM_TOO_SLOW_SPEED_UP,     // Msg to UI
-    SK_COMM_SETTINGS_APPLIED,      // Msg to UI
+    SK_COMM_SETTINGS_V1,          // Receive settings on get_conf
+    SK_COMM_ALIVE_POWER_STATS,    // Get alive timeout from UI and send back power stats
+    SK_COMM_ALIVE_TEMP_STATS,     // Get alive timeout from UI and send back power and temp stats
+    SK_COMM_FAULT,                // Send Fault code to UI
+    SK_COMM_STATE,                // Send/receive new state
+    SK_COMM_PULLING_TOO_HIGH,     // Messages to UI
+    SK_COMM_OUT_OF_LIMITS,        // Will contain entire error message without zero byte
+    SK_COMM_UNWINDED_TO_OPPOSITE, // Many one byte acknowledgments
+    SK_COMM_UNWINDED_FROM_SLOWING,
+    SK_COMM_DETECTING_MOTION,
+    SK_COMM_TOO_SLOW_SPEED_UP,
+    SK_COMM_ZERO_IS_SET,
+    SK_COMM_FORCE_IS_SET,
+    SK_COMM_SETTINGS_APPLIED,
 } skypuff_custom_app_data_command;
 
 // Winch FSM
@@ -194,6 +197,8 @@ inline const char *sk_command_str(const skypuff_custom_app_data_command c)
         return "SK_COMM_STATE";
     case SK_COMM_PULLING_TOO_HIGH:
         return "SK_COMM_PULLING_TOO_HIGH";
+    case SK_COMM_OUT_OF_LIMITS:
+        return "SK_COMM_OUT_OF_LIMITS";
     case SK_COMM_UNWINDED_TO_OPPOSITE:
         return "SK_COMM_UNWINDED_TO_OPPOSITE";
     case SK_COMM_UNWINDED_FROM_SLOWING:
@@ -202,6 +207,10 @@ inline const char *sk_command_str(const skypuff_custom_app_data_command c)
         return "SK_COMM_DETECTING_MOTION";
     case SK_COMM_TOO_SLOW_SPEED_UP:
         return "SK_COMM_TOO_SLOW_SPEED_UP";
+    case SK_COMM_ZERO_IS_SET:
+        return "SK_COMM_ZERO_IS_SET";
+    case SK_COMM_FORCE_IS_SET:
+        return "SK_COMM_FORCE_IS_SET";
     case SK_COMM_SETTINGS_APPLIED:
         return "SK_COMM_SETTINGS_APPLIED";
     default:
