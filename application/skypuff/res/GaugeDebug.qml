@@ -123,6 +123,28 @@ ColumnLayout {
         }
 
         Label {
+            text: 'Acc val:'
+            font.pixelSize: debug.fontSize
+        }
+
+        Label {
+            text: prettyNumber(acceleration.value)
+            font.pixelSize: debug.valFontSize
+        }
+
+        Slider {
+            id: acceleration
+            from: -20
+            to: 20
+            value: gauge.acceleration
+            Layout.fillWidth: true
+            Layout.rightMargin: debug.paddingLeft
+
+            onValueChanged: {
+                gauge.acceleration = value;
+            }
+        }
+        Label {
             text: 'Speed val:'
             font.pixelSize: debug.fontSize
         }

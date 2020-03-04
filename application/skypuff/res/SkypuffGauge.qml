@@ -13,6 +13,7 @@ Item {
     SystemPalette {id: systemPalette; colorGroup: SystemPalette.Active}
 
     property real speedMs: 0
+    property real acceleration: 5
     property real maxSpeedMs: 20
     property real minSpeedMs: maxSpeedMs * -1
 
@@ -167,12 +168,13 @@ Item {
 
     }
 
-    onMaxMotorKgChanged: root.setMaxMotorKg()
-    onMaxRopeMetersChanged: setMaxRopeMeters()
-    onMaxPowerChanged: root.setMaxPower()
-    onMaxSpeedMsChanged: root.getSpeedLimit()
-    onMinSpeedMsChanged: root.getSpeedLimit()
-    onMinPowerChanged: root.setMinPower()
+    onMaxMotorKgChanged: root.setMaxMotorKg();
+    onMaxRopeMetersChanged: setMaxRopeMeters();
+    onMaxPowerChanged: root.setMaxPower();
+    onMaxSpeedMsChanged: root.getSpeedLimit();
+    onMinSpeedMsChanged: root.getSpeedLimit();
+    onMinPowerChanged: root.setMinPower();
+    onAccelerationChanged: speedCanvas.requestPaint();
 
     /********************/
 
@@ -619,6 +621,7 @@ Item {
                         root.speedWarning = debug.warning;
                     }
                     canvas.requestPaint();
+                    speedCanvas.requestPaint();
                 }
                 onMotorKgEndAngChanged: {
                     if (root.debug && root.debugBlink) {
@@ -681,36 +684,6 @@ Item {
                     context.restore();
                 }
 
-                function drawSpeedAlongArc(context, speed, centerX, centerY, radius) {
-                    var str = '%1ms'.arg(speed);
-                    var lc;
-
-                    // Calculate angle of str
-                    var angle = (Math.PI * (str.length * 3.8)) / 180; // radians
-
-                    context.save();
-                    context.translate(centerX, centerY);
-                    context.rotate(convertAngToRadian(-180) - angle / 2);
-
-                    for (var n = 0; n < str.length; n++) {
-                        var c = str[n];
-                        // Custom margin for special chars
-                        var d = c === 's' || c === 'm' ? -2 : 0;
-                            d = lc === '.' ? 10 : d;
-
-                        context.rotate(angle / (str.length + d));
-                        context.save();
-                        context.translate(0, -1 * radius);
-                        context.fillStyle = c === '*' ? 'rgba(255, 0, 0, 0)' : progressBars.speedTextColor;
-                        context.fillText(c, 0, 0);
-                        context.restore();
-                        lc = c;
-                    }
-                    context.restore();
-                }
-
-
-
                 function drawRopeAlongArc(context, lrm, rm, centerX, centerY, radius) {
                     lrm += 'm';
                     rm += 'm';
@@ -746,19 +719,80 @@ Item {
                     context.restore();
                 }
 
-                function drawArc(context, str, angle, radius) {
+                function drawSpeedAlongArc(context, speed, acceleration, centerX, centerY, radius) {
+                    speed += 'ms';
+                    speed = speed.split("").reverse().join("");
+                    acceleration += 'ms2';
+                    acceleration = acceleration.split("").reverse().join("");
+
+                    // Calculate width angle of str
+                    var angle = (Math.PI * (speed.length * 3.8)) / 180; // radians
+
+                    context.save();
+                    context.translate(centerX, centerY);
+
+                    // -11.2 - margin
+
+                    var marginAng = (speed.indexOf('.') !== -1 ? -8.2 : -7) + 180
+                    context.rotate(convertAngToRadian(marginAng) - angle);
+                    drawArc(context, acceleration.toString(), angle, radius, true);
+
+                    context.restore();
+
+                    /******/
+
+                    angle = (Math.PI * (acceleration.length * 3.8)) / 180; // radians
+
+                    context.save();
+                    context.translate(centerX, centerY);
+
+                    marginAng = (acceleration.indexOf('.') !== -1 ? -6.4 : -6)
+                    context.rotate(convertAngToRadian(180 + marginAng) + angle);
+                    drawArc(context, speed.toString(), angle, radius, true);
+                    context.restore();
+
+                    /******/
+
+                    angle = convertAngToRadian(180) // radians
+                    context.save();
+                    context.translate(centerX, centerY);
+                    context.rotate(convertAngToRadian(-1));
+                    drawArc(context, '|', angle, radius);
+                    context.restore();
+                }
+
+                function drawArc(context, str, angle, radius, reverse = false) {
                     var lc;
                     for (var n = 0; n < str.length; n++) {
                         var c = str[n];
 
-                        var a = c === 'm' ? -1.2 : 0;
+                        // blyadskij cirk
+                        var a;
+
+                        if (reverse) {
+                            a = lc === 's' ? -2.4 : 0;
+                            a = lc === '.' ? -1 : a;
+                        } else {
+                            a = c === 'm' ? -1.2 : 0;
                             a = lc === '.' ? 1.2 : a;
+                        }
 
                         context.rotate(angle / (str.length) - convertAngToRadian(a));
+                        //console.log(angle / (str.length) - convertAngToRadian(a))
                         context.save();
+                        //console.log(radius)
                         context.translate(0, -1 * radius);
 
-                        context.fillStyle = progressBars.ropeTextColor;
+                        if (reverse) {
+
+                            var cx = context.measureText(c).width ;
+
+                            context.scale(-1, -1, 0, 0);
+                            context.translate(0, Math.max(10, root.diameter * 0.05) / 2);
+
+                        }
+
+                        context.fillStyle = progressBars.speedTextColor;
                         context.fillText(c, 0, 0);
                         context.restore();
                         lc = c;
@@ -985,67 +1019,37 @@ Item {
                     );
 
                     context.beginPath();
-
-
-                    /*progressBars.drawSpeedAlongArc(
-                        context,
-                        root.prettyNumber(root.speedMs),
-                        centreX,
-                        centreY,
-                        baseLayer.radius - root.gaugeHeight
-                    );*/
-
-                    /*progressBars.drawTextAlongArc(
-                        context,
-                        'Rope',
-                        centreX,
-                        centreY,
-                        baseLayer.radius - root.gaugeHeight,
-                        180 -  90 - dl2.rotation,
-                        '#515151'
-                    );*/
                 }
             }
 
-            /*Canvas {
+            Canvas {
                 id: speedCanvas
                 antialiasing: true
                 contextType: '2d'
                 anchors.fill: parent
-                z: 1
-                opacity: 0.8
-
-
-                onWidthChanged:  { requestPaint(); }
-                onHeightChanged: { requestPaint(); }
-
-
 
                 onPaint: {
-
                     var centreX = baseLayer.width / 2;
                     var centreY = baseLayer.height / 2;
 
                     context.reset();
                     context.beginPath();
-                    context.font = "%1px sans-serif".arg(Math.max(10, root.diameter * 0.04));
+                    context.font = "%2 %1px sans-serif"
+                        .arg(Math.max(10, root.diameter * 0.05))
+                        .arg(root.boldValues ? 'bold' : '');
 
-
+                    progressBars.drawSpeedAlongArc(
+                        context,
+                        root.prettyNumber(root.speedMs),
+                        root.prettyNumber(root.acceleration),
+                        centreX,
+                        centreY,
+                        baseLayer.radius - root.gaugeHeight
+                    );
 
                     context.beginPath();
-
-                    progressBars.drawTextAlongArc(
-                        context,
-                        'Rope',
-                        centreX,
-                        centreY + 15,
-                        (circleInner.height - (root.diameter * 0.05)) / 2 ,
-                        //baseLayer.radius - root.gaugeHeight * 1.7,
-                        180  + dl2.rotation + 15,
-                        '#515151'
-                    );
                 }
-            }*/
+            }
 
             Item {
                 id: circleInner
@@ -1519,7 +1523,7 @@ Item {
             /**
               Value of speedMs
               */
-            Grid {
+            /*Grid {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: root.gaugeHeight / 1.7
@@ -1533,12 +1537,12 @@ Item {
                 }
 
                 Text {
-                    text: 'ms'
+                    text: 'm/s'
                     font.family: root.ff
                     font.pixelSize: Math.max(10, root.diameter * 0.05)
                     font.bold: root.boldValues
                 }
-            }
+            }*/
 
             /**
               State
