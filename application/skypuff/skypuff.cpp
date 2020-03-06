@@ -31,41 +31,9 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
     playlist = new QMediaPlaylist(player);
     player->setPlaylist(playlist);
 
-    // Fill message types
-    messageTypes[PARAM_TEXT] = "--";
-    messageTypes[PARAM_POS] = "pos";
-    messageTypes[PARAM_SPEED] = "speed";
-    messageTypes[PARAM_BRAKING] = "braking";
-    messageTypes[PARAM_PULL] = "pull";
-    messageTypes[PARAM_TEMP_FETS] = "t_fets";
-    messageTypes[PARAM_TEMP_MOTOR] = "t_motor";
-    messageTypes[PARAM_TEMP_BAT] = "t_bat";
-    messageTypes[PARAM_WH_IN] = "wh_in";
-    messageTypes[PARAM_WH_OUT] = "wh_out";
-    messageTypes[PARAM_FAULT] = "fault";
-    messageTypes[PARAM_V_BAT] = "v_bat";
-
     connect(vesc, SIGNAL(portConnectedChanged()), this, SLOT(portConnectedChanged()));
     connect(vesc, SIGNAL(messageDialog(QString,QString,bool,bool)), this, SLOT(logVescDialog(const QString&,const QString&)));
     connect(vesc->commands(), SIGNAL(customAppDataReceived(QByteArray)), this, SLOT(customAppDataReceived(QByteArray)));
-
-    // Can't use Q_ENUM because skypuff_state declared out of Q_OBJECT class
-    QString eof = "UNKNOWN";
-    for(int i = 0;;i++) {
-        QString s = state_str((skypuff_state)i);
-        if(eof == s)
-            break;
-        h_states[s] = (skypuff_state)i;
-    }
-
-    // Fill faults string codes
-    eof = "Unknown fault";
-    for(int i = 0;;i++) {
-        QString s = Commands::faultToStr((mc_fault_code)i);
-        if(eof == s)
-            break;
-        h_faults[s] = (mc_fault_code)i;
-    }
 
     setState(DISCONNECTED);
     clearStats();
@@ -97,19 +65,19 @@ void Skypuff::setState(const skypuff_state newState)
             stateText = tr("Manual Braking");
             break;
         case MANUAL_SLOW_SPEED_UP:
-            stateText = tr("Manual Speed Up");
+            stateText = tr("Speed Up");
             break;
         case MANUAL_SLOW:
             stateText = tr("Manual Slow");
             break;
         case MANUAL_SLOW_BACK_SPEED_UP:
-            stateText = tr("Manual Speed Up Back");
+            stateText = tr("Speed Up Back");
             break;
         case MANUAL_SLOW_BACK:
-            stateText = tr("Manual Slow Back");
+            stateText = tr("Slow Back");
             break;
         case BRAKING_EXTENSION:
-            stateText = tr("Braking Extension");
+            stateText = tr("Braking Ext");
             break;
         case UNWINDING:
             stateText = tr("Unwinding");
@@ -303,135 +271,6 @@ void Skypuff::sendSettings(const QMLable_skypuff_config& cfg)
     vesc->commands()->sendCustomAppData(cfg.serializeV1());
 }
 
-// Parse known command and payload
-/*
-bool Skypuff::parsePrintMessage(QStringRef &str, MessageTypeAndPayload &c)
-{
-    int len = str.length();
-
-    if(!len)
-        return false;
-
-    int i;
-
-    // Skip spaces or ','
-    for(i = 0;(str[i].isSpace() || str[i] == ',') && i < len;i++);
-
-    if(i == len)
-        return false;
-
-    if(i)
-        str = str.mid(i);
-
-    for(auto ci = messageTypes.constBegin();ci != messageTypes.constEnd();ci++)
-        if(str.startsWith(ci.value())) {
-            // Payload up to next '--' or end of string
-            c.first = ci.key();
-
-            int e = str.indexOf(c.first == PARAM_TEXT ? "--" : ",", ci.value().length());
-            if(e == -1)
-                e = str.length();
-
-            c.second = str.mid(ci.value().length(), e - ci.value().length()).trimmed();
-            str = str.mid(e);
-
-            return true;
-        }
-
-    // Unknown command type, just ignore
-    return false;
-}
-
-
-void Skypuff::printReceived(QString str)
-{
-    // Parse state
-    int i = str.indexOf(':');
-
-    if(i == -1) {
-        qWarning() << "Can't parse state, no colon" << str;
-        return;
-    }
-
-    QString p_state = str.left(i);
-
-    if(!h_states.contains(p_state)) {
-        qWarning() << "Can't parse state, unknown state" << str;
-        return;
-    }
-
-    QStringRef rStr = str.midRef(i + 1); // Skip ':'
-    QStringList messages;
-    auto fault_parsed = h_faults.end();
-
-    // Parse messages with types
-    MessageTypeAndPayload c;
-    while(parsePrintMessage(rStr, c)) {
-        switch(c.first) {
-        case PARAM_TEXT: // -- Hello baby
-            messages.append(c.second.toString());
-            break;
-        case PARAM_SPEED: // "-0.0ms (-0 ERPM)"
-            if(reSpeed.indexIn(c.second.toString()) != -1)
-                setSpeed(reSpeed.cap(2).toFloat());
-            break;
-        case PARAM_POS: // "0.62m (151 steps)"
-            if(rePos.indexIn(c.second.toString()) != -1)
-                setPos(rePos.cap(2).toFloat());
-            break;
-        case PARAM_TEMP_FETS: // "29.1C"
-            setTempFets(c.second.left(c.second.length() - 1).toFloat());
-            break;
-        case PARAM_TEMP_MOTOR: // "29.1C"
-            setTempMotor(c.second.left(c.second.length() - 1).toFloat());
-            break;
-        case PARAM_TEMP_BAT: // "29.1C"
-            setTempBat(c.second.left(c.second.length() - 1).toFloat());
-            break;
-        case PARAM_WH_IN: // "0.003Wh"
-            setWhIn(c.second.left(c.second.length() - 2).toFloat());
-            break;
-        case PARAM_WH_OUT: // "0.003Wh"
-            setWhOut(c.second.left(c.second.length() - 2).toFloat());
-            break;
-        case PARAM_V_BAT: // "23.3V"
-            setVBat(c.second.left(c.second.length() - 1).toFloat());
-            break;
-        case PARAM_FAULT: // FAULT_CODE_OVER_VOLTAGE
-            fault_parsed = h_faults.find(c.second.toString());
-            if(fault_parsed == h_faults.end()) {
-                qWarning() << "Unknown fault string" << c.second;
-                vesc->emitMessageDialog(tr("Can't parse fault"),
-                                        tr("Unknown code: %s").arg(c.second.toString()),
-                                        false, false);
-            }
-            break;
-        default:
-            break;
-        }
-    };
-
-    // Yeagh, we know the state!
-    setState(p_state);
-
-    // Fault parsed?
-    if(fault_parsed != h_faults.end())
-        setFault(fault_parsed.value());
-
-    // Emit messages signals
-    if(!messages.isEmpty()) {
-        QString title = messages.takeFirst();
-
-        // Only title available?
-        if(messages.isEmpty())
-            setStatus(title);
-        else {
-            vesc->emitMessageDialog(title, messages.join("\n"), false);\
-        }
-    }
-}
-*/
-
 void Skypuff::customAppDataReceived(QByteArray data)
 {
     VByteArray vb(data);
@@ -462,6 +301,12 @@ void Skypuff::customAppDataReceived(QByteArray data)
     case SK_COMM_PULLING_TOO_HIGH:
         processPullingTooHigh(vb);
         break;
+    case SK_COMM_OUT_OF_LIMITS:
+        processOutOfLimits(vb);
+        break;
+    case SK_COMM_FORCE_IS_SET:
+        processForceIsSet(vb);
+        break;
     case SK_COMM_UNWINDED_TO_OPPOSITE:
         processUnwindedToOpposite(vb);
         break;
@@ -476,6 +321,9 @@ void Skypuff::customAppDataReceived(QByteArray data)
         break;
     case SK_COMM_TOO_SLOW_SPEED_UP:
         processTooSlowSpeedUp(vb);
+        break;
+    case SK_COMM_ZERO_IS_SET:
+        processZeroIsSet(vb);
         break;
     case SK_COMM_SETTINGS_V1:
         processSettingsV1(vb);
@@ -534,7 +382,7 @@ void Skypuff::processPullingTooHigh(VByteArray &vb)
         return;
     }
 
-    setStatus(tr("Pulling too high - %1Kg").arg(QString::number(current / cfg.amps_per_kg, 'g', 2)));
+    setStatus(tr("Pulling too high - %1Kg").arg((double)(current / cfg.amps_per_kg), 0, 'f', 2));
 }
 
 void Skypuff::processUnwindedToOpposite(VByteArray &vb)
@@ -547,7 +395,7 @@ void Skypuff::processUnwindedToOpposite(VByteArray &vb)
         return;
     }
 
-    setStatus(tr("Unwinded to opposite braking zone"));
+    setStatus(tr("Opposite braking zone"));
 }
 
 void Skypuff::processUnwindedFromSlowing(VByteArray &vb)
@@ -560,7 +408,7 @@ void Skypuff::processUnwindedFromSlowing(VByteArray &vb)
         return;
     }
 
-    setStatus(tr("Unwinded from slowing zone"));
+    setStatus(tr("Slowing zone passed"));
 }
 
 void Skypuff::processDetectingMotion(VByteArray &vb)
@@ -589,6 +437,52 @@ void Skypuff::processTooSlowSpeedUp(VByteArray &vb)
     setStatus(tr("Too slow speed up"));
 }
 
+void Skypuff::processForceIsSet(VByteArray &vb)
+{
+    // Enough data?
+    const int force_is_set_packet_length = 4;
+    if(vb.length() < force_is_set_packet_length) {
+        vesc->emitMessageDialog(tr("Can't deserialize force is set command packet"),
+                                tr("Received %1 bytes, expected %2 bytes!").arg(vb.length()).arg(force_is_set_packet_length),
+                                true);
+        vesc->disconnectPort();
+    }
+
+    // Calculate amps_per_sec
+    float pull_current = vb.vbPopFrontDouble16(1e1);
+    float amps_per_sec = vb.vbPopFrontDouble16(1e1);
+
+    setStatus(tr("%1Kg (%2A, %3A/sec)").
+                arg(pull_current / cfg.amps_per_kg, 0, 'f', 2).
+                arg(pull_current, 0, 'f', 1).
+                arg(amps_per_sec, 0, 'f', 1));
+
+    //setStatus(tr("%1Kg (%2A) is set").
+    //            arg(lastForceKg, 0, 'f', 2).
+    //            arg(pull_current, 0, 'f', 1));
+
+    if(vb.length()) {
+        vesc->emitMessageDialog(tr("Extra bytes received with force is set command packet"),
+                                tr("Received %1 extra bytes!").arg(vb.length()),
+                                true);
+        vesc->disconnectPort();
+        return;
+    }
+}
+
+void Skypuff::processZeroIsSet(VByteArray &vb)
+{
+    if(vb.length()) {
+        vesc->emitMessageDialog(tr("Extra bytes received with zero is set command packet"),
+                                tr("Received %1 extra bytes!").arg(vb.length()),
+                                true);
+        vesc->disconnectPort();
+        return;
+    }
+
+    setStatus(tr("Zero is set"));
+}
+
 void Skypuff::processSettingsApplied(VByteArray &vb)
 {
     if(vb.length()) {
@@ -600,6 +494,22 @@ void Skypuff::processSettingsApplied(VByteArray &vb)
     }
 
     vesc->emitMessageDialog(tr("Settings are set"), tr("Have a nice puffs"), true);
+}
+
+void Skypuff::processOutOfLimits(VByteArray &vb)
+{
+    // Enough data?
+    const int pulling_too_high_packet_length = 1;
+    if(vb.length() < pulling_too_high_packet_length) {
+        vesc->emitMessageDialog(tr("Can't deserialize out of limits command packet"),
+                                tr("Received %1 bytes, expected %2 bytes!").arg(vb.length()).arg(pulling_too_high_packet_length),
+                                true);
+        vesc->disconnectPort();
+    }
+
+    QString msg = QString::fromUtf8(vb);
+
+    vesc->emitMessageDialog(tr("Configuration is out of limits"), msg, false);
 }
 
 void Skypuff::processState(VByteArray &vb)
@@ -1011,10 +921,11 @@ void Skypuff::setVBat(const float newVBat)
 
 void Skypuff::setStatus(const QString& newStatus)
 {
-    if(status != newStatus) {
+    // Do not filter same messages!
+    //if(status != newStatus) {
         status = newStatus;
         emit statusChanged(newStatus);
-    }
+    //}
 }
 
 QVariantList Skypuff::serialPortsToQml()
