@@ -494,10 +494,10 @@ ColumnLayout {
 
             nextCheckState: {
                 var value = checkState === Qt.Checked;
-                gauge.ropeWarning = value;
-                gauge.powerWarning = value;
-                gauge.motorKgWarning= value;
-                gauge.speedWarning = value;
+                gauge.isRopeWarning = value;
+                gauge.isPowerWarning = value;
+                gauge.isMotorKgWarning= value;
+                gauge.isSpeedWarning = value;
                 gauge.isBatteryWarning = value;
             }
         }
@@ -508,10 +508,10 @@ ColumnLayout {
 
             nextCheckState: {
                 var value = checkState === Qt.Checked;
-                gauge.ropeDanger = value;
-                gauge.powerDanger = value;
-                gauge.motorKgDanger = value;
-                gauge.speedDanger = value;
+                gauge.isRopeBlinking = value;
+                gauge.isPowerBlinking = value;
+                gauge.isMotorKgBlinking = value;
+                gauge.isSpeedBlinking = value;
                 gauge.isBatteryBlinking = value;
             }
         }

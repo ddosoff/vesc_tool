@@ -13,7 +13,7 @@ Item {
     SystemPalette {id: systemPalette; colorGroup: SystemPalette.Active}
 
     property real speedMs: 0
-    property real acceleration: 5
+    property real acceleration: 0
     property real maxSpeedMs: 20
     property real minSpeedMs: maxSpeedMs * -1
 
@@ -49,10 +49,6 @@ Item {
     property real whIn: 0.0
     property real whOut: 0.0
 
-    property bool isBatteryBlinking: false
-    property bool isBatteryWarning: false
-    property bool isBatteryScaleValid: false
-
     property bool showCharginAnimation: false
 
     property string ff: 'Roboto'
@@ -63,7 +59,6 @@ Item {
     ********************/
 
     property real baseOpacity: 1  // Opacity is to all colors of the scale
-
     property string gaugeDangerFontColor: '#8e1616' // Color for danger ranges
     property string gaugeFontColor: '#374759'
     property string gaugeColor: '#dfe3e8'
@@ -74,38 +69,37 @@ Item {
     property string color: '#F7F7F7'            // Main backgroundColor
     property string innerColor: color
 
-
     // Default for all scales
-    property string defaultColor: '#A5D6A7'  // base succes color
+    property string defaultColor: '#A5D6A7'  // base success color
     property string dangerColor: '#ef8383'   // attention color
-    property string dangerTextColor: '#F44336'
+    property string dangerTextColor: 'red'
     property string warningColor: '#dbdee3'  // blink color
     property int gaugesColorAnimation: 1000  // freq of blinking
 
     // Rope
     property string ropeColor: root.defaultColor
     property string ropeWarningColor: root.warningColor
-    property string ropeDangerColor: root.dangerColor
+    property string ropeBlinkingColor: root.dangerColor
 
     // MotorKg
     property string motorKgColor: root.defaultColor
     property string motorKgWarningColor: root.warningColor
-    property string motorKgDangerColor: root.dangerColor
+    property string motorKgBlinkingColor: root.dangerColor
 
     // Power
     property string powerColor: root.defaultColor
     property string powerWarningColor: root.warningColor
-    property string powerDangerColor: root.dangerColor
+    property string powerBlinkingColor: root.dangerColor
 
     // Speed
     property string speedColor: root.defaultColor
     property string speedWarningColor: root.warningColor
-    property string speedDangerColor: root.dangerColor
+    property string speedBlinkingColor: root.dangerColor
 
     // Battery
     property string battColor: root.defaultColor
     property string battWarningColor: root.warningColor
-    property string battDangerColor: root.dangerColor
+    property string battBlinkingColor: root.dangerColor
 
 
     /********************
@@ -123,7 +117,7 @@ Item {
     implicitWidth: diameter
     implicitHeight: diameter + (batteryBlock.height) + marginTop + batteryTopMargin
 
-    property int diagLAnc: 55                   // Angle of diagonal lines from 12 hours
+    property int diagLAnc: 55  // Angle of diagonal lines from 12 hours
 
     /********************
             Gauge
@@ -142,14 +136,23 @@ Item {
     ********************/
     property bool debug: false
     property bool debugBlink: false
-    property bool motorKgWarning: false
-    property bool motorKgDanger: false
-    property bool ropeWarning: false
-    property bool ropeDanger: false
-    property bool powerWarning: false
-    property bool powerDanger: false
-    property bool speedWarning: false
-    property bool speedDanger: false
+
+    property bool isBatteryBlinking: false
+    property bool isBatteryWarning: false
+    property bool isBatteryScaleValid: false
+
+    property bool isMotorKgWarning: false // isBatteryBlinking
+    property bool isMotorKgBlinking: false
+
+    property bool isRopeWarning: false
+    property bool isRopeBlinking: false
+
+    property bool isPowerWarning: false
+    property bool isPowerBlinking: false
+
+    property bool isSpeedWarning: false
+    property bool isSpeedBlinking: false
+
     property int angK: 1000
 
     /********************/
@@ -165,7 +168,6 @@ Item {
     onFaultChanged:  {
         status.text = root.fault;
         faultsBlinker.start();
-
     }
 
     onMaxMotorKgChanged: root.setMaxMotorKg();
@@ -464,21 +466,21 @@ Item {
                 property string powerBgColor: root.textColor
                 property string kgBgColor: root.textColor
 
-                property bool ropeD: root.ropeDanger
-                property bool ropeW: root.ropeWarning
-                property string ropeDColor: root.ropeDangerColor
+                property bool ropeD: root.isRopeBlinking
+                property bool ropeW: root.isRopeWarning
+                property string ropeDColor: root.ropeBlinkingColor
 
-                property bool powerD: root.powerDanger
-                property bool powerW: root.powerWarning
-                property string powerDColor: root.powerDangerColor
+                property bool powerD: root.isPowerBlinking
+                property bool powerW: root.isPowerWarning
+                property string powerDColor: root.powerBlinkingColor
 
-                property bool motorKgD: root.motorKgDanger
-                property bool motorKgW: root.motorKgWarning
-                property string motorKgDColor: root.motorKgDangerColor
+                property bool motorKgD: root.isMotorKgBlinking
+                property bool motorKgW: root.isMotorKgWarning
+                property string motorKgDColor: root.motorKgBlinkingColor
 
-                property bool speedD: root.speedDanger
-                property bool speedW: root.speedWarning
-                property string speedDColor: root.speedDangerColor
+                property bool speedD: root.isSpeedBlinking
+                property bool speedW: root.isSpeedWarning
+                property string speedDColor: root.speedBlinkingColor
 
                 /*************** ROPE ***************/
 
@@ -486,7 +488,7 @@ Item {
                     // Count of loops
                     ropeDAnimation.loops = ropeD ? Animation.Infinite : 1;
                     // Restore default color
-                    if (!ropeD) ropeDColor = root.ropeDangerColor;
+                    if (!ropeD) ropeDColor = root.ropeBlinkingColor;
                     canvas.requestPaint();
                 }
 
@@ -495,8 +497,8 @@ Item {
 
                 ColorAnimation on ropeDColor {
                     id: ropeDAnimation
-                    running: root.ropeDanger
-                    from: root.ropeDangerColor
+                    running: root.isRopeBlinking
+                    from: root.ropeBlinkingColor
                     to: root.ropeWarningColor
                     duration: root.gaugesColorAnimation
                     loops: Animation.Infinite // Loops will be controlled in onRopeDChanged
@@ -506,7 +508,7 @@ Item {
 
                 onPowerDChanged: {
                     powerDAnimation.loops = powerD ? Animation.Infinite : 1;
-                    if (!powerD) powerDColor = root.powerDangerColor;
+                    if (!powerD) powerDColor = root.powerBlinkingColor;
                     canvas.requestPaint();
                 }
 
@@ -515,8 +517,8 @@ Item {
 
                 ColorAnimation on powerDColor {
                     id: powerDAnimation
-                    running: root.powerDanger
-                    from: root.powerDangerColor
+                    running: root.isPowerBlinking
+                    from: root.powerBlinkingColor
                     to: root.powerWarningColor
                     duration: root.gaugesColorAnimation
                     loops: Animation.Infinite
@@ -526,7 +528,7 @@ Item {
 
                 onMotorKgDChanged: {
                     motorKgDAnimation.loops = motorKgD ? Animation.Infinite : 1;
-                    if (!motorKgD) motorKgDColor = root.motorKgDangerColor;
+                    if (!motorKgD) motorKgDColor = root.motorKgBlinkingColor;
                     canvas.requestPaint();
                 }
 
@@ -535,8 +537,8 @@ Item {
 
                 ColorAnimation on motorKgDColor {
                     id: motorKgDAnimation
-                    running: root.motorKgDanger
-                    from: root.motorKgDangerColor
+                    running: root.isMotorKgBlinking
+                    from: root.motorKgBlinkingColor
                     to: root.motorKgWarningColor
                     duration: root.gaugesColorAnimation
                     loops: Animation.Infinite
@@ -546,7 +548,7 @@ Item {
 
                 onSpeedDChanged: {
                     speedDAnimation.loops = speedD ? Animation.Infinite : 1;
-                    if (!speedD) speedDColor = root.speedDangerColor;
+                    if (!speedD) speedDColor = root.speedBlinkingColor;
                     canvas.requestPaint();
                 }
 
@@ -555,8 +557,8 @@ Item {
 
                 ColorAnimation on speedDColor {
                     id: speedDAnimation
-                    running: root.speedDanger
-                    from: root.speedDangerColor
+                    running: root.isSpeedBlinking
+                    from: root.speedBlinkingColor
                     to: root.speedWarningColor
                     duration: root.gaugesColorAnimation
                     loops: Animation.Infinite
@@ -607,8 +609,8 @@ Item {
                     if (root.debug && root.debugBlink) {
                         // Only for debug
                         var debug = debugBlink(root.ropeMeters, root.maxRopeMeters);
-                        root.ropeDanger = debug.danger;
-                        root.ropeWarning = debug.warning;
+                        root.isRopeBlinking = debug.danger;
+                        root.isRopeWarning = debug.warning;
                     }
                     canvas.requestPaint();
                     ropeCanvas.requestPaint();
@@ -617,8 +619,8 @@ Item {
                 onSpeedEndAngChanged: {
                     if (root.debug && root.debugBlink) {
                         var debug = debugBlink(root.speedMs, root.maxSpeedMs);
-                        root.speedDanger = debug.danger;
-                        root.speedWarning = debug.warning;
+                        root.isSpeedBlinking = debug.danger;
+                        root.isSpeedWarning = debug.warning;
                     }
                     canvas.requestPaint();
                     speedCanvas.requestPaint();
@@ -626,8 +628,8 @@ Item {
                 onMotorKgEndAngChanged: {
                     if (root.debug && root.debugBlink) {
                         var debug = debugBlink(root.motorKg, root.maxMotorKg);
-                        root.motorKgDanger = debug.danger;
-                        root.motorKgWarning = debug.warning;
+                        root.isMotorKgBlinking = debug.danger;
+                        root.isMotorKgWarning = debug.warning;
                     }
                     canvas.requestPaint();
                 }
@@ -635,8 +637,8 @@ Item {
                     if (root.debug && root.debugBlink) {
                         var debugMax = debugBlink(root.power, root.maxPower);
                         var debugMin = debugBlink(root.power, root.minPower);
-                        root.powerDanger = root.power < 0 ? debugMin.danger : debugMax.danger;
-                        root.powerWarning = root.power < 0 ? debugMin.warning : debugMax.warning;
+                        root.isPowerBlinking = root.power < 0 ? debugMin.danger : debugMax.danger;
+                        root.isPowerWarning = root.power < 0 ? debugMin.warning : debugMax.warning;
                     }
                     canvas.requestPaint()
                 }
@@ -684,118 +686,165 @@ Item {
                     context.restore();
                 }
 
-                function drawRopeAlongArc(context, lrm, rm, centerX, centerY, radius) {
-                    lrm += 'm';
-                    rm += 'm';
+                function drawRopeAlongArc(context, lrm, rm, centerX, centerY, radius, fontSize) {
+
+                    lrm = "%1m".arg(lrm);
+                    rm = "%1m".arg(rm);
+
+                    context.font = "%2 %1px sans-serif"
+                        .arg(fontSize)
+                        .arg(root.boldValues ? 'bold' : '');
+
+                    /*** Left rope m ***/
 
                     // Calculate width angle of str
-                    var angle = (Math.PI * (lrm.length * 3.8)) / 180; // radians
+/*                    var angle = (Math.PI * (lrm.length * 3.8)) / 180; // radians
 
                     context.save();
                     context.translate(centerX, centerY);
 
                     // -11.2 - margin
-
                     var marginAng = lrm.indexOf('.') !== -1 ? -10 : -11.2
                     context.rotate(convertAngToRadian(marginAng) - angle);
-                    drawArc(context, lrm.toString(), angle, radius);
-                    context.restore();
+                    drawArc(context, lrm.toString(), radius);
+                    context.restore();*/
 
-                    /******/
-
-                    angle = (Math.PI * (rm.length * 3.8)) / 180; // radians
                     context.save();
                     context.translate(centerX, centerY);
-                    drawArc(context, rm.toString(), angle, radius);
+                    context.rotate(convertAngToRadian(0 - gerBatStrWidth(context, lrm, fontSize) -10));
+                    drawArc(context, lrm, radius, fontSize);
                     context.restore();
 
-                    /******/
+                    /*** Rope m ***/
 
-                    angle = 0 // radians
+/*                    angle = (Math.PI * (rm.length * 3.8)) / 180; // radians
+                    context.save();
+                    context.translate(centerX, centerY);
+                    drawArc(context, rm.toString(), radius);
+                    context.restore();*/
+
+                    context.save();
+                    context.translate(centerX, centerY);
+                    context.rotate(convertAngToRadian(-0));
+                    drawArc(context, rm, radius, fontSize);
+                    context.restore();
+
+                    /*** Divider ***/
+
+                    //angle = 0 // radians
                     context.save();
                     context.translate(centerX, centerY);
                     context.rotate(convertAngToRadian(-1));
-                    drawArc(context, '|', angle, radius);
+                    drawArc(context, '|', radius);
                     context.restore();
                 }
 
-                function drawSpeedAlongArc(context, speed, acceleration, centerX, centerY, radius) {
-                    speed += 'ms';
+                function gerBatStrWidth(context, str, fs, reverse = false) {
+                    var fullWidth = 0;
+                    for (var n = 0; n < str.length; n++) {
+                         var c = str[n];
+                         var fontSize = fs;
+                         var margin = 0;
+
+                        /*if ('m/s'.indexOf(c) !== -1) {
+                            var newfontSize = fontSize * 0.85;
+                            fontSize = newfontSize;
+                        }
+
+                        context.font = "%2 %1px sans-serif"
+                            .arg(fontSize)
+                            .arg(root.boldValues ? 'bold' : '');*/
+
+                        // Calculating every letter's width and correcting spacing
+                        var width = (context.measureText(c).width / (fs / (reverse ? 6.9 : 6.3)));
+                        // width += c === '.' || str[n-1] === '.' ? -0.5 : 0;
+                        width += str[n-1] === 'm' || str[n-1] === '.' ? 0.5 : 0;
+                        if (!reverse) {
+                            width += str[n] === '.' ? 2 : 0;
+                            width += str[n - 1] === '.' ? -2 : 0;
+                        }
+
+                        fullWidth += width;
+                    }
+                    return fullWidth;
+                }
+
+                function drawSpeedAlongArc(context, speed, acceleration, centerX, centerY, radius, fontSize) {
+                    speed = "%1m/s".arg(speed)
                     speed = speed.split("").reverse().join("");
-                    acceleration += 'ms2';
+
+                    acceleration = "(%2m/ss)".arg(acceleration)
                     acceleration = acceleration.split("").reverse().join("");
 
+                    context.font = "%2 %1px sans-serif"
+                        .arg(fontSize)
+                        .arg(root.boldValues ? 'bold' : '');
+
+                    /*** Speed ***/
+
                     // Calculate width angle of str
-                    var angle = (Math.PI * (speed.length * 3.8)) / 180; // radians
+                    //var width = getStrWidth(context, speed)
 
                     context.save();
                     context.translate(centerX, centerY);
-
-                    // -11.2 - margin
-
-                    var marginAng = (speed.indexOf('.') !== -1 ? -8.2 : -7) + 180
-                    context.rotate(convertAngToRadian(marginAng) - angle);
-                    drawArc(context, acceleration.toString(), angle, radius, true);
-
+                    context.rotate(convertAngToRadian(-178));
+                    drawArc(context, speed, radius, fontSize, true);
                     context.restore();
 
-                    /******/
+                    /*** Acceleration ***/
 
-                    angle = (Math.PI * (acceleration.length * 3.8)) / 180; // radians
+                    //width = getStrWidth(context, acceleration)
 
                     context.save();
                     context.translate(centerX, centerY);
-
-                    marginAng = (acceleration.indexOf('.') !== -1 ? -6.4 : -6)
-                    context.rotate(convertAngToRadian(180 + marginAng) + angle);
-                    drawArc(context, speed.toString(), angle, radius, true);
-                    context.restore();
-
-                    /******/
-
-                    angle = convertAngToRadian(180) // radians
-                    context.save();
-                    context.translate(centerX, centerY);
-                    context.rotate(convertAngToRadian(-1));
-                    drawArc(context, '|', angle, radius);
+                    context.rotate(convertAngToRadian(-181 - gerBatStrWidth(context, acceleration, fontSize, true)));
+                    drawArc(context, acceleration, radius, fontSize, true, true);
                     context.restore();
                 }
 
-                function drawArc(context, str, angle, radius, reverse = false) {
-                    var lc;
-                    for (var n = 0; n < str.length; n++) {
+                function drawArc(context, str, radius, fs, reverse = false) {
+                   for (var n = 0; n < str.length; n++) {
                         var c = str[n];
+                        var fontSize = fs;
+                        var margin = 0;
 
-                        // blyadskij cirk
-                        var a;
-
-                        if (reverse) {
-                            a = lc === 's' ? -2.4 : 0;
-                            a = lc === '.' ? -1 : a;
-                        } else {
-                            a = c === 'm' ? -1.2 : 0;
-                            a = lc === '.' ? 1.2 : a;
+                        /*if ('m/s'.indexOf(c) !== -1) {
+                            var newfontSize = fontSize * 0.85;
+                            margin = fontSize - newfontSize;
+                            fontSize = newfontSize;
                         }
 
-                        context.rotate(angle / (str.length) - convertAngToRadian(a));
-                        //console.log(angle / (str.length) - convertAngToRadian(a))
-                        context.save();
-                        //console.log(radius)
-                        context.translate(0, -1 * radius);
+                        context.font = "%2 %1px sans-serif"
+                            .arg(fontSize)
+                            .arg(root.boldValues ? 'bold' : '');*/
 
-                        if (reverse) {
 
-                            var cx = context.measureText(c).width ;
+                       // Calculating every letter's width and correcting spacing
+                       var width = (context.measureText(c).width / (fs / (reverse ? 6.9 : 6.3)));
+                       //width += c === '.' || str[n-1] === '.' ? -0.5 : 0;
+                       width += str[n-1] === 'm' ? 0.5 : 0;
 
-                            context.scale(-1, -1, 0, 0);
-                            context.translate(0, Math.max(10, root.diameter * 0.05) / 2);
+                       if (!reverse) {
+                           width += str[n] === '.' ? 2 : 0;
+                           width += str[n - 1] === '.' ? -2 : 0;
+                       }
 
-                        }
+                       context.rotate(convertAngToRadian(width));
+                       context.save();
+                       context.translate(0, -1 * radius);
 
-                        context.fillStyle = progressBars.speedTextColor;
+                       if (reverse) {
+                           context.scale(-1, -1, 0, 0);
+                           context.translate(0, fontSize / 2);
+                       }
+
+                       /*if (!!margin && reverse) {
+                            context.translate(0, margin);
+                        }*/
+
+                        context.fillStyle = root.textColor;
                         context.fillText(c, 0, 0);
                         context.restore();
-                        lc = c;
                     }
                 }
 
@@ -850,7 +899,7 @@ Item {
                             context.globalCompositeOperation = 'source-atop';
                             context.lineWidth = 200;
 
-                            var b = root.ropeWarning || root.ropeDanger;
+                            var b = root.isRopeWarning || root.isRopeBlinking;
                             context.strokeStyle = b ? parent.ropeDColor : root.ropeColor;
                             context.stroke();
 
@@ -873,7 +922,7 @@ Item {
                             context.globalCompositeOperation = 'source-atop';
                             context.lineWidth = 200;
 
-                            b = root.speedWarning || root.speedDanger;
+                            b = root.isSpeedWarning || root.isSpeedBlinking;
                             parent.speedTextColor = b ? parent.speedDColor : root.textColor;
                             context.strokeStyle = b ? parent.speedDColor : root.speedColor;
                             context.stroke();
@@ -896,7 +945,7 @@ Item {
 
                             context.lineWidth = root.gaugeHeight * 0.7;
 
-                            b = root.motorKgWarning || root.motorKgDanger;
+                            b = root.isMotorKgWarning || root.isMotorKgBlinking;
                             motoKgTxt1.color = motoKgTxt2.color = b ? root.dangerTextColor : root.textColor;
                             var kgColor = b ? parent.motorKgDColor : root.motorKgColor;
 
@@ -922,7 +971,7 @@ Item {
 
                             context.lineWidth = root.gaugeHeight * 0.7;
 
-                            b = root.powerWarning || root.powerDanger;
+                            b = root.isPowerWarning || root.isPowerBlinking;
                             var powerColor = b ? parent.powerDColor : root.powerColor;
                             powerTxt2.color = powerTxt1.color = b ? root.dangerTextColor : root.textColor;
 
@@ -1005,9 +1054,6 @@ Item {
 
                     context.reset();
                     context.beginPath();
-                    context.font = "%2 %1px sans-serif"
-                        .arg(Math.max(10, root.diameter * 0.05))
-                        .arg(root.boldValues ? 'bold' : '');
 
                     progressBars.drawRopeAlongArc(
                         context,
@@ -1015,7 +1061,8 @@ Item {
                         root.prettyNumber(root.ropeMeters, root.ropeMeters < 10 ? 1 : 0),
                         centreX,
                         centreY,
-                        baseLayer.radius - root.gaugeHeight
+                        baseLayer.radius - root.gaugeHeight,
+                        Math.max(10, root.diameter * 0.05)
                     );
 
                     context.beginPath();
@@ -1034,9 +1081,6 @@ Item {
 
                     context.reset();
                     context.beginPath();
-                    context.font = "%2 %1px sans-serif"
-                        .arg(Math.max(10, root.diameter * 0.05))
-                        .arg(root.boldValues ? 'bold' : '');
 
                     progressBars.drawSpeedAlongArc(
                         context,
@@ -1044,7 +1088,8 @@ Item {
                         root.prettyNumber(root.acceleration),
                         centreX,
                         centreY,
-                        baseLayer.radius - root.gaugeHeight
+                        baseLayer.radius - root.gaugeHeight,
+                        Math.max(10, root.diameter * 0.05)
                     );
 
                     context.beginPath();
@@ -1644,8 +1689,8 @@ Item {
                     id: statusCleaner
                     interval: 5 * 1000
 
-                    onTriggered: {
-                        status.text = root.status
+                    onTriggered: {                      
+                        status.text = root.fault
 
                         if(root.fault) {
                             faultsBlinker.start();

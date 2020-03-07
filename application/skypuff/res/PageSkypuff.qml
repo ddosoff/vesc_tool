@@ -14,8 +14,11 @@ Page {
     property string bgGreenColor: '#A5D6A7'
     property string bgBlueColor: '#90CAF9'
     property string bgRedColor: '#EF9A9A'
-    property real bFontSize: page.width * 0.04
-    property real bHeight: page.width * 0.17
+    property string bgYellowColor: '#FFE082'
+
+    property real bFontSize: Math.max(page.width * 0.04, 10)
+    property real bHeight: Math.max(page.width * 0.17, 10)
+    property real kgValFontSize: Math.max(page.width * 0.04, 10)
 
     // Get normal text color from this palette
     SystemPalette {id: systemPalette; colorGroup: SystemPalette.Active}
@@ -44,7 +47,7 @@ Page {
 
             BigRoundButton {
                 id: bStop
-                enabled: true
+                enabled: false
                 radius: 0
 
                 text: qsTr("Stop")
@@ -52,7 +55,7 @@ Page {
                 Layout.preferredHeight: page.bHeight
                 Layout.fillWidth: true
                 background.anchors.fill: bStop
-                Material.background: '#FFE082'
+                Material.background: page.bgYellowColor
 
                 CustomBorder {
                     visible: parent.enabled
@@ -61,7 +64,7 @@ Page {
                     rBorderwidth: 0
                     tBorderwidth: 0
                     bBorderwidth: 0
-                    borderColor: Qt.darker('#FFE082', 1.2)
+                    borderColor: Qt.darker(page.bgYellowColor, 1.2)
                 }
 
                 onClicked: {Skypuff.sendTerminal("set MANUAL_BRAKING")}
@@ -69,7 +72,7 @@ Page {
         }
 
         /*Label {
-            visible: false
+            visible: true
             id: lState
             text: Skypuff.stateText
 
@@ -86,7 +89,7 @@ Page {
         // or blinking faults
         Text {
             id: tStatus
-            visible: false
+            visible: true
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
 
@@ -135,7 +138,6 @@ Page {
 
         SkypuffGauge {
             id: sGauge
-            debug: false
 
             rootDiameter: page.width
 
@@ -148,10 +150,8 @@ Page {
             tempMotor: Skypuff.tempMotor
             tempBat: Skypuff.tempBat
 
-            //stateText: Skypuff.stateText
-            //stateText: 'Braking Extension'
-            //status: 'Pulling too high 5Kg (11A) is more 4Kg (10A)'
-
+            // Statuses
+            stateText: Skypuff.stateText
             status: Skypuff.fault
 
             Connections {
@@ -167,14 +167,14 @@ Page {
                 onRopeMetersChanged: { sGauge.maxRopeMeters = Skypuff.ropeMeters.toFixed(); }
 
                 // Warning and Blink (bool) | I don't know names of this params
-                //onMotorKgWarningChanged: { sGauge.motorKgWarning = false; } // Warning
-                //onMotorKgDangerChanged: { sGauge.motorKgDanger = false; } // Blink
-                //onRopeWarningChanged: { sGauge.ropeWarning = false; }
-                //onRopeDangerChanged: { sGauge.ropeDanger = false; }
-                //onPowerWarningChanged: { sGauge.powerWarning = false; }
-                //onPowerDangerChanged: { sGauge.powerDanger = false; }
-                //onSpeedWarningChanged: { sGauge.speedWarning = false; }
-                //onSpeedDangerChanged: { sGauge.speedDanger = false; }
+                //onIsMotorKgWarningChanged: { sGauge.isMotorKgWarning = false; } // Warning
+                //onIsMotorKgBlinkingChanged: { sGauge.isMotorKgBlinking = false; } // Blink
+                //onIsRopeWarningChanged: { sGauge.isRopeWarning = false; }
+                //onIsRopeBlinkingChanged: { sGauge.isRopeBlinking = false; }
+                //onIsPowerWarningChanged: { sGauge.isPowerWarning = false; }
+                //onIsPowerBlinkingChanged: { sGauge.ispowerBlinking = false; }
+                //onIsSpeedWarningChanged: { sGauge.isSpeedWarning = false; }
+                //onIsSpeedBlinkingChanged: { sGauge.isSpeedBlinking = false; }
 
                 onIsBatteryBlinkingChanged: { sGauge.isBatteryBlinking = Skypuff.isBatteryBlinking; }
                 onIsBatteryWarningChanged: { sGauge.isBatteryWarning = Skypuff.isBatteryWarning; }
@@ -203,20 +203,20 @@ Page {
 
                 onFaultChanged:  {
                     if(newFault) {
-                        tStatus.text = newFault;
+                        sGauge.status = newFault;
                     }
 
                 }
             }
         }
 
-        /*
-        GaugeDebug {
+
+        /*GaugeDebug {
             id: debugBlock
             gauge: sGauge
             visible: true
-        }
-        //*/
+        }*/
+
 
         // Vertical space
         Item {
@@ -247,7 +247,7 @@ Page {
                 enabled: parent.isManualSlowButtonsEnabled()
                 visible: parent.isManualSlowButtonsVisible()
                 onClicked: Skypuff.sendTerminal("set manual_slow")
-                Material.background: '#A5D6A7'
+                Material.background: page.bgGreenColor
             }
 
             Item {
@@ -261,7 +261,7 @@ Page {
                 Layout.alignment: Qt.AlignHCenter
 
                 enabled: false
-                font.pointSize: 16
+                font.pointSize: page.kgValFontSize
                 font.bold: true
 
                 decimals: 1
@@ -281,7 +281,7 @@ Page {
                 enabled: parent.isManualSlowButtonsEnabled()
                 visible: parent.isManualSlowButtonsVisible()
                 onClicked: Skypuff.sendTerminal("set manual_slow_back")
-                Material.background: '#A5D6A7'
+                Material.background: page.bgGreenColor
             }
         }
 
@@ -307,7 +307,7 @@ Page {
             BigRoundButton {
                 id: bPrePull
                 radius: 0
-                enabled: true
+                enabled: false
 
                 font.pixelSize: page.bFontSize
                 Layout.preferredHeight: page.bHeight
@@ -329,7 +329,7 @@ Page {
             BigRoundButton {
                 id: bUnwinding
                 radius: 0
-                enabled: true
+                enabled: false
 
                 text: qsTr("Unwinding")
                 font.pixelSize: page.bFontSize
