@@ -103,17 +103,17 @@ Item {
             anchors.verticalCenter: battery.verticalCenter
 
             property bool battD: gauge.isBatteryBlinking
-            property string battDColor: gauge.battDangerColor
+            property string battDColor: gauge.battBlinkingColor
 
             onBattDChanged: {
                 battDAnimation.loops = battD ? Animation.Infinite : 1;
-                if (!battD) battDColor = gauge.battDangerColor;
+                if (!battD) battDColor = gauge.battBlinkingColor;
             }
 
             ColorAnimation on battDColor {
                 id: battDAnimation
                 running: gauge.isBatteryBlinking
-                from: gauge.battDangerColor
+                from: gauge.battBlinkingColor
                 to: gauge.battWarningColor
                 duration: gauge.gaugesColorAnimation
                 loops: Animation.Infinite

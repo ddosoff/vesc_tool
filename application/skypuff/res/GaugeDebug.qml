@@ -123,6 +123,28 @@ ColumnLayout {
         }
 
         Label {
+            text: 'Acc val:'
+            font.pixelSize: debug.fontSize
+        }
+
+        Label {
+            text: prettyNumber(acceleration.value)
+            font.pixelSize: debug.valFontSize
+        }
+
+        Slider {
+            id: acceleration
+            from: -20
+            to: 20
+            value: gauge.acceleration
+            Layout.fillWidth: true
+            Layout.rightMargin: debug.paddingLeft
+
+            onValueChanged: {
+                gauge.acceleration = value;
+            }
+        }
+        Label {
             text: 'Speed val:'
             font.pixelSize: debug.fontSize
         }
@@ -472,10 +494,10 @@ ColumnLayout {
 
             nextCheckState: {
                 var value = checkState === Qt.Checked;
-                gauge.ropeWarning = value;
-                gauge.powerWarning = value;
-                gauge.motorKgWarning= value;
-                gauge.speedWarning = value;
+                gauge.isRopeWarning = value;
+                gauge.isPowerWarning = value;
+                gauge.isMotorKgWarning= value;
+                gauge.isSpeedWarning = value;
                 gauge.isBatteryWarning = value;
             }
         }
@@ -486,10 +508,10 @@ ColumnLayout {
 
             nextCheckState: {
                 var value = checkState === Qt.Checked;
-                gauge.ropeDanger = value;
-                gauge.powerDanger = value;
-                gauge.motorKgDanger = value;
-                gauge.speedDanger = value;
+                gauge.isRopeBlinking = value;
+                gauge.isPowerBlinking = value;
+                gauge.isMotorKgBlinking = value;
+                gauge.isSpeedBlinking = value;
                 gauge.isBatteryBlinking = value;
             }
         }
