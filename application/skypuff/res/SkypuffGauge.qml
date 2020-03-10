@@ -53,6 +53,8 @@ Item {
 
     property string ff: 'Roboto'
 
+    property bool smallDimension: false
+
 
     /********************
             Colors
@@ -111,6 +113,7 @@ Item {
     property int paddingRight: 20
     property int marginTop: 20
     property int batteryTopMargin: 20
+    property int borderWidth: 3
 
     property int diameter: rootDiameter - paddingLeft - paddingRight
 
@@ -118,6 +121,27 @@ Item {
     implicitHeight: diameter + (batteryBlock.height) + marginTop + batteryTopMargin
 
     property int diagLAnc: 55  // Angle of diagonal lines from 12 hours
+
+    property string batteryIco: "qrc:/res/icons/battery.svg"
+    property string mcuIco: "qrc:/res/icons/mcu.svg"
+    property string motorIco: "qrc:/res/icons/motor.svg"
+
+    property string tempFontSize: Math.max(10, root.diameter * 0.04)
+    property string tempDimension: 'C'
+    property real tempIcoWH: root.diameter * 0.05 // width and height of temp icons
+
+    property real _valFontSize: Math.max(10, root.diameter * 0.06)
+    property real powerDimensionFontSize: _valFontSize
+    property real powerFontSize: _valFontSize
+    property real motorKgDimensionFontSize: _valFontSize
+    property real motorKgFontSize: _valFontSize
+
+
+    property real statusFontSize: Math.max(10, root.diameter * 0.038)
+
+    property real statusTimerInterval: 5 * 1000 // sec
+
+
 
     /********************
             Gauge
@@ -153,6 +177,10 @@ Item {
     property bool isSpeedWarning: false
     property bool isSpeedBlinking: false
 
+    property bool isTempBatteryWarning: false
+    property bool isTempMcuWarning: false
+    property bool isTempMotorWarning: false
+
     property int angK: 1000
 
     /********************/
@@ -184,7 +212,6 @@ Item {
         if (val >= 1000) {
             return prettyNumber(val / 1000) + ' kwh';
         }
-
         return prettyNumber(val) + ' wh';
     }
 
@@ -220,7 +247,6 @@ Item {
         if (isPrime(res, 1000)) {
             res += 2000;
         }
-
         return res;
     }
 
@@ -238,7 +264,6 @@ Item {
         for (var d = 2; d <= maxStep; d++) {
             if (val % (d * k)  === 0) step = d;
         }
-
         return step;
     }
 
@@ -397,7 +422,7 @@ Item {
             radius: root.diameter / 2
             color: root.color
             border.color: root.borderColor
-            border.width: 3
+            border.width: root.borderWidth
             x: root.paddingLeft
             y: root.marginTop
 
@@ -658,7 +683,6 @@ Item {
                         danger = true;
                         warning = false
                     }
-
                     return { warning, danger };
                 }
 
@@ -666,28 +690,33 @@ Item {
                     return (Math.PI * ang) / 180;
                 }
 
-                function drawTextAlongArc(context, str, centerX, centerY, radius, ang, color) {
-                    var angle = (Math.PI * (str.length * 3.8)) / 180; // radians
+                function drawRopeTitleAlongArc(context, text, centerX, centerY, radius, fontSize) {
+                    context.font = "%2 %1px sans-serif"
+                        .arg(fontSize)
+                        .arg(root.boldValues ? 'bold' : '');
 
                     context.save();
                     context.translate(centerX, centerY);
-                    context.rotate(convertAngToRadian(ang) - angle / 2);
+                    context.rotate(convertAngToRadian(90 -root.diagLAnc - 15));
+                    drawArc(context, text, radius, fontSize);
+                    context.restore();
+                }
 
-                    for (var n = 0; n < str.length; n++) {
-                        var c = str[n];
+                function drawSpeedTitleAlongArc(context, text, centerX, centerY, radius, fontSize) {
+                    text = text.split("").reverse().join("");
 
-                        context.rotate(angle / str.length);
-                        context.save();
-                        context.translate(0, -1 * radius);
-                        context.fillStyle = color;
-                        context.fillText(c, 0, 0);
-                        context.restore();
-                    }
+                    context.font = "%2 %1px sans-serif"
+                        .arg(fontSize)
+                        .arg(root.boldValues ? 'bold' : '');
+
+                    context.save();
+                    context.translate(centerX, centerY);
+                    context.rotate(convertAngToRadian(-180 + (90 - root.diagLAnc) - 15));
+                    drawArc(context, text, radius, fontSize, true);
                     context.restore();
                 }
 
                 function drawRopeAlongArc(context, lrm, rm, centerX, centerY, radius, fontSize) {
-
                     lrm = "%1m".arg(lrm);
                     rm = "%1m".arg(rm);
 
@@ -697,68 +726,48 @@ Item {
 
                     /*** Left rope m ***/
 
-                    // Calculate width angle of str
-/*                    var angle = (Math.PI * (lrm.length * 3.8)) / 180; // radians
-
                     context.save();
                     context.translate(centerX, centerY);
-
-                    // -11.2 - margin
-                    var marginAng = lrm.indexOf('.') !== -1 ? -10 : -11.2
-                    context.rotate(convertAngToRadian(marginAng) - angle);
-                    drawArc(context, lrm.toString(), radius);
-                    context.restore();*/
-
-                    context.save();
-                    context.translate(centerX, centerY);
-                    context.rotate(convertAngToRadian(0 - gerBatStrWidth(context, lrm, fontSize) -10));
+                    context.rotate(convertAngToRadian(0 - getBatStrWidth(context, lrm, fontSize) -8));
                     drawArc(context, lrm, radius, fontSize);
                     context.restore();
 
-                    /*** Rope m ***/
+                    /*** Divider ***/
 
-/*                    angle = (Math.PI * (rm.length * 3.8)) / 180; // radians
                     context.save();
                     context.translate(centerX, centerY);
-                    drawArc(context, rm.toString(), radius);
-                    context.restore();*/
+                    context.rotate(convertAngToRadian(-0.5 - getBatStrWidth(context, '|', fontSize)));
+                    drawArc(context, '|', radius, fontSize);
+                    context.restore();
+
+                    /*** Rope m ***/
 
                     context.save();
                     context.translate(centerX, centerY);
                     context.rotate(convertAngToRadian(-0));
                     drawArc(context, rm, radius, fontSize);
                     context.restore();
-
-                    /*** Divider ***/
-
-                    //angle = 0 // radians
-                    context.save();
-                    context.translate(centerX, centerY);
-                    context.rotate(convertAngToRadian(-1));
-                    drawArc(context, '|', radius);
-                    context.restore();
                 }
 
-                function gerBatStrWidth(context, str, fs, reverse = false) {
+                function getBatStrWidth(context, str, fs, reverse = false) {
                     var fullWidth = 0;
                     for (var n = 0; n < str.length; n++) {
                          var c = str[n];
                          var fontSize = fs;
                          var margin = 0;
 
-                        /*if ('m/s'.indexOf(c) !== -1) {
-                            var newfontSize = fontSize * 0.85;
-                            fontSize = newfontSize;
+                        if (root.smallDimension) {
+                            if ('m/s'.indexOf(c) !== -1) {
+                                var newfontSize = fontSize * 0.85;
+                                fontSize = newfontSize;
+                            }
                         }
 
-                        context.font = "%2 %1px sans-serif"
-                            .arg(fontSize)
-                            .arg(root.boldValues ? 'bold' : '');*/
-
                         // Calculating every letter's width and correcting spacing
-                        var width = (context.measureText(c).width / (fs / (reverse ? 6.9 : 6.3)));
-                        // width += c === '.' || str[n-1] === '.' ? -0.5 : 0;
-                        width += str[n-1] === 'm' || str[n-1] === '.' ? 0.5 : 0;
+                        //var width = (context.measureText(c).width / (fs / (reverse ? 6.9 : 6.3)));
+                        var width = (context.measureText(c).width / (fs / 7));
+                        width += str[n-1] === 'm' ? 0.5 : 0;
+
                         if (!reverse) {
                             width += str[n] === '.' ? 2 : 0;
                             width += str[n - 1] === '.' ? -2 : 0;
@@ -770,20 +779,14 @@ Item {
                 }
 
                 function drawSpeedAlongArc(context, speed, acceleration, centerX, centerY, radius, fontSize) {
-                    speed = "%1m/s".arg(speed)
-                    speed = speed.split("").reverse().join("");
+                    speed = '%1m/s'.arg(speed).split('').reverse().join('');
+                    acceleration = '(%2m/ss)'.arg(acceleration).split('').reverse().join('');
 
-                    acceleration = "(%2m/ss)".arg(acceleration)
-                    acceleration = acceleration.split("").reverse().join("");
-
-                    context.font = "%2 %1px sans-serif"
+                    context.font = '%2 %1px sans-serif'
                         .arg(fontSize)
                         .arg(root.boldValues ? 'bold' : '');
 
                     /*** Speed ***/
-
-                    // Calculate width angle of str
-                    //var width = getStrWidth(context, speed)
 
                     context.save();
                     context.translate(centerX, centerY);
@@ -793,11 +796,10 @@ Item {
 
                     /*** Acceleration ***/
 
-                    //width = getStrWidth(context, acceleration)
-
+                    var width = getBatStrWidth(context, acceleration, fontSize, true)
                     context.save();
                     context.translate(centerX, centerY);
-                    context.rotate(convertAngToRadian(-181 - gerBatStrWidth(context, acceleration, fontSize, true)));
+                    context.rotate(convertAngToRadian(-179 - width));
                     drawArc(context, acceleration, radius, fontSize, true, true);
                     context.restore();
                 }
@@ -808,20 +810,21 @@ Item {
                         var fontSize = fs;
                         var margin = 0;
 
-                        /*if ('m/s'.indexOf(c) !== -1) {
-                            var newfontSize = fontSize * 0.85;
-                            margin = fontSize - newfontSize;
-                            fontSize = newfontSize;
-                        }
+                        if (root.smallDimension) {
+                            if ('m/s'.indexOf(c) !== -1) {
+                                var newfontSize = fontSize * 0.85;
+                                margin = fontSize - newfontSize;
+                                fontSize = newfontSize;
+                            }
 
-                        context.font = "%2 %1px sans-serif"
-                            .arg(fontSize)
-                            .arg(root.boldValues ? 'bold' : '');*/
+                            context.font = "%2 %1px sans-serif"
+                                .arg(fontSize)
+                                .arg(root.boldValues ? 'bold' : '');
+                        }
 
 
                        // Calculating every letter's width and correcting spacing
-                       var width = (context.measureText(c).width / (fs / (reverse ? 6.9 : 6.3)));
-                       //width += c === '.' || str[n-1] === '.' ? -0.5 : 0;
+                       var width = (context.measureText(c).width / (fs / 7));
                        width += str[n-1] === 'm' ? 0.5 : 0;
 
                        if (!reverse) {
@@ -838,9 +841,9 @@ Item {
                            context.translate(0, fontSize / 2);
                        }
 
-                       /*if (!!margin && reverse) {
+                       if (!!margin && reverse && root.smallDimension) {
                             context.translate(0, margin);
-                        }*/
+                        }
 
                         context.fillStyle = root.textColor;
                         context.fillText(c, 0, 0);
@@ -1076,9 +1079,6 @@ Item {
                 anchors.fill: parent
 
                 onPaint: {
-                    var centreX = baseLayer.width / 2;
-                    var centreY = baseLayer.height / 2;
-
                     context.reset();
                     context.beginPath();
 
@@ -1086,13 +1086,59 @@ Item {
                         context,
                         root.prettyNumber(root.speedMs),
                         root.prettyNumber(root.acceleration),
-                        centreX,
-                        centreY,
+                        baseLayer.width / 2,
+                        baseLayer.height / 2,
                         baseLayer.radius - root.gaugeHeight,
                         Math.max(10, root.diameter * 0.05)
                     );
 
                     context.beginPath();
+                }
+            }
+
+            Canvas {
+                id: ropeTitle
+                antialiasing: true
+                contextType: '2d'
+                anchors.fill: parent
+                opacity: 0.4
+                z:5
+
+                onPaint: {
+                    context.reset();
+                    context.beginPath();
+
+                    progressBars.drawRopeTitleAlongArc(
+                        context,
+                        'ROPE',
+                        baseLayer.width / 2 + baseLayer.radius * 0.166,
+                        baseLayer.height / 2 - baseLayer.radius * 0.12,
+                        baseLayer.radius * 0.5,
+                        root.diameter * 0.026
+                    );
+                }
+            }
+
+            Canvas {
+                id: speedTitle
+                antialiasing: true
+                contextType: '2d'
+                anchors.fill: parent
+                opacity: 0.4
+                z:5
+
+                onPaint: {
+                    context.reset();
+                    context.beginPath();
+
+                    progressBars.drawSpeedTitleAlongArc(
+                        context,
+                        'SPEED',
+                        baseLayer.width / 2 - baseLayer.radius * 0.166,
+                        baseLayer.height / 2 + baseLayer.radius * 0.12,
+                        baseLayer.radius * 0.5,
+                        root.diameter * 0.026
+                    );
                 }
             }
 
@@ -1114,7 +1160,6 @@ Item {
 
                 anchors {
                     fill: parent
-                    //margins: gaugeHeight * 0.1
                     margins: baseLayer.border.width
                 }
 
@@ -1566,30 +1611,6 @@ Item {
             }
 
             /**
-              Value of speedMs
-              */
-            /*Grid {
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottom: parent.bottom
-                anchors.bottomMargin: root.gaugeHeight / 1.7
-                spacing: 5
-
-                Text {
-                    text: root.prettyNumber(root.speedMs)
-                    font.family: root.ff
-                    font.pixelSize: Math.max(10, root.diameter * 0.05)
-                    font.bold: root.boldValues
-                }
-
-                Text {
-                    text: 'm/s'
-                    font.family: root.ff
-                    font.pixelSize: Math.max(10, root.diameter * 0.05)
-                    font.bold: root.boldValues
-                }
-            }*/
-
-            /**
               State
               */
             Text {
@@ -1672,11 +1693,10 @@ Item {
                 //font.bold: true
                 anchors.top: parent.top
                 anchors.topMargin: root.gaugeHeight * 4.55 - status.height
-                font.pixelSize: Math.max(10, root.diameter * 0.038)
+                font.pixelSize: root.statusFontSize
                 color:  Qt.lighter(root.textColor);
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter
-
 
                 SequentialAnimation on color {
                     id: faultsBlinker
@@ -1687,16 +1707,13 @@ Item {
 
                 Timer {
                     id: statusCleaner
-                    interval: 5 * 1000
+                    interval: root.statusTimerInterval
 
                     onTriggered: {                      
-                        status.text = root.fault
-
-                        if(root.fault) {
-                            faultsBlinker.start();
-                        } else {
-                            faultsBlinker.stop();
-                        }
+                        status.text = root.fault;
+                        root.fault
+                            ? faultsBlinker.start()
+                            : faultsBlinker.stop();
                     }
                 }
             }
@@ -1706,7 +1723,6 @@ Item {
               */
             Grid {
                 anchors.verticalCenter: parent.verticalCenter
-                //anchors.horizontalCenter: parent.horizontalCenter
                 anchors.left: parent.left
                 anchors.leftMargin: root.gaugeHeight * 2.5
                 spacing: 5
@@ -1715,7 +1731,7 @@ Item {
                     id: motoKgTxt1
                     font.family: root.ff
                     text: root.prettyNumber(root.motorKg, root.motorKg >= 25 ? 0 : 1)
-                    font.pixelSize: Math.max(10, root.diameter * 0.06)
+                    font.pixelSize: root.motorKgFontSize
                     font.bold: root.boldValues
                 }
 
@@ -1724,7 +1740,7 @@ Item {
                     font.family: root.ff
                     text: 'kg'
                     opacity: 0.8
-                    font.pixelSize: Math.max(10, root.diameter * 0.06)
+                    font.pixelSize: root.motorKgDimensionFontSize
                     font.bold: root.boldValues
                 }
             }
@@ -1740,9 +1756,11 @@ Item {
 
                 Text {
                     id: powerTxt1
-                    text: root.prettyNumber(Math.abs(root.power) >= 1000 ? root.power / 1000 : root.power, Math.abs(root.power) > 10000 ? 0 : 2)
+                    text: root.prettyNumber(Math.abs(root.power) >= 1000
+                                            ? root.power / 1000
+                                            : root.power, Math.abs(root.power) > 10000 ? 0 : 2)
                     font.family: root.ff
-                    font.pixelSize: Math.max(10, root.diameter * 0.06)
+                    font.pixelSize: root.powerFontSize
                     font.bold: root.boldValues
                 }
 
@@ -1751,12 +1769,14 @@ Item {
                     text: Math.abs(root.power) >= 1000 ? 'kw' : 'w'
                     font.family: root.ff
                     opacity: 0.8
-                    font.pixelSize: Math.max(10, root.diameter * 0.06)
+                    font.pixelSize: root.powerDimensionFontSize
                     font.bold: root.boldValues
                 }
             }
 
-
+            /**
+              Motor temp block
+              */
             Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom
@@ -1766,8 +1786,71 @@ Item {
 
                 Row {
                     anchors.left: parent.left
-                    width: tempMotorTextBlock.width + tfetsIcoBlock.width
+                    width: tempMotorTextBlock.width + tmotIcoBlock.width
                     height: tfetsIcoBlock.height
+                    spacing: 3
+
+                    /**
+                      Ico
+                      */
+
+                    Item {
+                        id: tmotIcoBlock
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: tmotIco.width + 3
+                        height: tmotIco.height
+
+                        Image {
+                            id: tmotIco
+                            smooth: true
+                            source: root.mcuIco
+                            sourceSize.width: root.tempIcoWH
+                            sourceSize.height: root.tempIcoWH
+                            visible: false
+                        }
+
+                        ColorOverlay {
+                            anchors.fill: tmotIco
+                            source: tmotIco
+                            color: Material.color(Material.Blue)
+                        }
+                    }
+
+                    /**
+                      Val
+                      */
+                    Item {
+                        id: tempMotorTextBlock
+                        width: tempMotorText.width
+                        height: parent.height
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        Text {
+                            id: tempMotorText
+                            font.family: root.ff
+                            text: prettyNumber(root.tempMotor) + root.tempDimension
+                            font.pixelSize: root.tempFontSize
+                            color: root.isTempMotorWarning ? root.dangerTextColor : root.textColor;
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+                }
+            }
+
+            /**
+              Mcu temp block
+              */
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: root.gaugeHeight * 4
+                anchors.right: parent.right
+                anchors.rightMargin: root.gaugeHeight * 3.3
+
+                Row {
+                    anchors.right: parent.right
+                    width: tfetsIcoBlock.width + tfetsTextBlock.block
+                    height: tmotIcoBlock.height
                     spacing: 3
 
                     Item {
@@ -1779,69 +1862,15 @@ Item {
                         Image {
                             id: tfetsIco
                             smooth: true
-                            source: "qrc:/res/icons/motor.svg"
-                            sourceSize.width: root.diameter * 0.05
-                            sourceSize.height: root.diameter * 0.05
+                            source: root.motorIco
+                            sourceSize.width: root.tempIcoWH
+                            sourceSize.height: root.tempIcoWH
                             visible: false
 
                         }
                         ColorOverlay {
                             anchors.fill: tfetsIco
                             source: tfetsIco
-                            color: Material.color(Material.Blue)
-                        }
-                    }
-
-                    Item {
-                        id: tempMotorTextBlock
-                        width: tempMotorText.width
-                        height: parent.height
-                        anchors.verticalCenter: parent.verticalCenter
-
-                        Text {
-                            id: tempMotorText
-                            font.family: root.ff
-                            text: prettyNumber(root.tempMotor) + 'C'
-                            font.pixelSize: Math.max(10, root.diameter * 0.04)
-                            color: root.tempMotor > 80 ? root.dangerTextColor : root.textColor;
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-                }
-            }
-
-            Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottom: parent.bottom
-                anchors.bottomMargin: root.gaugeHeight * 4
-                anchors.right: parent.right
-                anchors.rightMargin: root.gaugeHeight * 3.3
-
-                Row {
-                    anchors.right: parent.right
-                    width: tmotIcoBlock.width + tfetsTextBlock.block
-                    height: tmotIcoBlock.height
-                    spacing: 3
-
-
-                    Item {
-                        id: tmotIcoBlock
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: tmotIco.width + 3
-                        height: tmotIco.height
-
-                        Image {
-                            id: tmotIco
-                            smooth: true
-                            source: "qrc:/res/icons/mcu.svg"
-                            sourceSize.width: root.diameter * 0.05
-                            sourceSize.height: root.diameter * 0.05
-                            visible: false
-                        }
-
-                        ColorOverlay {
-                            anchors.fill: tmotIco
-                            source: tmotIco
                             color: Material.color(Material.Blue)
                         }
                     }
@@ -1855,15 +1884,18 @@ Item {
                         Text {
                             id: tfetsText
                             font.family: root.ff
-                            text: prettyNumber(root.tempFets, 1) + 'C'
-                            font.pixelSize: Math.max(10, root.diameter * 0.04)
-                            color: root.tempFets > 80 ? root.dangerTextColor : root.textColor;
+                            text: prettyNumber(root.tempFets, 1) + root.tempDimension
+                            font.pixelSize: root.tempFontSize
+                            color: root.isTempMcuWarning ? root.dangerTextColor : root.textColor;
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }
                 }
             }
 
+            /**
+              Battery temp block
+              */
             Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom
@@ -1886,9 +1918,9 @@ Item {
                         Image {
                             id: tbatIco
                             smooth: true
-                            source: "qrc:/res/icons/battery.svg"
-                            sourceSize.width: root.diameter * 0.05
-                            sourceSize.height: root.diameter * 0.05
+                            source: root.batteryIco
+                            sourceSize.width: root.tempIcoWH
+                            sourceSize.height: root.tempIcoWH
                             visible: false
                         }
 
@@ -1908,9 +1940,9 @@ Item {
                         Text {
                             id: tbatText
                             font.family: root.ff
-                            text: root.prettyNumber(root.tempBat, 1) + 'C'
-                            font.pixelSize: Math.max(10, root.diameter * 0.04)
-                            color: root.tempBat > 80 ? root.dangerTextColor : root.textColor;
+                            text: root.prettyNumber(root.tempBat, 1) + root.tempDimension
+                            font.pixelSize: root.tempFontSize
+                            color: root.isTempBatteryWarning ? root.dangerTextColor : root.textColor;
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }
@@ -1926,5 +1958,4 @@ Item {
         isCharging: root.power < 0
         isDischarging: root.power > 0
     }
-
 }
