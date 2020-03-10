@@ -141,6 +141,8 @@ Page {
 
             rootDiameter: page.width
 
+            smallDimension: true // отключи, если изменение скорости или веревки слишком грузит цпу
+
             paddingLeft: 10
             paddingRight: 10
             marginTop: 20

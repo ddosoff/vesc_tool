@@ -53,6 +53,8 @@ Item {
 
     property string ff: 'Roboto'
 
+    property bool smallDimension: false
+
 
     /********************
             Colors
@@ -726,7 +728,7 @@ Item {
 
                     context.save();
                     context.translate(centerX, centerY);
-                    context.rotate(convertAngToRadian(0 - getBatStrWidth(context, lrm, fontSize) -10));
+                    context.rotate(convertAngToRadian(0 - getBatStrWidth(context, lrm, fontSize) -8));
                     drawArc(context, lrm, radius, fontSize);
                     context.restore();
 
@@ -754,14 +756,16 @@ Item {
                          var fontSize = fs;
                          var margin = 0;
 
-                        if ('m/s'.indexOf(c) !== -1) {
-                            var newfontSize = fontSize * 0.85;
-                            fontSize = newfontSize;
+                        if (root.smallDimension) {
+                            if ('m/s'.indexOf(c) !== -1) {
+                                var newfontSize = fontSize * 0.85;
+                                fontSize = newfontSize;
+                            }
                         }
 
                         // Calculating every letter's width and correcting spacing
                         //var width = (context.measureText(c).width / (fs / (reverse ? 6.9 : 6.3)));
-                        var width = (context.measureText(c).width / (fs / 7.5));
+                        var width = (context.measureText(c).width / (fs / 7));
                         width += str[n-1] === 'm' ? 0.5 : 0;
 
                         if (!reverse) {
@@ -795,7 +799,7 @@ Item {
                     var width = getBatStrWidth(context, acceleration, fontSize, true)
                     context.save();
                     context.translate(centerX, centerY);
-                    context.rotate(convertAngToRadian(-181 - width));
+                    context.rotate(convertAngToRadian(-179 - width));
                     drawArc(context, acceleration, radius, fontSize, true, true);
                     context.restore();
                 }
@@ -806,19 +810,21 @@ Item {
                         var fontSize = fs;
                         var margin = 0;
 
-                        if ('m/s'.indexOf(c) !== -1) {
-                            var newfontSize = fontSize * 0.85;
-                            margin = fontSize - newfontSize;
-                            fontSize = newfontSize;
-                        }
+                        if (root.smallDimension) {
+                            if ('m/s'.indexOf(c) !== -1) {
+                                var newfontSize = fontSize * 0.85;
+                                margin = fontSize - newfontSize;
+                                fontSize = newfontSize;
+                            }
 
-                        context.font = "%2 %1px sans-serif"
-                            .arg(fontSize)
-                            .arg(root.boldValues ? 'bold' : '');
+                            context.font = "%2 %1px sans-serif"
+                                .arg(fontSize)
+                                .arg(root.boldValues ? 'bold' : '');
+                        }
 
 
                        // Calculating every letter's width and correcting spacing
-                       var width = (context.measureText(c).width / (fs / 7.5));
+                       var width = (context.measureText(c).width / (fs / 7));
                        width += str[n-1] === 'm' ? 0.5 : 0;
 
                        if (!reverse) {
@@ -835,7 +841,7 @@ Item {
                            context.translate(0, fontSize / 2);
                        }
 
-                       if (!!margin && reverse) {
+                       if (!!margin && reverse && root.smallDimension) {
                             context.translate(0, margin);
                         }
 
