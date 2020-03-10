@@ -169,12 +169,19 @@ Page {
                 // Warning and Blink (bool) | I don't know names of this params
                 //onIsMotorKgWarningChanged: { sGauge.isMotorKgWarning = false; } // Warning
                 //onIsMotorKgBlinkingChanged: { sGauge.isMotorKgBlinking = false; } // Blink
+
                 //onIsRopeWarningChanged: { sGauge.isRopeWarning = false; }
                 //onIsRopeBlinkingChanged: { sGauge.isRopeBlinking = false; }
+
                 //onIsPowerWarningChanged: { sGauge.isPowerWarning = false; }
                 //onIsPowerBlinkingChanged: { sGauge.ispowerBlinking = false; }
+
                 //onIsSpeedWarningChanged: { sGauge.isSpeedWarning = false; }
                 //onIsSpeedBlinkingChanged: { sGauge.isSpeedBlinking = false; }
+
+                //onIsTempBatteryWarningChanged: { sGauge.isTempBatteryWarning = false; }
+                //onIsTempMcuWarningChanged: { sGauge.isTempMcuWarning = false; }
+                //onIsTempMotorWarningChanged: { sGauge.isTempMotorWarning = false; }
 
                 onIsBatteryBlinkingChanged: { sGauge.isBatteryBlinking = Skypuff.isBatteryBlinking; }
                 onIsBatteryWarningChanged: { sGauge.isBatteryWarning = Skypuff.isBatteryWarning; }
@@ -211,11 +218,11 @@ Page {
         }
 
 
-        /*GaugeDebug {
+        GaugeDebug {
             id: debugBlock
             gauge: sGauge
             visible: true
-        }*/
+        }
 
 
         // Vertical space
