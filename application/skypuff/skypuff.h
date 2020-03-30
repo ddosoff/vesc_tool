@@ -97,6 +97,8 @@ public:
     Q_INVOKABLE bool saveSettings(const QString & fileName, const QMLable_skypuff_config& c);
     Q_INVOKABLE QVariantList serialPortsToQml();
     Q_INVOKABLE bool connectSerial(QString port, int baudrate = 115200);
+    Q_INVOKABLE QString urlHost(const QString & u) {return QUrl(u).host();}
+    Q_INVOKABLE int urlPort(const QString & u) {return QUrl(u).port();}
 
 signals:
     /* It is simple to work with QML text states:
