@@ -82,6 +82,58 @@ Page {
         }
     }
 
+
+    // Enter IP address and TCP port dialog
+    Popup {
+        id: newTcpAddressDialog
+        modal: true
+        anchors.centerIn: parent
+        contentWidth: parent.width - 50
+
+        ColumnLayout {
+            anchors.fill: parent
+
+            Label {
+                text: qsTr("Add VESC TCP address...")
+                font.bold: true
+            }
+
+            TextField {
+                Layout.fillWidth: true
+                Layout.margins: 20
+
+                id: tcpAddress
+
+                text: "192.168.4.1:65102"
+                focus: true
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.margins: 5
+                Button {
+                    text: qsTr('Cancel')
+                    onClicked: newTcpAddressDialog.close()
+                }
+                Item {
+                    Layout.fillWidth: true
+                }
+                Button {
+                    text: qsTr('Save')
+                    onClicked: {
+                        newTcpAddressDialog.close()
+                        var host = Skypuff.urlHost("tcp://" + tcpAddress.text)
+                        var port = Skypuff.urlPort("tcp://" + tcpAddress.text)
+                        if(host && port !== -1) {
+                            var addr = host + ":" + port
+                            if(listModel.find("tcp", addr) === -1)
+                                listModel.insert(0, {type: "tcp", name: "TCP [%1:%2]".arg(host).arg(port), addr: addr, isVesc: true})
+                        }
+                    }
+                }
+            }
+        }
+    }
     /*PairingDialog {
         id: pairDialog
     }*/
@@ -146,6 +198,17 @@ Page {
                 id: bWifi
                 icon.source: "qrc:/res/icons/wifi.svg"
                 Material.foreground: Material.Indigo
+
+                onClicked: newTcpAddressDialog.open()
+
+                Component.onCompleted: {
+                    var host = VescIf.getLastTcpServer();
+                    host = host === "127.0.0.1" ? "192.168.4.1" : host
+                    var port = VescIf.getLastTcpPort()
+                    var addr = host + ":" + port
+                    if(listModel.find("tcp", addr) === -1)
+                        listModel.insert(0, {type: "tcp", name: "TCP [%1:%2]".arg(host).arg(port), addr: addr, isVesc: true})
+                }
             }
             Item {
                 Layout.fillWidth: true
@@ -206,7 +269,7 @@ Page {
                     source: connectionType
                     color: type === "bt" ? Material.color(Material.Blue) :
                            type === "usb" ? Material.color(Material.Teal) :
-                                            Material.Indigo
+                                            Material.color(Material.Indigo)
 
                     RotationAnimator on rotation {
                         id: connectionAnime
@@ -240,6 +303,11 @@ Page {
                             break
                         case 'usb':
                             Skypuff.connectSerial(addr)
+                            break
+                        case 'tcp':
+                            var host = Skypuff.urlHost("tcp://" + addr)
+                            var port = Skypuff.urlPort("tcp://" + addr)
+                            VescIf.connectTcp(host, port)
                             break
                         default:
                             console.log('Connection type', type, 'not implemented')
@@ -322,343 +390,3 @@ Page {
     }
 
 }
-
-        /*
-
-        GroupBox {
-            title: qsTr("Bluetooth")
-            Layout.fillWidth: true
-
-            ColumnLayout {
-                anchors.fill: parent
-
-                GridLayout {
-                    Layout.fillWidth: true
-
-                    Button {
-                        text: qsTr("Name")
-                        enabled: bleBox.count > 0
-
-                        onClicked: {
-                            if (bleItems.rowCount() > 0) {
-                                bleNameDialog.open()
-                            } else {
-                                VescIf.emitMessageDialog("Set BLE Device Name",
-                                                         "No device selected.",
-                                                         false, false);
-                            }
-                        }
-                    }
-
-                    Button {
-                        text: qsTr("Pair")
-
-                        onClicked: {
-                            pairDialog.openDialog()
-                        }
-                    }
-
-                    Button {
-                        id: scanButton
-                        text: qsTr("Scan")
-
-                        onClicked: {
-                            scanButton.enabled = false
-                            mBle.startScan()
-                        }
-                    }
-                }
-
-                ComboBox {
-                    id: bleBox
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-
-                    textRole: "key"
-                    model: ListModel {
-                        id: bleItems
-                    }
-                }
-
-                Button {
-                    id: bleConnectButton
-                    text: qsTr("Connect")
-                    enabled: false
-                    //Layout.preferredWidth: 500
-                    Layout.fillWidth: true
-
-                    onClicked: {
-                        if (bleItems.rowCount() > 0) {
-                            setConnectButtonsEnabled(false)
-                            var b = bleItems.get(bleBox.currentIndex).value
-                            statusMessage.text = "Connecting BlueTooth: " + b + " ..."
-                            statusMessage.color = "blue"
-
-                            VescIf.connectBle(b)
-                            bleChecker.running = true
-                        }
-                    }
-                }
-            }
-
-            Connections {
-                target: mBle
-                onScanDone: {
-                    if (done) {
-                        scanButton.enabled = true
-                        scanButton.text = qsTr("Scan")
-                    }
-
-                    bleItems.clear()
-
-                    for (var addr in devs) {
-                        var name = devs[addr]
-                        var name2 = name + " [" + addr + "]"
-                        var setName = VescIf.getBleName(addr)
-                        if (setName.length > 0) {
-                            setName += " [" + addr + "]"
-                            bleItems.insert(0, { key: setName, value: addr })
-                        } else if (name.indexOf("VESC") !== -1) {
-                            bleItems.insert(0, { key: name2, value: addr })
-                        } else {
-                            bleItems.append({ key: name2, value: addr })
-                        }
-                    }
-
-                    bleConnectButton.enabled = (bleItems.rowCount() > 0) && !VescIf.isPortConnected()
-
-                    bleBox.currentIndex = 0
-                }
-
-                onBleError: {
-                    VescIf.emitMessageDialog("BLE Error", info, false, false)
-                }
-            }
-
-            Connections {
-                target: mCommands
-
-                onPingCanRx: {
-                    canItems.clear()
-                    for (var i = 0;i < devs.length;i++) {
-                        var name = "VESC " + devs[i]
-                        canItems.append({ key: name, value: devs[i] })
-                    }
-                    canScanButton.enabled = true
-                    canAllButton.enabled = true
-                    canIdBox.currentIndex = 0
-                    canButtonLayout.visible = true
-                    canScanBar.visible = false
-                    canScanBar.indeterminate = false
-                }
-
-                onNrfPairingRes: {
-                    if (res != 0) {
-                        nrfPairButton.visible = true
-                    }
-                }
-            }
-
-            Dialog {
-                id: bleNameDialog
-                standardButtons: Dialog.Ok | Dialog.Cancel
-                modal: true
-                focus: true
-                title: "Set BLE Device Name"
-
-                width: parent.width - 20
-                height: 200
-                closePolicy: Popup.CloseOnEscape
-                x: 10
-                y: Math.max(parent.height / 4 - height / 2, 20)
-                parent: ApplicationWindow.overlay
-
-                Rectangle {
-                    anchors.fill: parent
-                    height: stringInput.implicitHeight + 14
-                    border.width: 2
-                    border.color: "#8d8d8d"
-                    color: "#33a8a8a8"
-                    radius: 3
-                    TextInput {
-                        id: stringInput
-                        color: "#ffffff"
-                        anchors.fill: parent
-                        anchors.margins: 7
-                        font.pointSize: 12
-                        focus: true
-                    }
-                }
-
-                onAccepted: {
-                    if (stringInput.text.length > 0) {
-                        var addr = bleItems.get(bleBox.currentIndex).value
-                        var setName = stringInput.text + " [" + addr + "]"
-
-                        VescIf.storeBleName(addr, stringInput.text)
-                        VescIf.storeSettings()
-
-                        bleItems.set(bleBox.currentIndex, { key: setName, value: addr })
-                        bleBox.currentText
-                    }
-                }
-            }
-        }
-
-        GroupBox {
-            title: qsTr("USB/Serial")
-            Layout.fillWidth: true
-
-            GridLayout {
-                anchors.fill: parent
-
-                rowSpacing: 5
-                columnSpacing: 5
-
-                Button {
-                    id: usbConnectButton
-                    Layout.fillWidth: true
-                    text: qsTr("Auto Connect")
-
-                    onClicked: {
-                        // UI changes have to be done before trying to connect
-                        setConnectButtonsEnabled(false)
-                        statusMessage.text = "Connecting USB/Serial..."
-                        statusMessage.color = "blue"
-
-                        VescIf.autoconnect()
-                    }
-                }
-
-            }
-        }
-
-        Item {
-            Layout.fillHeight: true
-            Layout.fillWidth: true
-
-            Button {
-                id: disconnectButton
-                text: qsTr("Disconnect")
-
-                anchors.centerIn: parent
-                enabled: false
-
-                onClicked: {
-                    VescIf.disconnectPort()
-                }
-            }
-        }
-
-        Label {
-            id: statusMessage
-
-            Layout.fillWidth: true
-            Layout.alignment: Qt.AlignRight
-
-            text: qsTr("Not connected")
-            color: "red"
-        }
-
-    }
-    Dialog {
-        id: vescDialog
-        standardButtons: Dialog.Ok
-        modal: true
-        focus: true
-        closePolicy: Popup.CloseOnEscape
-
-        width: parent.width - 20
-        height: Math.min(implicitHeight, parent.height - 40)
-        x: (parent.width - width) / 2
-        y: (parent.height - height) / 2
-        parent: ApplicationWindow.overlay
-
-        ScrollView {
-            anchors.fill: parent
-            clip: true
-            contentWidth: parent.width - 20
-
-            Text {
-                id: vescDialogLabel
-                linkColor: "lightblue"
-                verticalAlignment: Text.AlignVCenter
-                anchors.fill: parent
-                wrapMode: Text.WordWrap
-                textFormat: Text.RichText
-                onLinkActivated: {
-                    Qt.openUrlExternally(link)
-                }
-            }
-        }
-    }
-
-    Connections {
-        target: VescIf
-
-        // Display modal dialog with errors from VESC interface
-        onMessageDialog: {
-            vescDialog.title = title
-            vescDialogLabel.text = (richText ? "<style>a:link { color: lightblue; }</style>" : "") + msg
-            vescDialogLabel.textFormat = richText ? Text.RichText : Text.AutoText
-            vescDialog.open()
-        }
-    }
-
-    Connections {
-        target: VescIf
-
-        onPortConnectedChanged: {
-            updateConnected()
-        }
-
-        onAutoConnectFinished: {
-            updateConnected()
-        }
-
-        onStatusMessage: {
-            statusMessage.text = msg
-            statusMessage.color = isGood ? "green" : "red"
-        }
-    }
-
-
-    Timer {
-        id: bleChecker
-        interval: 200
-        running: false
-        repeat: true
-
-        onTriggered: {
-            if(!VescIf.bleDevice().isConnecting() &&
-               !VescIf.bleDevice().isConnected()) {
-                updateConnected()
-                bleChecker.running = false
-            }
-        }
-    }
-
-    // Bluetooth scan button animation
-    Timer {
-        interval: 500
-        running: !scanButton.enabled
-        repeat: true
-
-        property int dots: 0
-        onTriggered: {
-            var text = "Scan"
-            for (var i = 0;i < dots;i++) {
-                text += "."
-            }
-
-            dots++;
-            if (dots > 3) {
-                dots = 0;
-            }
-
-            scanButton.text = text
-        }
-    }
-
-}
-    */
