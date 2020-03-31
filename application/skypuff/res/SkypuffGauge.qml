@@ -50,9 +50,7 @@ Item {
     property real whOut: 0.0
 
     property bool showCharginAnimation: false
-
     property string ff: 'Roboto'
-
     property bool smallDimension: false
 
 
@@ -60,23 +58,23 @@ Item {
             Colors
     ********************/
 
-    property real baseOpacity: 1  // Opacity is to all colors of the scale
+    property real baseOpacity: 1                    // Opacity is to all colors of the scale
     property string gaugeDangerFontColor: '#8e1616' // Color for danger ranges
     property string gaugeFontColor: '#374759'
     property string gaugeColor: '#dfe3e8'
     property string battGaugeColor: '#dfe3e8'
     property string textColor: 'black'
-    property string borderColor: '#737E8C'      // Color of all borders
+    property string borderColor: '#737E8C'          // Color of all borders
     property string borderGlowColor: '#C7CFD9'
-    property string color: '#F7F7F7'            // Main backgroundColor
+    property string color: '#F7F7F7'                // Main backgroundColor
     property string innerColor: color
 
     // Default for all scales
-    property string defaultColor: '#A5D6A7'  // base success color
-    property string dangerColor: '#ef8383'   // attention color
+    property string defaultColor: '#A5D6A7'         // base success color
+    property string dangerColor: '#ef8383'          // attention color
     property string dangerTextColor: 'red'
-    property string warningColor: '#dbdee3'  // blink color
-    property int gaugesColorAnimation: 1000  // freq of blinking
+    property string warningColor: '#dbdee3'         // blink color
+    property int gaugesColorAnimation: 1000         // freq of blinking
 
     // Rope
     property string ropeColor: root.defaultColor
@@ -136,11 +134,8 @@ Item {
     property real motorKgDimensionFontSize: _valFontSize
     property real motorKgFontSize: _valFontSize
 
-
     property real statusFontSize: Math.max(10, root.diameter * 0.038)
-
     property real statusTimerInterval: 5 * 1000 // sec
-
 
 
     /********************
@@ -155,6 +150,7 @@ Item {
     property real motorKgLabelStepSize: 5
     property real powerLabelStepSize: (maxPower - minPower) / (5 * 1000)
 
+
     /********************
          Do not touch
     ********************/
@@ -165,7 +161,7 @@ Item {
     property bool isBatteryWarning: false
     property bool isBatteryScaleValid: false
 
-    property bool isMotorKgWarning: false // isBatteryBlinking
+    property bool isMotorKgWarning: false
     property bool isMotorKgBlinking: false
 
     property bool isRopeWarning: false
@@ -251,12 +247,12 @@ Item {
     }
 
     function isPrime(num, k = 1) {
-      if (num === 2 * k) return false;
+        if (num === 2 * k) return false;
 
-      for (var i = 3 * k; i <= 6 * k; i += 1 * k) {
-        if (num % i === 0) return false;
-      }
-      return true;
+        for (var i = 3 * k; i <= 6 * k; i += 1 * k) {
+            if (num % i === 0) return false;
+        }
+        return true;
     }
 
     function getDivider(val, maxStep, k = 1) {
@@ -483,8 +479,8 @@ Item {
 
                 property real powerStartAng: powerToAng(0)
                 property real powerEndAng: powerToAng(root.power > 0
-                                              ? Math.min(root.power, root.maxPower)
-                                              : Math.max(root.power, root.minPower))
+                                                      ? Math.min(root.power, root.maxPower)
+                                                      : Math.max(root.power, root.minPower))
 
                 property string ropeTextColor: root.textColor
                 property string speedTextColor: root.textColor
@@ -593,39 +589,39 @@ Item {
 
                 // Animation
                 Behavior on ropeEndAng {
-                   id: animationRopeEndAng
-                   enabled: root.enableAnimation
-                   NumberAnimation {
-                       duration: root.animationDuration
-                       easing.type: root.animationType
-                   }
+                    id: animationRopeEndAng
+                    enabled: root.enableAnimation
+                    NumberAnimation {
+                        duration: root.animationDuration
+                        easing.type: root.animationType
+                    }
                 }
 
                 Behavior on speedEndAng {
-                   id: animationSpeedEndAng
-                   enabled: root.enableAnimation
-                   NumberAnimation {
-                       duration: root.animationDuration
-                       easing.type: root.animationType
-                   }
+                    id: animationSpeedEndAng
+                    enabled: root.enableAnimation
+                    NumberAnimation {
+                        duration: root.animationDuration
+                        easing.type: root.animationType
+                    }
                 }
 
                 Behavior on motorKgEndAng {
-                   id: animationMotorKgEndAng
-                   enabled: root.enableAnimation
-                   NumberAnimation {
-                       duration: root.animationDuration
-                       easing.type: root.animationType
-                   }
+                    id: animationMotorKgEndAng
+                    enabled: root.enableAnimation
+                    NumberAnimation {
+                        duration: root.animationDuration
+                        easing.type: root.animationType
+                    }
                 }
 
                 Behavior on powerEndAng {
-                   id: animationPowerEndAng
-                   enabled: root.enableAnimation
-                   NumberAnimation {
-                       duration: root.animationDuration
-                       easing.type: root.animationType
-                   }
+                    id: animationPowerEndAng
+                    enabled: root.enableAnimation
+                    NumberAnimation {
+                        duration: root.animationDuration
+                        easing.type: root.animationType
+                    }
                 }
 
                 /******************************/
@@ -697,7 +693,7 @@ Item {
 
                     context.save();
                     context.translate(centerX, centerY);
-                    context.rotate(convertAngToRadian(90 -root.diagLAnc - 15));
+                    context.rotate(convertAngToRadian(180 + 90 + root.diagLAnc - 15));
                     drawArc(context, text, radius, fontSize);
                     context.restore();
                 }
@@ -752,9 +748,9 @@ Item {
                 function getBatStrWidth(context, str, fs, reverse = false) {
                     var fullWidth = 0;
                     for (var n = 0; n < str.length; n++) {
-                         var c = str[n];
-                         var fontSize = fs;
-                         var margin = 0;
+                        var c = str[n];
+                        var fontSize = fs;
+                        var margin = 0;
 
                         if (root.smallDimension) {
                             if ('m/s'.indexOf(c) !== -1) {
@@ -805,7 +801,7 @@ Item {
                 }
 
                 function drawArc(context, str, radius, fs, reverse = false) {
-                   for (var n = 0; n < str.length; n++) {
+                    for (var n = 0; n < str.length; n++) {
                         var c = str[n];
                         var fontSize = fs;
                         var margin = 0;
@@ -823,25 +819,25 @@ Item {
                         }
 
 
-                       // Calculating every letter's width and correcting spacing
-                       var width = (context.measureText(c).width / (fs / 7));
-                       width += str[n-1] === 'm' ? 0.5 : 0;
+                        // Calculating every letter's width and correcting spacing
+                        var width = (context.measureText(c).width / (fs / 7));
+                        width += str[n-1] === 'm' ? 0.5 : 0;
 
-                       if (!reverse) {
-                           width += str[n] === '.' ? 2 : 0;
-                           width += str[n - 1] === '.' ? -2 : 0;
-                       }
+                        if (!reverse) {
+                            width += str[n] === '.' ? 2 : 0;
+                            width += str[n - 1] === '.' ? -2 : 0;
+                        }
 
-                       context.rotate(convertAngToRadian(width));
-                       context.save();
-                       context.translate(0, -1 * radius);
+                        context.rotate(convertAngToRadian(width));
+                        context.save();
+                        context.translate(0, -1 * radius);
 
-                       if (reverse) {
-                           context.scale(-1, -1, 0, 0);
-                           context.translate(0, fontSize / 2);
-                       }
+                        if (reverse) {
+                            context.scale(-1, -1, 0, 0);
+                            context.translate(0, fontSize / 2);
+                        }
 
-                       if (!!margin && reverse && root.smallDimension) {
+                        if (!!margin && reverse && root.smallDimension) {
                             context.translate(0, margin);
                         }
 
@@ -1111,7 +1107,7 @@ Item {
                     progressBars.drawRopeTitleAlongArc(
                         context,
                         'ROPE',
-                        baseLayer.width / 2 + baseLayer.radius * 0.166,
+                        baseLayer.width / 2 - baseLayer.radius * 0.166,
                         baseLayer.height / 2 - baseLayer.radius * 0.12,
                         baseLayer.radius * 0.5,
                         root.diameter * 0.026
@@ -1226,12 +1222,12 @@ Item {
                     value: root.motorKg
 
                     Behavior on value {
-                       id: animationValueKg
-                       enabled: root.enableAnimation
-                       NumberAnimation {
-                           duration: root.animationDuration
-                           easing.type: root.animationType
-                       }
+                        id: animationValueKg
+                        enabled: root.enableAnimation
+                        NumberAnimation {
+                            duration: root.animationDuration
+                            easing.type: root.animationType
+                        }
                     }
 
                     style: CircularGaugeStyle {
@@ -1272,11 +1268,11 @@ Item {
                             antialiasing: true
                             visible: root.maxMotorKg <= 50
                             implicitWidth: outerRadius * ((styleData.value === root.maxMotorKg || styleData.value === root.minMotorKg)
-                                ? 0.005
-                                : 0.01)
+                                                          ? 0.005
+                                                          : 0.01)
                             implicitHeight: (styleData.value === root.maxMotorKg || styleData.value === root.minMotorKg)
-                                ? root.gaugeHeight
-                                : implicitWidth * (styleData.value % (root.motorKgLabelStepSize) ? 3 : 6)
+                                            ? root.gaugeHeight
+                                            : implicitWidth * (styleData.value % (root.motorKgLabelStepSize) ? 3 : 6)
                             color: gauge.getTLColor(styleData.value, root.maxMotorKg)
                         }
 
@@ -1287,8 +1283,8 @@ Item {
                             antialiasing: true
                             implicitWidth: outerRadius * 0.01
                             implicitHeight:  (styleData.value === root.maxMotorKg || styleData.value === root.minMotorKg)
-                                ? root.gaugeHeight * 1.7
-                                : implicitWidth * (styleData.value % (root.motorKgLabelStepSize / 2) ? 3 : 6)
+                                             ? root.gaugeHeight * 1.7
+                                             : implicitWidth * (styleData.value % (root.motorKgLabelStepSize / 2) ? 3 : 6)
                             color: root.gaugeFontColor
                         }
 
@@ -1321,12 +1317,12 @@ Item {
                     value: root.power
 
                     Behavior on value {
-                       id: animationValuePower
-                       enabled: root.enableAnimation
-                       NumberAnimation {
-                           duration: root.animationDuration
-                           easing.type: root.animationType
-                       }
+                        id: animationValuePower
+                        enabled: root.enableAnimation
+                        NumberAnimation {
+                            duration: root.animationDuration
+                            easing.type: root.animationType
+                        }
                     }
 
                     style: CircularGaugeStyle {
@@ -1355,8 +1351,8 @@ Item {
                             antialiasing: true
                             implicitWidth: outerRadius * 0.01
                             implicitHeight:  (styleData.value  === root.maxPower || styleData.value  === root.minPower)
-                                ? root.gaugeHeight * 1.7
-                                : implicitWidth * ((styleData.value % (root.powerLabelStepSize * 1000)) ? 3 : 6)
+                                             ? root.gaugeHeight * 1.7
+                                             : implicitWidth * ((styleData.value % (root.powerLabelStepSize * 1000)) ? 3 : 6)
                             color: root.gaugeFontColor
                         }
 
@@ -1386,12 +1382,12 @@ Item {
                     value: root.speedMs
 
                     Behavior on value {
-                       id: animationValueSpeed
-                       enabled: root.enableAnimation
-                       NumberAnimation {
-                           duration: root.animationDuration
-                           easing.type: root.animationType
-                       }
+                        id: animationValueSpeed
+                        enabled: root.enableAnimation
+                        NumberAnimation {
+                            duration: root.animationDuration
+                            easing.type: root.animationType
+                        }
                     }
 
                     style: CircularGaugeStyle {
@@ -1418,11 +1414,11 @@ Item {
                         tickmark: Rectangle {
                             antialiasing: true
                             implicitWidth: outerRadius * ((styleData.value === root.maxSpeedMs || styleData.value === root.minSpeedMs)
-                                ? 0.005
-                                : 0.01)
+                                                          ? 0.005
+                                                          : 0.01)
                             implicitHeight:  (styleData.value === root.maxSpeedMs || styleData.value === root.minSpeedMs)
-                                ? root.gaugeHeight
-                                : implicitWidth * ((styleData.value % (root.maxSpeedMs)) ? 3 : 6)
+                                             ? root.gaugeHeight
+                                             : implicitWidth * ((styleData.value % (root.maxSpeedMs)) ? 3 : 6)
                             color: root.gaugeFontColor
                         }
 
@@ -1446,12 +1442,12 @@ Item {
                     value: root.ropeMeters
 
                     Behavior on value {
-                       id: animationValueRope
-                       enabled: root.enableAnimation
-                       NumberAnimation {
-                           duration: root.animationDuration
-                           easing.type: root.animationType
-                       }
+                        id: animationValueRope
+                        enabled: root.enableAnimation
+                        NumberAnimation {
+                            duration: root.animationDuration
+                            easing.type: root.animationType
+                        }
                     }
 
                     style: CircularGaugeStyle {
@@ -1468,8 +1464,8 @@ Item {
                             function getAng(value) {
                                 var ang = root.ropeToAng(value);
                                 return value !== root.maxRopeMeters
-                                    ? (ang - 180 - 90)
-                                    : (ang - 90);
+                                        ? (ang - 180 - 90)
+                                        : (ang - 90);
                             }
 
                             function show(value) {
@@ -1500,11 +1496,11 @@ Item {
                             visible: this.show(styleData.value)
                             antialiasing: true
                             implicitWidth: outerRadius * ((styleData.value === root.maxRopeMeters || styleData.value === root.minRopeMeters)
-                                ? 0.005
-                                : 0.01)
+                                                          ? 0.005
+                                                          : 0.01)
                             implicitHeight:  (styleData.value === root.maxRopeMeters || styleData.value === root.minRopeMeters)
-                                ? root.gaugeHeight
-                                : implicitWidth * ((styleData.value % (root.maxRopeMeters)) ? 3 : 6)
+                                             ? root.gaugeHeight
+                                             : implicitWidth * ((styleData.value % (root.maxRopeMeters)) ? 3 : 6)
                             color: root.gaugeFontColor
                         }
                     }
@@ -1630,16 +1626,16 @@ Item {
                         name: "up"
                         when: !!status.text
                         PropertyChanges {
-                          target: state
-                          anchors.topMargin: state.mDown - (statusHeight.height < status.height ? status.height / 2 : 0)
+                            target: state
+                            anchors.topMargin: state.mDown - (statusHeight.height < status.height ? status.height / 2 : 0)
                         }
                     },
                     State {
                         name: "down"
                         when: !status.text
                         PropertyChanges {
-                          target: state
-                          anchors.topMargin: state.mDown
+                            target: state
+                            anchors.topMargin: state.mDown
                         }
                     }
                 ]
@@ -1709,11 +1705,11 @@ Item {
                     id: statusCleaner
                     interval: root.statusTimerInterval
 
-                    onTriggered: {                      
+                    onTriggered: {
                         status.text = root.fault;
                         root.fault
-                            ? faultsBlinker.start()
-                            : faultsBlinker.stop();
+                                ? faultsBlinker.start()
+                                : faultsBlinker.stop();
                     }
                 }
             }
@@ -1757,8 +1753,8 @@ Item {
                 Text {
                     id: powerTxt1
                     text: root.prettyNumber(Math.abs(root.power) >= 1000
-                                            ? root.power / 1000
-                                            : root.power, Math.abs(root.power) > 10000 ? 0 : 2)
+                            ? root.power / 1000
+                            : root.power, Math.abs(root.power) > 10000 ? 0 : 2)
                     font.family: root.ff
                     font.pixelSize: root.powerFontSize
                     font.bold: root.boldValues
