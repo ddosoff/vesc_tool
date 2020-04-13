@@ -146,6 +146,7 @@ Page {
             paddingLeft: 10
             paddingRight: 10
             marginTop: 20
+            maxRopeMeters: 20
 
             // Temps
             tempFets: Skypuff.tempFets

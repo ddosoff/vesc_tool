@@ -77,29 +77,29 @@ Item {
     property int gaugesColorAnimation: 1000         // freq of blinking
 
     // Rope
-    property string ropeColor: root.defaultColor
-    property string ropeWarningColor: root.warningColor
-    property string ropeBlinkingColor: root.dangerColor
+    property string ropeColor: defaultColor
+    property string ropeWarningColor: warningColor
+    property string ropeBlinkingColor: dangerColor
 
     // MotorKg
-    property string motorKgColor: root.defaultColor
-    property string motorKgWarningColor: root.warningColor
-    property string motorKgBlinkingColor: root.dangerColor
+    property string motorKgColor: defaultColor
+    property string motorKgWarningColor: warningColor
+    property string motorKgBlinkingColor: dangerColor
 
     // Power
-    property string powerColor: root.defaultColor
-    property string powerWarningColor: root.warningColor
-    property string powerBlinkingColor: root.dangerColor
+    property string powerColor: defaultColor
+    property string powerWarningColor: warningColor
+    property string powerBlinkingColor: dangerColor
 
     // Speed
-    property string speedColor: root.defaultColor
-    property string speedWarningColor: root.warningColor
-    property string speedBlinkingColor: root.dangerColor
+    property string speedColor: defaultColor
+    property string speedWarningColor: warningColor
+    property string speedBlinkingColor: dangerColor
 
     // Battery
-    property string battColor: root.defaultColor
-    property string battWarningColor: root.warningColor
-    property string battBlinkingColor: root.dangerColor
+    property string battColor: defaultColor
+    property string battWarningColor: warningColor
+    property string battBlinkingColor: dangerColor
 
 
     /********************
@@ -124,17 +124,17 @@ Item {
     property string mcuIco: "qrc:/res/icons/mcu.svg"
     property string motorIco: "qrc:/res/icons/motor.svg"
 
-    property string tempFontSize: Math.max(10, root.diameter * 0.04)
+    property string tempFontSize: Math.max(10, diameter * 0.04)
     property string tempDimension: 'C'
-    property real tempIcoWH: root.diameter * 0.05 // width and height of temp icons
+    property real tempIcoWH: diameter * 0.05 // width and height of temp icons
 
-    property real _valFontSize: Math.max(10, root.diameter * 0.06)
+    property real _valFontSize: Math.max(10, diameter * 0.06)
     property real powerDimensionFontSize: _valFontSize
     property real powerFontSize: _valFontSize
     property real motorKgDimensionFontSize: _valFontSize
     property real motorKgFontSize: _valFontSize
 
-    property real statusFontSize: Math.max(10, root.diameter * 0.038)
+    property real statusFontSize: Math.max(10, diameter * 0.038)
     property real statusTimerInterval: 5 * 1000 // sec
 
 
@@ -389,6 +389,9 @@ Item {
         return (value === root.minPower ? res + 0.1 : res);
     }
 
+    /**
+      Main gauge block
+      */
     Item {
         id: gaugeBlock
         width: diameter
@@ -401,7 +404,9 @@ Item {
             root.getSpeedLimit();
             root.setMaxRopeMeters();
         }
-
+        /**
+          Glow of main block
+          */
         RectangularGlow {
             id: effect
             anchors.fill: baseLayer
@@ -585,9 +590,8 @@ Item {
                     loops: Animation.Infinite
                 }
 
-                /******************************/
+                /************** Animations ****************/
 
-                // Animation
                 Behavior on ropeEndAng {
                     id: animationRopeEndAng
                     enabled: root.enableAnimation
@@ -693,8 +697,8 @@ Item {
 
                     context.save();
                     context.translate(centerX, centerY);
-                    context.rotate(convertAngToRadian(180 + 90 + root.diagLAnc - 15));
-                    drawArc(context, text, radius, fontSize);
+                    context.rotate(convertAngToRadian(180 + 90 + root.diagLAnc - 7.5));
+                    drawArc(context, text, radius, fontSize, false);
                     context.restore();
                 }
 
@@ -707,8 +711,8 @@ Item {
 
                     context.save();
                     context.translate(centerX, centerY);
-                    context.rotate(convertAngToRadian(-180 + (90 - root.diagLAnc) - 15));
-                    drawArc(context, text, radius, fontSize, true);
+                    context.rotate(convertAngToRadian(-180 + 90 - root.diagLAnc - 15));
+                    drawArc(context, text, radius, fontSize, true, true);
                     context.restore();
                 }
 
@@ -724,15 +728,15 @@ Item {
 
                     context.save();
                     context.translate(centerX, centerY);
-                    context.rotate(convertAngToRadian(0 - getBatStrWidth(context, lrm, fontSize) -8));
-                    drawArc(context, lrm, radius, fontSize);
+                    context.rotate(convertAngToRadian(-4));
+                    drawArc(context, lrm.split('').reverse().join(''), radius, fontSize, false, false);
                     context.restore();
 
                     /*** Divider ***/
 
                     context.save();
                     context.translate(centerX, centerY);
-                    context.rotate(convertAngToRadian(-0.5 - getBatStrWidth(context, '|', fontSize)));
+                    context.rotate(convertAngToRadian(-1));
                     drawArc(context, '|', radius, fontSize);
                     context.restore();
 
@@ -740,43 +744,14 @@ Item {
 
                     context.save();
                     context.translate(centerX, centerY);
-                    context.rotate(convertAngToRadian(-0));
+                    context.rotate(convertAngToRadian(4));
                     drawArc(context, rm, radius, fontSize);
                     context.restore();
                 }
 
-                function getBatStrWidth(context, str, fs, reverse = false) {
-                    var fullWidth = 0;
-                    for (var n = 0; n < str.length; n++) {
-                        var c = str[n];
-                        var fontSize = fs;
-                        var margin = 0;
-
-                        if (root.smallDimension) {
-                            if ('m/s'.indexOf(c) !== -1) {
-                                var newfontSize = fontSize * 0.85;
-                                fontSize = newfontSize;
-                            }
-                        }
-
-                        // Calculating every letter's width and correcting spacing
-                        //var width = (context.measureText(c).width / (fs / (reverse ? 6.9 : 6.3)));
-                        var width = (context.measureText(c).width / (fs / 7));
-                        width += str[n-1] === 'm' ? 0.5 : 0;
-
-                        if (!reverse) {
-                            width += str[n] === '.' ? 2 : 0;
-                            width += str[n - 1] === '.' ? -2 : 0;
-                        }
-
-                        fullWidth += width;
-                    }
-                    return fullWidth;
-                }
-
                 function drawSpeedAlongArc(context, speed, acceleration, centerX, centerY, radius, fontSize) {
                     speed = '%1m/s'.arg(speed).split('').reverse().join('');
-                    acceleration = '(%2m/ss)'.arg(acceleration).split('').reverse().join('');
+                    acceleration = '(%2m/ss)'.arg(acceleration);
 
                     context.font = '%2 %1px sans-serif'
                         .arg(fontSize)
@@ -787,20 +762,19 @@ Item {
                     context.save();
                     context.translate(centerX, centerY);
                     context.rotate(convertAngToRadian(-178));
-                    drawArc(context, speed, radius, fontSize, true);
+                    drawArc(context, speed, radius, fontSize, true, true);
                     context.restore();
 
                     /*** Acceleration ***/
 
-                    var width = getBatStrWidth(context, acceleration, fontSize, true)
                     context.save();
                     context.translate(centerX, centerY);
-                    context.rotate(convertAngToRadian(-179 - width));
-                    drawArc(context, acceleration, radius, fontSize, true, true);
+                    context.rotate(convertAngToRadian(182));
+                    drawArc(context, acceleration, radius, fontSize, true, false);
                     context.restore();
                 }
 
-                function drawArc(context, str, radius, fs, reverse = false) {
+                function drawArc(context, str, radius, fs, reverse = false, clockwise = true) {
                     for (var n = 0; n < str.length; n++) {
                         var c = str[n];
                         var fontSize = fs;
@@ -818,14 +792,30 @@ Item {
                                 .arg(root.boldValues ? 'bold' : '');
                         }
 
-
                         // Calculating every letter's width and correcting spacing
                         var width = (context.measureText(c).width / (fs / 7));
-                        width += str[n-1] === 'm' ? 0.5 : 0;
+                        width += str[n-1] === 'm' ? 1.5 : 0;
+                        width += str[n-1] === 'O' ? 1.5 : 0;
 
-                        if (!reverse) {
+                        if (!reverse && clockwise || reverse && !clockwise) {
                             width += str[n] === '.' ? 2 : 0;
                             width += str[n - 1] === '.' ? -2 : 0;
+                        }
+
+                        // Pizdec
+                        if (reverse && !clockwise) {
+                            width += str[n-1] === '(' && str[n] !== '-' ? -1 : 0;
+                            width += str[n-1] === '-' ? -1 : 0;
+                            width += str[n] === ')' ? 1 : 0;
+                            width += str[n-1] === 'm' ? 2.5 : 0;
+                            width += str[n-2] === 'm' ? -0.5 : 0;
+                        }
+
+                        // Zero width for fisrt clockwise symbol
+                        if (clockwise) {
+                            if (!reverse) width = (n === 0 ? 0 : width);
+                        } else {
+                            width *= -1;
                         }
 
                         context.rotate(convertAngToRadian(width));
@@ -982,7 +972,7 @@ Item {
                 }
 
                 /**
-                  Left and Rigth BG
+                  Left and Right BGs
                  */
                 Canvas {
                     //opacity: 0.5
@@ -1039,7 +1029,7 @@ Item {
             }
 
             /**
-              Text along arc
+              Rope's values along arc
               */
             Canvas {
                 id: ropeCanvas
@@ -1068,6 +1058,9 @@ Item {
                 }
             }
 
+            /**
+              Speed's values along arc
+              */
             Canvas {
                 id: speedCanvas
                 antialiasing: true
