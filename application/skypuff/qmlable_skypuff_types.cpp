@@ -2,7 +2,7 @@
 
 bool QMLable_skypuff_config::deserializeV1(VByteArray& from)
 {
-    if(from.length() < 4 * 29 - 2)
+    if(from.length() < 4 * 29 - 2 + 2)
             return false;
 
     motor_poles = from.vbPopFrontUint8();
@@ -43,6 +43,7 @@ bool QMLable_skypuff_config::deserializeV1(VByteArray& from)
     antisex_reduce_amps = from.vbPopFrontDouble32Auto();
     antisex_reduce_steps = from.vbPopFrontInt32();
     antisex_reduce_amps_per_step = from.vbPopFrontDouble32Auto();
+    antisex_unwinding_gain = from.vbPopFrontDouble16(1e2);
 
     return true;
 }
@@ -86,6 +87,7 @@ QByteArray QMLable_skypuff_config::serializeV1() const
     vb.vbAppendDouble32Auto(antisex_reduce_amps);
     vb.vbAppendInt32(antisex_reduce_steps);
     vb.vbAppendDouble32Auto(antisex_reduce_amps_per_step);
+    vb.vbAppendDouble16(antisex_unwinding_gain, 1e2);
 
     return std::move(vb);
 }
@@ -153,6 +155,7 @@ bool QMLable_skypuff_config::saveV1(QSettings &f) const
     f.setValue("reduce_kg", QString::number(antisex_reduce_amps_to_kg(), 'f', 1));
     f.setValue("reduce_steps", antisex_reduce_steps);
     f.setValue("reduce_per_step_kg", QString::number(antisex_reduce_amps_per_step_to_kg(), 'f', 1));
+    f.setValue("unwinding_gain", antisex_unwinding_gain);
     f.endGroup();
 
     f.sync();
@@ -218,6 +221,7 @@ bool QMLable_skypuff_config::loadV1(QSettings &f)
     kg_to_antisex_reduce_amps(f.value("reduce_kg").toDouble());
     antisex_reduce_steps = f.value("reduce_steps").toInt();
     kg_to_antisex_reduce_amps_per_step(f.value("reduce_per_step_kg").toDouble());
+    antisex_unwinding_gain = f.value("unwinding_gain").toDouble();
     f.endGroup();
 
     return f.status() == QSettings::NoError;

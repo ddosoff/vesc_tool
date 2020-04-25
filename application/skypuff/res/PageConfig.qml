@@ -609,6 +609,23 @@ Page {
                                 stepSize: 0.2
                             }
                         }
+                        RowLayout {
+                            Text {
+                                text: qsTr('Unwinding (<a href="help">Gain</a>)')
+                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Unwinding gain"),
+                                                                          qsTr("Multiply motor amps to this when unwinding."),
+                                                                          false, false);
+                            }
+                            Item {Layout.fillWidth: true}
+                            RealSpinBox {
+                                id: antisex_unwinding_gain
+                                from: 0.8
+                                to: 1.2
+                                value: 1
+                                decimals: 2
+                                stepSize: 0.01
+                            }
+                        }
                     }
                 }
             }
@@ -658,6 +675,7 @@ Page {
         cfg.antisex_reduce_kg = antisex_reduce_kg.value
         cfg.antisex_reduce_steps = antisex_reduce_steps.value
         cfg.antisex_reduce_per_step_kg = antisex_reduce_per_step_kg.value
+        cfg.antisex_unwinding_gain = antisex_unwinding_gain.value
 
         if(fileName)
             Skypuff.saveSettings(fileName, cfg)
@@ -708,6 +726,7 @@ Page {
         antisex_reduce_kg.value = cfg.antisex_reduce_kg
         antisex_reduce_steps.value = cfg.antisex_reduce_steps
         antisex_reduce_per_step_kg.value = cfg.antisex_reduce_per_step_kg
+        antisex_unwinding_gain.value = cfg.antisex_unwinding_gain
     }
 
     // Open settings file picker

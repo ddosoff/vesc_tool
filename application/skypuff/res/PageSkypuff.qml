@@ -220,13 +220,13 @@ Page {
             }
         }
 
-
+        /*
         GaugeDebug {
             id: debugBlock
             gauge: sGauge
             visible: true
         }
-
+        */
 
         // Vertical space
         Item {

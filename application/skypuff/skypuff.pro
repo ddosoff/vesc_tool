@@ -1,6 +1,7 @@
 VT_VERSION = 0.95
 DEFINES += VT_VERSION=$$VT_VERSION
 
+VT_IS_TEST_VERSION = 1
 #VT_ANDROID_VERSION_ARMV7 = 1
 VT_ANDROID_VERSION_ARM64 = 100
 #VT_ANDROID_VERSION_X86 = 3
@@ -11,6 +12,14 @@ VT_ANDROID_VERSION = $$VT_ANDROID_VERSION_ARM64
 # sudo apt install qml-module-qt-labs-folderlistmodel qml-module-qtquick-extras qml-module-qtquick-controls2 qt5-default libqt5quickcontrols2-5 qtquickcontrols2-5-dev qtcreator qtcreator-doc libqt5serialport5-dev build-essential qml-module-qt3d qt3d5-dev qtdeclarative5-dev qtconnectivity5-dev qtmultimedia5-dev
 
 DEFINES += VT_VERSION=$$VT_VERSION
+
+!vt_test_version: {
+    DEFINES += VT_IS_TEST_VERSION=$$VT_IS_TEST_VERSION
+}
+vt_test_version: {
+    DEFINES += VT_IS_TEST_VERSION=1
+}
+
 
 CONFIG += build_mobile
 CONFIG += c++11

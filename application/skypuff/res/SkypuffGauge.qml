@@ -1792,7 +1792,7 @@ Item {
                         Image {
                             id: tmotIco
                             smooth: true
-                            source: root.mcuIco
+                            source: root.motorIco
                             sourceSize.width: root.tempIcoWH
                             sourceSize.height: root.tempIcoWH
                             visible: false
@@ -1851,7 +1851,7 @@ Item {
                         Image {
                             id: tfetsIco
                             smooth: true
-                            source: root.motorIco
+                            source: root.mcuIco
                             sourceSize.width: root.tempIcoWH
                             sourceSize.height: root.tempIcoWH
                             visible: false

@@ -102,6 +102,7 @@ typedef struct
     float antisex_reduce_amps;          // Reduce motor amps to this value on deceleration
     int antisex_reduce_steps;           // Maximum number of steps to increase deceleration
     float antisex_reduce_amps_per_step; // Deceleration increase amps per step
+    float antisex_unwinding_gain;       // Coefficient to multiply current when unwinding
 } skypuff_config;
 
 // Drive settings part of mc_configuration
