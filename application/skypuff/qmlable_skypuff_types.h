@@ -65,6 +65,7 @@ struct QMLable_skypuff_config : public skypuff_config, public skypuff_drive {
     Q_PROPERTY(float antisex_reduce_per_step_kg READ antisex_reduce_amps_per_step_to_kg WRITE kg_to_antisex_reduce_amps_per_step)
     Q_PROPERTY(int antisex_reduce_steps MEMBER antisex_reduce_steps)
     Q_PROPERTY(float antisex_unwinding_gain MEMBER antisex_unwinding_gain)
+    Q_PROPERTY(float antisex_gain_speed_ms READ antisex_gain_speed_to_ms WRITE ms_to_antisex_gain_speed)
     Q_PROPERTY(int battery_cells MEMBER battery_cells)
 public:
 
@@ -183,6 +184,9 @@ public:
 
     float antisex_starting_integral_to_ms() const {return erpm_to_ms(antisex_starting_integral);}
     void ms_to_antisex_starting_integral(float ms) {antisex_starting_integral = ms_to_erpm(ms);}
+
+    float antisex_gain_speed_to_ms() const {return erpm_to_ms(antisex_gain_speed);}
+    void ms_to_antisex_gain_speed(float ms) {antisex_gain_speed = ms_to_erpm(ms);}
 
     inline float meters_per_rev() const {return wheel_diameter / gear_ratio * M_PI;}
     inline float steps_per_rev(void) const {return motor_poles * 3;}

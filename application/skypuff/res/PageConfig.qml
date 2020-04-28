@@ -611,7 +611,7 @@ Page {
                         }
                         RowLayout {
                             Text {
-                                text: qsTr('Unwinding (<a href="help">Gain</a>)')
+                                text: qsTr('Unwinding (<a href="help">GAIN</a>)')
                                 onLinkActivated: VescIf.emitMessageDialog(qsTr("Unwinding gain"),
                                                                           qsTr("Multiply motor amps to this when unwinding."),
                                                                           false, false);
@@ -624,6 +624,23 @@ Page {
                                 value: 1
                                 decimals: 2
                                 stepSize: 0.01
+                            }
+                        }
+                        RowLayout {
+                            Text {
+                                text: qsTr('Gain speed (<a href="help">M/S</a>)')
+                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Speed to apply unwinding gain"),
+                                                                          qsTr("Positive speed means unwinding. Zero speed is possible, but bad for motor heating."),
+                                                                          false, false);
+                            }
+                            Item {Layout.fillWidth: true}
+                            RealSpinBox {
+                                id: antisex_gain_speed_ms
+                                from: -6
+                                to: 6
+                                value: 0.5
+                                decimals: 1
+                                stepSize: 0.1
                             }
                         }
                     }
@@ -676,6 +693,7 @@ Page {
         cfg.antisex_reduce_steps = antisex_reduce_steps.value
         cfg.antisex_reduce_per_step_kg = antisex_reduce_per_step_kg.value
         cfg.antisex_unwinding_gain = antisex_unwinding_gain.value
+        cfg.antisex_gain_speed_ms = antisex_gain_speed_ms.value
 
         if(fileName)
             Skypuff.saveSettings(fileName, cfg)
@@ -727,6 +745,7 @@ Page {
         antisex_reduce_steps.value = cfg.antisex_reduce_steps
         antisex_reduce_per_step_kg.value = cfg.antisex_reduce_per_step_kg
         antisex_unwinding_gain.value = cfg.antisex_unwinding_gain
+        antisex_gain_speed_ms.value = cfg.antisex_gain_speed_ms
     }
 
     // Open settings file picker
