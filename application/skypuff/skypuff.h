@@ -244,6 +244,7 @@ protected:
     void processZeroIsSet(VByteArray &vb);
     void processForceIsSet(VByteArray &vb);
     void processSettingsV1(VByteArray &vb);
+    void processMsg(VByteArray &vb);
     void updateAliveResponseStats(const int millis);
 };
 

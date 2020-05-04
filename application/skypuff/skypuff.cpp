@@ -325,6 +325,9 @@ void Skypuff::customAppDataReceived(QByteArray data)
     case SK_COMM_ZERO_IS_SET:
         processZeroIsSet(vb);
         break;
+    case SK_COMM_MSG:
+        processMsg(vb);
+        break;
     case SK_COMM_SETTINGS_V1:
         processSettingsV1(vb);
         break;
@@ -481,6 +484,21 @@ void Skypuff::processZeroIsSet(VByteArray &vb)
     }
 
     setStatus(tr("Zero is set"));
+}
+
+void Skypuff::processMsg(VByteArray &vb)
+{
+    if(!vb.length()) {
+        vesc->emitMessageDialog(tr("No bytes with SK_COMM_MSG command packet"),
+                                tr("Received %1 bytes!").arg(vb.length()),
+                                true);
+        vesc->disconnectPort();
+        return;
+    }
+
+    QString msg(vb);
+
+    setStatus(vb);
 }
 
 void Skypuff::processSettingsApplied(VByteArray &vb)
