@@ -83,9 +83,9 @@ Page {
     }
 
 
-    // Enter IP address and TCP port dialog
+    // Enter IP address and port dialog
     Popup {
-        id: newTcpAddressDialog
+        id: newUdpAddressDialog
         modal: true
         anchors.centerIn: parent
         contentWidth: parent.width - 50
@@ -94,7 +94,7 @@ Page {
             anchors.fill: parent
 
             Label {
-                text: qsTr("Add VESC TCP address...")
+                text: qsTr("Add VESC UDP address...")
                 font.bold: true
             }
 
@@ -102,7 +102,7 @@ Page {
                 Layout.fillWidth: true
                 Layout.margins: 20
 
-                id: tcpAddress
+                id: udpAddress
 
                 text: "192.168.4.1:65102"
                 focus: true
@@ -113,7 +113,7 @@ Page {
                 Layout.margins: 5
                 Button {
                     text: qsTr('Cancel')
-                    onClicked: newTcpAddressDialog.close()
+                    onClicked: newUdpAddressDialog.close()
                 }
                 Item {
                     Layout.fillWidth: true
@@ -121,13 +121,13 @@ Page {
                 Button {
                     text: qsTr('Save')
                     onClicked: {
-                        newTcpAddressDialog.close()
-                        var host = Skypuff.urlHost("tcp://" + tcpAddress.text)
-                        var port = Skypuff.urlPort("tcp://" + tcpAddress.text)
+                        newUdpAddressDialog.close()
+                        var host = Skypuff.urlHost("udp://" + udpAddress.text)
+                        var port = Skypuff.urlPort("udp://" + udpAddress.text)
                         if(host && port !== -1) {
                             var addr = host + ":" + port
-                            if(listModel.find("tcp", addr) === -1)
-                                listModel.insert(0, {type: "tcp", name: "TCP [%1:%2]".arg(host).arg(port), addr: addr, isVesc: true})
+                            if(listModel.find("udp", addr) === -1)
+                                listModel.insert(0, {type: "udp", name: "UDP [%1:%2]".arg(host).arg(port), addr: addr, isVesc: true})
                         }
                     }
                 }
@@ -199,15 +199,15 @@ Page {
                 icon.source: "qrc:/res/icons/wifi.svg"
                 Material.foreground: Material.Indigo
 
-                onClicked: newTcpAddressDialog.open()
+                onClicked: newUdpAddressDialog.open()
 
                 Component.onCompleted: {
-                    var host = VescIf.getLastTcpServer();
+                    var host = VescIf.getLastUdpServer();
                     host = host === "127.0.0.1" ? "192.168.4.1" : host
-                    var port = VescIf.getLastTcpPort()
+                    var port = VescIf.getLastUdpPort()
                     var addr = host + ":" + port
-                    if(listModel.find("tcp", addr) === -1)
-                        listModel.insert(0, {type: "tcp", name: "TCP [%1:%2]".arg(host).arg(port), addr: addr, isVesc: true})
+                    if(listModel.find("udp", addr) === -1)
+                        listModel.insert(0, {type: "udp", name: "UDP [%1:%2]".arg(host).arg(port), addr: addr, isVesc: true})
                 }
             }
             Item {
@@ -304,10 +304,10 @@ Page {
                         case 'usb':
                             Skypuff.connectSerial(addr)
                             break
-                        case 'tcp':
-                            var host = Skypuff.urlHost("tcp://" + addr)
-                            var port = Skypuff.urlPort("tcp://" + addr)
-                            VescIf.connectTcp(host, port)
+                        case 'udp':
+                            var host = Skypuff.urlHost("udp://" + addr)
+                            var port = Skypuff.urlPort("udp://" + addr)
+                            VescIf.connectUdp(host, port)
                             break
                         default:
                             console.log('Connection type', type, 'not implemented')

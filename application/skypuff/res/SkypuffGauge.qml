@@ -13,7 +13,7 @@ Item {
     SystemPalette {id: systemPalette; colorGroup: SystemPalette.Active}
 
     property real speedMs: 0
-    property real acceleration: 0
+    //property real acceleration: 0
     property real maxSpeedMs: 20
     property real minSpeedMs: maxSpeedMs * -1
 
@@ -200,7 +200,7 @@ Item {
     onMaxSpeedMsChanged: root.getSpeedLimit();
     onMinSpeedMsChanged: root.getSpeedLimit();
     onMinPowerChanged: root.setMinPower();
-    onAccelerationChanged: speedCanvas.requestPaint();
+    //onAccelerationChanged: speedCanvas.requestPaint();
 
     /********************/
 
@@ -749,9 +749,9 @@ Item {
                     context.restore();
                 }
 
-                function drawSpeedAlongArc(context, speed, acceleration, centerX, centerY, radius, fontSize) {
+                function drawSpeedAlongArc(context, speed, /*acceleration,*/ centerX, centerY, radius, fontSize) {
                     speed = '%1m/s'.arg(speed).split('').reverse().join('');
-                    acceleration = '(%2m/ss)'.arg(acceleration);
+                    //acceleration = '(%2m/ss)'.arg(acceleration);
 
                     context.font = '%2 %1px sans-serif'
                         .arg(fontSize)
@@ -759,19 +759,21 @@ Item {
 
                     /*** Speed ***/
 
+                    var angle = (Math.PI * (speed.length * 3.8)) / 180; // radians
+
                     context.save();
                     context.translate(centerX, centerY);
-                    context.rotate(convertAngToRadian(-178));
+                    context.rotate(convertAngToRadian(-180) - angle / 2);
                     drawArc(context, speed, radius, fontSize, true, true);
                     context.restore();
 
                     /*** Acceleration ***/
 
-                    context.save();
+                    /*context.save();
                     context.translate(centerX, centerY);
                     context.rotate(convertAngToRadian(182));
                     drawArc(context, acceleration, radius, fontSize, true, false);
-                    context.restore();
+                    context.restore();*/
                 }
 
                 function drawArc(context, str, radius, fs, reverse = false, clockwise = true) {
@@ -1074,7 +1076,7 @@ Item {
                     progressBars.drawSpeedAlongArc(
                         context,
                         root.prettyNumber(root.speedMs),
-                        root.prettyNumber(root.acceleration),
+                        //root.prettyNumber(root.acceleration),
                         baseLayer.width / 2,
                         baseLayer.height / 2,
                         baseLayer.radius - root.gaugeHeight,
