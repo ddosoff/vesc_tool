@@ -75,7 +75,7 @@ Page {
                             SpinBox {
                                 id: wheel_diameter_mm
                                 editable: true
-                                value: 350
+                                value: 270
                                 from: 10
                                 to: 2000
                                 stepSize: 5
@@ -122,7 +122,7 @@ Page {
                                 editable: true
                                 from: 0.1
                                 to: 10
-                                value: 1.5
+                                value: 2
                                 decimals: 1
                                 stepSize: 0.1
                             }
@@ -135,7 +135,7 @@ Page {
                                 editable: true
                                 from: 5
                                 to: 5000
-                                value: 1000
+                                value: 1500
                                 stepSize: 10
                                 decimals: 1
                             }
@@ -159,7 +159,7 @@ Page {
                                 editable: true
                                 from: 1
                                 to: 100
-                                value: 15
+                                value: 30
                                 stepSize: 1
                                 decimals: 1
                             }
@@ -180,6 +180,7 @@ Page {
                                 editable: true
                                 from: 0.2
                                 to: 5000
+                                value: 1
                                 stepSize: 10
                             }
                         }
@@ -190,7 +191,7 @@ Page {
                                 id: brake_kg
                                 from: 0.2
                                 to: 200 // High force possible, no special mode yet
-                                value: 1
+                                value: 1.4
                                 decimals: 1
                                 stepSize: 0.2
                             }
@@ -217,7 +218,7 @@ Page {
                             Item {Layout.fillWidth: true}
                             RealSpinBox {
                                 id: unwinding_trigger_length
-                                value: 0.8
+                                value: 1
                                 from: 0.1
                                 to: 10
                                 decimals: 1
@@ -229,7 +230,7 @@ Page {
                             Item {Layout.fillWidth: true}
                             RealSpinBox {
                                 id: unwinding_kg
-                                value: 3
+                                value: 2
                                 from: 0.2
                                 to: 20
                                 decimals: 1
@@ -256,7 +257,7 @@ Page {
                             Item {Layout.fillWidth: true}
                             RealSpinBox {
                                 id: rewinding_trigger_length
-                                value: 20
+                                value: 15
                                 from: 0.5
                                 to: 50
                                 decimals: 1
@@ -269,7 +270,7 @@ Page {
                                 id: rewinding_kg
                                 from: 0.2
                                 to: 40
-                                value: 5
+                                value: 6
                                 decimals: 1
                                 stepSize: 0.2
                             }
@@ -293,6 +294,7 @@ Page {
                                 editable: true
                                 from: 1
                                 to: 100
+                                value: 55
                                 decimals: 1
                             }
                         }
@@ -308,7 +310,7 @@ Page {
                                 id: slowing_kg
                                 from: 0
                                 to: 10
-                                value: 0.1
+                                value: 0.6
                                 decimals: 1
                                 stepSize: 0.1
                             }
@@ -320,6 +322,7 @@ Page {
                                 id: slow_ms
                                 from: 0.5
                                 to: 5
+                                value: 1.5
                                 decimals: 1
                                 stepSize: 0.2
                             }
@@ -336,7 +339,7 @@ Page {
                                 id: slow_max_kg
                                 from: 0.2
                                 to: 20
-                                value: 5
+                                value: 5.6
                                 decimals: 1
                                 stepSize: 0.2
                             }
@@ -365,7 +368,7 @@ Page {
                                 id: pull_kg
                                 from: 0.1
                                 to: 600
-                                value: 100
+                                value: 60
                                 decimals: 1
                                 stepSize: 5
                             }
@@ -376,7 +379,7 @@ Page {
                             SpinBox {
                                 id: pre_pull_k
                                 editable: true
-                                value: 25
+                                value: 30
                                 from: 10
                                 to: 50
                             }
@@ -387,7 +390,7 @@ Page {
                             SpinBox {
                                 id: takeoff_pull_k
                                 editable: true
-                                value: 50
+                                value: 60
                                 from: 30
                                 to: 80
                             }
@@ -432,7 +435,7 @@ Page {
                                 id: takeoff_trigger_length
                                 from: 0.1
                                 to: 5000
-                                value: 2
+                                value: 1.4
                                 decimals: 1
                                 stepSize: 0.2
                             }
@@ -477,7 +480,7 @@ Page {
                                 id: manual_brake_kg
                                 from: 0.2
                                 to: 10
-                                value: 3
+                                value: 1
                                 decimals: 1
                                 stepSize: 0.2
                             }
@@ -494,7 +497,7 @@ Page {
                                 id: manual_slow_ms
                                 from: 0.5
                                 to: 12
-                                value: 6
+                                value: 2
                                 decimals: 1
                                 stepSize: 0.2
                             }
@@ -511,7 +514,7 @@ Page {
                                 id: manual_slow_speed_up_kg
                                 from: 0.2
                                 to: 20
-                                value: 2
+                                value: 5
                                 decimals: 1
                                 stepSize: 0.2
                             }
@@ -528,7 +531,7 @@ Page {
                                 id: manual_slow_max_kg
                                 from: 0.2
                                 to: 20
-                                value: 5
+                                value: 6
                                 decimals: 1
                                 stepSize: 0.2
                             }
@@ -555,7 +558,7 @@ Page {
                                 id: antisex_starting_integral
                                 from: 1
                                 to: 10
-                                value: 3
+                                value: 2.6
                                 decimals: 1
                                 stepSize: 0.2
                             }
@@ -572,7 +575,7 @@ Page {
                                 id: antisex_reduce_kg
                                 from: 1
                                 to: 20
-                                value: 8
+                                value: 6
                                 decimals: 1
                                 stepSize: 0.5
                             }
@@ -589,7 +592,7 @@ Page {
                                 id: antisex_reduce_steps
                                 from: 0
                                 to: 10
-                                value: 3
+                                value: 1
                             }
                         }
                         RowLayout {
@@ -604,7 +607,7 @@ Page {
                                 id: antisex_reduce_per_step_kg
                                 from: 0
                                 to: 3
-                                value: 1
+                                value: 1.4
                                 decimals: 1
                                 stepSize: 0.2
                             }
@@ -621,7 +624,7 @@ Page {
                                 id: antisex_unwinding_gain
                                 from: 0.8
                                 to: 1.2
-                                value: 1
+                                value: 1.04
                                 decimals: 2
                                 stepSize: 0.01
                             }
@@ -638,7 +641,7 @@ Page {
                                 id: antisex_gain_speed_ms
                                 from: -6
                                 to: 6
-                                value: 0.5
+                                value: 0.8
                                 decimals: 1
                                 stepSize: 0.1
                             }
