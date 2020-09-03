@@ -14,21 +14,21 @@ Item {
 
     property real speedMs: 0
     //property real acceleration: 0
-    property real maxSpeedMs: 20
-    property real minSpeedMs: maxSpeedMs * -1
+    property real maxSpeedMs: 0 // 20
+    property real minSpeedMs: 0 // maxSpeedMs * -1
 
     property real ropeMeters: 0
     property real leftRopeMeters: maxRopeMeters - ropeMeters
     property real minRopeMeters: 0
-    property real maxRopeMeters: 1500;
+    property real maxRopeMeters: 0;
 
     property real power: 0
-    property real maxPower: 20000
-    property real minPower: maxPower * -1
+    property real maxPower: 0 // 20000
+    property real minPower: 0 // maxPower * -1
 
     property real motorKg
     property real minMotorKg: 0
-    property real maxMotorKg: 51
+    property real maxMotorKg: 0 // 51
 
     property real tempFets: 0
     property real tempMotor: 0
@@ -216,6 +216,10 @@ Item {
     }
 
     function setMaxMotorKg() {
+        // Infinity protection
+        if(root.maxMotorKg > 1000)
+            root.maxMotorKg = 0;
+
         var s = root.maxMotorKg <= 10 ? 2 : 10
         root.maxMotorKg = Math.ceil(parseInt(root.maxMotorKg, 10) / s) * s;
 

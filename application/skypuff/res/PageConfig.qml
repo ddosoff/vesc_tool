@@ -140,6 +140,54 @@ Page {
                                 decimals: 1
                             }
                         }
+                        RowLayout {
+                            Text {
+                                text: qsTr('Max speed (<a href="help">ms</a>)')
+                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Speed scale maximum"),
+                                                                          qsTr("Could be calculated according motor kv, drive settings and maximum ESC voltage."),
+                                                                          false, false);
+                            }
+                            Item {Layout.fillWidth: true}
+                            RealSpinBox {
+                                id: max_speed_ms
+                                editable: true
+                                from: 10
+                                to: 300
+                                value: 30
+                                decimals: 1
+                                stepSize: 0.1
+                            }
+                        }
+                        RowLayout {
+                            Text {
+                                text: qsTr('Battery (<a href="help">cells</a>)')
+                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Number of cells"),
+                                                                          qsTr("This value will affect voltage limits."),
+                                                                          false, false);
+                            }
+                            Item {Layout.fillWidth: true}
+                            SpinBox {
+                                id: battery_cells
+                                editable: true
+                                from: 1
+                                to: 255
+                                value: 24
+                            }
+                        }
+                        RowLayout {
+                            Text {
+                                text: qsTr('Battery (<a href="help">type</a>)')
+                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Chemistry type"),
+                                                                          qsTr("This value will affect voltage limits."),
+                                                                          false, false);
+                            }
+                            Item {Layout.fillWidth: true}
+                            ComboBox {
+                                id: battery_type
+                                Layout.fillWidth: true
+                                model: ["LI_ION 3.0v -> 4.2v", "LI_IRON 2.6v -> 3.6v"]
+                            }
+                        }
                     }
                 }
 
@@ -698,6 +746,10 @@ Page {
         cfg.antisex_unwinding_gain = antisex_unwinding_gain.value
         cfg.antisex_gain_speed_ms = antisex_gain_speed_ms.value
 
+        cfg.max_speed_ms = max_speed_ms.value
+        cfg.battery_cells = battery_cells.value
+        cfg.battery_type = battery_type.currentIndex
+
         if(fileName)
             Skypuff.saveSettings(fileName, cfg)
         else
@@ -749,6 +801,10 @@ Page {
         antisex_reduce_per_step_kg.value = cfg.antisex_reduce_per_step_kg
         antisex_unwinding_gain.value = cfg.antisex_unwinding_gain
         antisex_gain_speed_ms.value = cfg.antisex_gain_speed_ms
+
+        max_speed_ms.value = cfg.max_speed_ms
+        battery_cells.value = cfg.battery_cells
+        battery_type.currentIndex = cfg.battery_type
     }
 
     // Open settings file picker

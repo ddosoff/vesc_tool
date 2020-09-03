@@ -25,8 +25,8 @@
 #include "qmlable_skypuff_types.h"
 
 const int aliveTimerDelay = 300; // milliseconds
-const int aliveTimeout = 700;    // 2 alives per fail
-const int commandTimeout = 690;
+const int aliveTimeout = 1400;   // 4 alives per fail (1.4s)
+const int commandTimeout = 1390;
 const int aliveAvgN = 10; // number last alive responses to average
 const int aliveStepsForTemps = 4; // Get temps every N steps
 

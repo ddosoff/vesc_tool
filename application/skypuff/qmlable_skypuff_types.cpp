@@ -2,12 +2,14 @@
 
 bool QMLable_skypuff_config::deserializeV1(VByteArray& from)
 {
-    if(from.length() < 4 * 29 - 2 + 2)
+    if(from.length() < 4 * 30 - 2)
             return false;
 
     motor_poles = from.vbPopFrontUint8();
     gear_ratio = from.vbPopFrontDouble32Auto();
     wheel_diameter = from.vbPopFrontDouble32Auto();
+    battery_type = (int)from.vbPopFrontUint8();
+    battery_cells = (int)from.vbPopFrontUint8();
 
     amps_per_kg = from.vbPopFrontDouble32Auto();
     pull_applying_period = from.vbPopFrontInt16();
@@ -46,6 +48,8 @@ bool QMLable_skypuff_config::deserializeV1(VByteArray& from)
     antisex_unwinding_gain = from.vbPopFrontDouble16(1e2);
     antisex_gain_speed = from.vbPopFrontDouble16(1);
 
+    max_speed_ms = from.vbPopFrontDouble16(1e2);
+
     return true;
 }
 
@@ -58,6 +62,8 @@ QByteArray QMLable_skypuff_config::serializeV1() const
     vb.vbAppendUint8(motor_poles);
     vb.vbAppendDouble32Auto(gear_ratio);
     vb.vbAppendDouble32Auto(wheel_diameter);
+    vb.vbAppendUint8(battery_type);
+    vb.vbAppendUint8(battery_cells);
 
     vb.vbAppendDouble32Auto(amps_per_kg);
     vb.vbAppendInt16(pull_applying_period);
@@ -90,6 +96,7 @@ QByteArray QMLable_skypuff_config::serializeV1() const
     vb.vbAppendDouble32Auto(antisex_reduce_amps_per_step);
     vb.vbAppendDouble16(antisex_unwinding_gain, 1e2);
     vb.vbAppendDouble16(antisex_gain_speed, 1);
+    vb.vbAppendDouble16(max_speed_ms, 1e2);
 
     return std::move(vb);
 }

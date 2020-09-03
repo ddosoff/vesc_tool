@@ -20,6 +20,7 @@
 #define APP_SKYPUFF_H_
 
 #include <stdint.h>
+#include "datatypes.h"
 
 /* --- This is common file for MCU and UI SkyPUFF apps --- */
 
@@ -97,6 +98,7 @@ typedef struct
     float manual_slow_max_current;      // Max force for MANUAL_SLOW and MANUAL_SLOW_BACK
     float manual_slow_speed_up_current; // Speed up current for manual constant speed states
     float manual_slow_erpm;             // Constant speed for manual rotation
+    float max_speed_ms;                 // Speed scale limit (only affects the interface)
 
     // Antisex dampering
     float antisex_starting_integral;    // Start antisex algorihtm if acceleration integral is higher then this
@@ -113,6 +115,17 @@ typedef struct
     int motor_poles;
     float wheel_diameter;
     float gear_ratio;
+
+    // vesc_tool is not necessary to change battery limits
+    BATTERY_TYPE battery_type;
+	int battery_cells;
+    
+    /* This mc_configuration values will be updated according battery_type and cells number
+
+    float l_battery_cut_start;
+    float l_battery_cut_end;
+    float l_max_vin;
+    */
 } skypuff_drive;
 
 /*

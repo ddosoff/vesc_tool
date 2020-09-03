@@ -88,6 +88,12 @@ typedef enum {
 } mc_fault_code;
 
 typedef enum {
+        BATTERY_TYPE_LIION_3_0__4_2,
+        BATTERY_TYPE_LIIRON_2_6__3_6,
+        BATTERY_TYPE_LEAD_ACID
+} BATTERY_TYPE;
+
+typedef enum {
     DISP_POS_MODE_NONE = 0,
     DISP_POS_MODE_INDUCTANCE,
     DISP_POS_MODE_OBSERVER,

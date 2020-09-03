@@ -87,7 +87,7 @@ Page {
 
         // Status messages from skypuff with normal text color
         // or blinking faults
-        Text {
+        /*Text {
             id: tStatus
             visible: true
             Layout.fillWidth: true
@@ -134,7 +134,7 @@ Page {
                         statusCleaner.restart()
                 }
             }
-        }
+        }*/
 
         SkypuffGauge {
             id: sGauge
@@ -146,7 +146,7 @@ Page {
             paddingLeft: 10
             paddingRight: 10
             marginTop: 20
-            maxRopeMeters: 20
+            //maxRopeMeters: 20
 
             // Temps
             tempFets: Skypuff.tempFets
@@ -200,6 +200,7 @@ Page {
                     sGauge.maxPower = cfg.power_max;
                     sGauge.minPower = cfg.power_min;
                     sGauge.batteryCells = cfg.battery_cells;
+                    sGauge.maxSpeedMs = cfg.max_speed_ms;
                 }
 
                 onStateChanged: {

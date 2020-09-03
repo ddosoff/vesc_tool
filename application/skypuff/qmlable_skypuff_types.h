@@ -66,7 +66,9 @@ struct QMLable_skypuff_config : public skypuff_config, public skypuff_drive {
     Q_PROPERTY(int antisex_reduce_steps MEMBER antisex_reduce_steps)
     Q_PROPERTY(float antisex_unwinding_gain MEMBER antisex_unwinding_gain)
     Q_PROPERTY(float antisex_gain_speed_ms READ antisex_gain_speed_to_ms WRITE ms_to_antisex_gain_speed)
+    Q_PROPERTY(int battery_type MEMBER battery_type)
     Q_PROPERTY(int battery_cells MEMBER battery_cells)
+    Q_PROPERTY(float max_speed_ms MEMBER max_speed_ms)
 public:
 
     float motor_max_current;
