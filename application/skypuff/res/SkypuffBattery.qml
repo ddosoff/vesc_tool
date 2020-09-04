@@ -7,8 +7,8 @@ Item {
     id: batteryBlock
     property var gauge
 
-    width: gauge.diameter / 2.6
-    height: gauge.diameter / 11.5
+    implicitWidth: gauge.diameter / 2.6
+    implicitHeight: gauge.diameter / 11.5
 
     //anchors.topMargin: gauge.batteryTopMargin
     //anchors.horizontalCenter: gauge.horizontalCenter
@@ -36,8 +36,6 @@ Item {
 
         border.color: gauge.borderColor
         border.width: 2
-
-        anchors.fill: parent
 
         radius: 3
         color: gauge.innerColor

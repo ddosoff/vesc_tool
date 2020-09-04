@@ -190,7 +190,7 @@ Page {
 
             paddingLeft: 10
             paddingRight: 10
-            marginTop: 20
+            marginTop: 15
             //maxRopeMeters: 20
 
             // Temps
@@ -276,6 +276,7 @@ Page {
             RoundButton {
                 id: rManualSlowBack
                 Layout.topMargin: -5
+                Layout.leftMargin: 5
                 text: "←";
                 enabled: parent.isManualSlowButtonsEnabled()
                 visible: parent.isManualSlowButtonsVisible()
@@ -290,6 +291,7 @@ Page {
             SkypuffBattery {
                 id: batteryBlock
                 gauge: sGauge
+                Layout.alignment: Qt.AlignHCenter
 
                 Connections {
                     target: Skypuff
@@ -310,6 +312,8 @@ Page {
             }
             RoundButton {
                 id: rManualSlowForward
+                Layout.topMargin: -5
+                Layout.rightMargin: 5
                 text: "→";
                 enabled: parent.isManualSlowButtonsEnabled()
                 visible: parent.isManualSlowButtonsVisible()
@@ -335,8 +339,8 @@ Page {
         RealSpinBox {
             id: pullForce
 
-            //Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter
+            Layout.topMargin: 30
 
             enabled: false
             font.pointSize: page.kgValFontSize
