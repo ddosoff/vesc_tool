@@ -1,4 +1,5 @@
 import QtQuick 2.12
+import QtQuick.Dialogs 1.2
 import QtQuick.Controls 2.2
 import QtQuick.Extras 1.4
 import QtQuick.Layouts 1.12
@@ -22,6 +23,50 @@ Page {
 
     // Get normal text color from this palette
     SystemPalette {id: systemPalette; colorGroup: SystemPalette.Active}
+
+    // Confirm Set Zero Here
+    Popup {
+        id: confirmResetZero
+        modal: true
+        anchors.centerIn: parent
+        contentWidth: parent.width - 50
+
+        ColumnLayout {
+            anchors.fill: parent
+
+            Label {
+                Layout.margins: 10
+                text: qsTr('Set zero here')
+                font.bold: true
+            }
+
+            Text {
+                Layout.margins: 10
+                Layout.fillWidth: true
+                elide: Text.ElideMiddle
+                wrapMode: Text.WordWrap
+                text: qsTr("Reset unwinded rope?")
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.margins: 20
+                Button {
+                    text: qsTr('Cancel')
+                    onClicked: confirmResetZero.close()
+                }
+                Item {
+                    Layout.fillWidth: true
+                }
+                Button {
+                    text: qsTr('Reset')
+                    onClicked: {
+                        confirmResetZero.close()
+                        Skypuff.sendTerminal("set_zero");
+                    }
+                }
+            }
+        }
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -151,7 +196,6 @@ Page {
             // Temps
             tempFets: Skypuff.tempFets
             tempMotor: Skypuff.tempMotor
-            tempBat: Skypuff.tempBat
 
             // Statuses
             stateText: Skypuff.stateText
@@ -190,8 +234,6 @@ Page {
                 onIsBatteryWarningChanged: { sGauge.isBatteryWarning = Skypuff.isBatteryWarning; }
                 onIsBatteryScaleValidChanged: { sGauge.isBatteryScaleValid = Skypuff.isBatteryScaleValid; }
 
-                onWhInChanged: { sGauge.whIn = Skypuff.whOut }
-                onWhOutChanged: { sGauge.whOut = Skypuff.whIn }
                 onBatteryPercentsChanged: { sGauge.batteryPercents = Skypuff.batteryPercents; }
                 onBatteryCellVoltsChanged: { sGauge.batteryCellVolts = Skypuff.batteryCellVolts; }
 
@@ -312,7 +354,7 @@ Page {
                 background.anchors.fill: bSetZero
                 Material.background: page.bgBlueColor
 
-                onClicked: {Skypuff.sendTerminal("set_zero")}
+                onClicked: { confirmResetZero.open() }
             }
 
             BigRoundButton {

@@ -66,9 +66,6 @@ class Skypuff : public QObject
     Q_PROPERTY(float power READ getPower NOTIFY powerChanged)
     Q_PROPERTY(float tempFets READ getTempFets NOTIFY tempFetsChanged)
     Q_PROPERTY(float tempMotor READ getTempMotor NOTIFY tempMotorChanged)
-    Q_PROPERTY(float tempBat READ getTempBat NOTIFY tempBatChanged)
-    Q_PROPERTY(float whIn READ getWhIn NOTIFY whInChanged)
-    Q_PROPERTY(float whOut READ getWhOut NOTIFY whOutChanged)
     // Battery
     Q_PROPERTY(bool isBatteryScaleValid READ isBatteryScaleValid NOTIFY batteryScalesChanged)
     Q_PROPERTY(bool isBatteryBlinking READ isBatteryBlinking NOTIFY batteryBlinkingChanged)
@@ -163,8 +160,7 @@ protected:
     int aliveStep;
     int curTac;
     float erpm, motorAmps, batteryAmps;
-    float tempFets, tempMotor, tempBat;
-    float whIn, whOut;
+    float tempFets, tempMotor;
     float vBat;
     mc_fault_code fault, playingFault;
 
@@ -183,9 +179,6 @@ protected:
     float getPower() {return batteryAmps * vBat;}
     float getTempFets() {return tempFets;}
     float getTempMotor() {return tempMotor;}
-    float getTempBat() {return tempBat;}
-    float getWhIn() {return whIn;}
-    float getWhOut() {return whOut;}
 
     // Battery
     bool isBatteryScaleValid() {return cfg.v_in_max && vBat;}
@@ -207,6 +200,7 @@ protected:
     QString getStatusText() {return status;}
     QString getFaultTranslation();
     void playAudio();
+    void playWarning(const char * resPath);
 
     // emit scales signals
     void scalesUpdated();
@@ -220,9 +214,6 @@ protected:
     void setPower(const float newMotorAmps, const float newBatteryAmps);
     void setTempFets(const float newTempFets);
     void setTempMotor(const float newTempMotor);
-    void setTempBat(const float newTempBat);
-    void setWhIn(const float newWhIn);
-    void setWhOut(const float newWhOut);
     void setFault(const mc_fault_code newFault);
     void setVBat(const float newVBat);
 

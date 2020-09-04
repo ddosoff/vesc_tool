@@ -34,5 +34,10 @@
         <file>res/utils.js</file>
         <file>res/CustomBorder.qml</file>
         <file>res/SkypuffBattery.qml</file>
+        <file>res/sounds/100 meters left.mp3</file>
+        <file>res/sounds/100 метров осталось.mp3</file>
+        <file>res/sounds/200 meters left.mp3</file>
+        <file>res/sounds/200 метров осталось.mp3</file>
+        <file>res/sounds/Zero meters.mp3</file>
     </qresource>
 </RCC>

@@ -160,9 +160,6 @@ void Skypuff::clearStats()
     batteryAmps = 0;
     tempFets = 0;
     tempMotor = 0;
-    tempBat = 0;
-    whIn = 0;
-    whOut = 0;
 
     setFault(FAULT_CODE_NONE);
     playingFault = FAULT_CODE_NONE;
@@ -574,7 +571,7 @@ void Skypuff::processFault(VByteArray &vb)
     }
 }
 
-void Skypuff::processAlive(VByteArray &vb, bool temps)
+void Skypuff::processAlive(VByteArray &vb, bool isTempsPacket)
 {
     // alive could be set from UI, timer is not necessary but possible
     if(aliveTimeoutTimerId) {
@@ -604,17 +601,17 @@ void Skypuff::processAlive(VByteArray &vb, bool temps)
     setSpeed(newErpm);
     setPower(newMotorAmps, newBatteryAmps);
 
-    if(!temps && vb.length()) {
+    if(!isTempsPacket && vb.length()) {
         vesc->emitMessageDialog(tr("Extra bytes received with alive power packet stats"),
                                 tr("Received %1 extra bytes!").arg(vb.length()),
                                 true);
         vesc->disconnectPort();
         return;
     }
-    else if(!temps)
+    else if(!isTempsPacket)
         return;
 
-    const int alive_temp_packet_length = 4 * 2  + 2 * 4;
+    const int alive_temp_packet_length = 2 * 3;
     if(vb.length() < alive_temp_packet_length) {
         vesc->emitMessageDialog(tr("Can't deserialize alive temp command packet"),
                                 tr("Received %1 bytes, expected %2 bytes!").arg(vb.length()).arg(alive_temp_packet_length),
@@ -625,9 +622,6 @@ void Skypuff::processAlive(VByteArray &vb, bool temps)
     float newVBat = vb.vbPopFrontDouble16(1e1);
     float newFetsTemp = vb.vbPopFrontDouble16(1e1);
     float newMotorTemp = vb.vbPopFrontDouble16(1e1);
-    float newBatTemp = vb.vbPopFrontDouble16(1e1);
-    float newWhIn = vb.vbPopFrontDouble32(1e3);
-    float newWhOut = vb.vbPopFrontDouble32(1e3);
 
     if(vb.length()) {
         vesc->emitMessageDialog(tr("Extra bytes received with alive temp packet"),
@@ -640,9 +634,6 @@ void Skypuff::processAlive(VByteArray &vb, bool temps)
     setVBat(newVBat);
     setTempFets(newFetsTemp);
     setTempMotor(newMotorTemp);
-    setTempBat(newBatTemp);
-    setWhIn(newWhIn);
-    setWhOut(newWhOut);
 }
 
 void Skypuff::processSettingsV1(VByteArray &vb)
@@ -708,9 +699,6 @@ void Skypuff::scalesUpdated()
     emit faultChanged(getFaultTranslation());
     emit tempFetsChanged(tempFets);
     emit tempMotorChanged(tempMotor);
-    emit tempBatChanged(tempBat);
-    emit whInChanged(whIn);
-    emit whOutChanged(whOut);
 
     // Battery
     emit batteryChanged(getBatteryPercents());
@@ -724,6 +712,20 @@ void Skypuff::scalesUpdated()
     emit brakingExtensionRangeChanged(isBrakingExtensionRange());
 }
 
+
+void Skypuff::playWarning(const char *resPath)
+{
+    // Still playing something?
+    if(player->state() == QMediaPlayer::PlayingState)
+        return;
+
+    // Just play resPath once
+    playlist->setPlaybackMode(QMediaPlaylist::Sequential);
+    playlist->clear();
+    playlist->addMedia(QUrl(tr(resPath)));
+    player->play();
+}
+
 // Priority to faults, play warnings only once if no fault
 void Skypuff::playAudio()
 {
@@ -731,13 +733,13 @@ void Skypuff::playAudio()
         // In case of fault gone play prev fault once
         playlist->setPlaybackMode(QMediaPlaylist::Sequential);
 
-        // Still playing old fault?
+        // Still playing something?
         if(player->state() == QMediaPlayer::PlayingState)
             return;
 
-        // Play some warnings?
         playlist->clear();
 
+        // Play some warnings?
         if(isBatteryTooHigh()) {
             playlist->addMedia(QUrl(tr("qrc:/res/sounds/Battery charged too high.mp3")));
             emit statusChanged(tr("Battery charged too high"), true);
@@ -802,14 +804,27 @@ void Skypuff::setFault(const mc_fault_code newFault)
 }
 
 // overrideChanged after new seetings to update ranges flags
-void Skypuff::setPos(const int new_pos)
+void Skypuff::setPos(const int newTac)
 {
-    if(new_pos != curTac) {
+    if(newTac != curTac) {
         bool wasBrakingRange = isBrakingRange();
         bool wasBrakingExtensionRange = isBrakingExtensionRange();
 
-        curTac = new_pos;
-        emit posChanged(cfg.tac_steps_to_meters(new_pos));
+        // Process rope warnings..
+        float oldMetersLeft = cfg.tac_steps_to_meters(cfg.rope_length - abs(curTac));
+        float newMetersLeft = cfg.tac_steps_to_meters(cfg.rope_length - abs(newTac));
+
+        if(oldMetersLeft > 0 && newMetersLeft <= 0)
+            playWarning("qrc:/res/sounds/Zero meters.mp3");
+
+        if(oldMetersLeft > 100 && newMetersLeft <= 100)
+            playWarning("qrc:/res/sounds/100 meters left.mp3");
+
+        if(oldMetersLeft > 200 && newMetersLeft <= 200)
+            playWarning("qrc:/res/sounds/200 meters left.mp3");
+
+        curTac = newTac;
+        emit posChanged(cfg.tac_steps_to_meters(newTac));
 
         bool newBrakingRange = isBrakingRange();
         bool newBrakingExtensionRange = isBrakingExtensionRange();
@@ -853,35 +868,11 @@ void Skypuff::setTempFets(const float newTempFets)
     }
 }
 
-void Skypuff::setTempBat(const float newTempBat)
-{
-    if(tempBat != newTempBat) {
-        tempBat = newTempBat;
-        emit tempBatChanged(newTempBat);
-    }
-}
-
 void Skypuff::setTempMotor(const float newTempMotor)
 {
     if(tempMotor != newTempMotor) {
         tempMotor = newTempMotor;
         emit tempMotorChanged(newTempMotor);
-    }
-}
-
-void Skypuff::setWhIn(const float newWhIn)
-{
-    if(whIn != newWhIn) {
-        whIn = newWhIn;
-        emit whInChanged(newWhIn);
-    }
-}
-
-void Skypuff::setWhOut(const float newWhOut)
-{
-    if(whOut != newWhOut) {
-        whOut = newWhOut;
-        emit whOutChanged(newWhOut);
     }
 }
 

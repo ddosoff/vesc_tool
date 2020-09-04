@@ -32,7 +32,6 @@ Item {
 
     property real tempFets: 0
     property real tempMotor: 0
-    property real tempBat: 0
 
     property string motorMode: 'Not Connected'
     property string state: 'DISCONNECTED'
@@ -45,9 +44,6 @@ Item {
     property real batteryPercents: 0
     property real batteryCellVolts: 0.0
     property int batteryCells: 0
-
-    property real whIn: 0.0
-    property real whOut: 0.0
 
     property bool showCharginAnimation: false
     property string ff: 'Roboto'
@@ -173,7 +169,6 @@ Item {
     property bool isSpeedWarning: false
     property bool isSpeedBlinking: false
 
-    property bool isTempBatteryWarning: false
     property bool isTempMcuWarning: false
     property bool isTempMotorWarning: false
 
@@ -203,14 +198,6 @@ Item {
     //onAccelerationChanged: speedCanvas.requestPaint();
 
     /********************/
-
-    function getWhValStr(val) {
-        if (val >= 1000) {
-            return prettyNumber(val / 1000) + ' kwh';
-        }
-        return prettyNumber(val) + ' wh';
-    }
-
     function setMaxRopeMeters() {
         root.maxRopeMeters = Math.ceil(parseInt(root.maxRopeMeters, 10) / 10) * 10;
     }
@@ -1882,62 +1869,6 @@ Item {
                             text: prettyNumber(root.tempFets, 1) + root.tempDimension
                             font.pixelSize: root.tempFontSize
                             color: root.isTempMcuWarning ? root.dangerTextColor : root.textColor;
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-                }
-            }
-
-            /**
-              Battery temp block
-              */
-            Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottom: parent.bottom
-                anchors.bottomMargin: root.gaugeHeight * 2.7
-
-                visible: root.tempBat > -200
-
-                Row {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    width: tbatIcoBlock.width + tbatTextBlock.block
-                    height: tbatIcoBlock.height
-                    spacing: 3
-
-                    Item {
-                        id: tbatIcoBlock
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: tbatIco.width + 3
-                        height: tbatIco.height
-
-                        Image {
-                            id: tbatIco
-                            smooth: true
-                            source: root.batteryIco
-                            sourceSize.width: root.tempIcoWH
-                            sourceSize.height: root.tempIcoWH
-                            visible: false
-                        }
-
-                        ColorOverlay {
-                            anchors.fill: tbatIco
-                            source: tbatIco
-                            color: Material.color(Material.Blue)
-                        }
-                    }
-
-                    Item {
-                        id: tbatTextBlock
-                        width: tbatText.width
-                        height: parent.height
-                        anchors.verticalCenter: parent.verticalCenter
-
-                        Text {
-                            id: tbatText
-                            font.family: root.ff
-                            text: root.prettyNumber(root.tempBat, 1) + root.tempDimension
-                            font.pixelSize: root.tempFontSize
-                            color: root.isTempBatteryWarning ? root.dangerTextColor : root.textColor;
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }
