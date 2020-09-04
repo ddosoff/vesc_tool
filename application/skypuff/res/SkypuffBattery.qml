@@ -11,15 +11,23 @@ Item {
     height: gauge.diameter / 11.5
 
     //anchors.topMargin: gauge.batteryTopMargin
-    anchors.horizontalCenter: gauge.horizontalCenter
-    anchors.bottom: gauge.bottom
+    //anchors.horizontalCenter: gauge.horizontalCenter
+    //anchors.bottom: gauge.bottom
 
     property real battFontSize: Math.max(10, battery.height * 0.51)
 
     property real margin: 5
 
-    property bool isCharging: false
-    property bool isDischarging: false
+    property bool isBatteryBlinking: false
+    property bool isBatteryWarning: false
+    property bool isBatteryScaleValid: false
+
+    property real batteryPercents: 0
+    property real batteryCellVolts: 0.0
+    property int batteryCells: 0
+
+    property bool isCharging: gauge.power < 0
+    property bool isDischarging: gauge.power >= 0
 
     Rectangle {
         id: battery
@@ -28,7 +36,8 @@ Item {
 
         border.color: gauge.borderColor
         border.width: 2
-        x: gauge.paddingLeft
+
+        anchors.fill: parent
 
         radius: 3
         color: gauge.innerColor
@@ -42,7 +51,7 @@ Item {
             anchors.topMargin: parent.border.width
             anchors.verticalCenter: battery.verticalCenter
 
-            property bool battD: gauge.isBatteryBlinking
+            property bool battD: batteryBlock.isBatteryBlinking
             property string battDColor: gauge.battBlinkingColor
 
             onBattDChanged: {
@@ -52,7 +61,7 @@ Item {
 
             ColorAnimation on battDColor {
                 id: battDAnimation
-                running: gauge.isBatteryBlinking
+                running: batteryBlock.isBatteryBlinking
                 from: gauge.battBlinkingColor
                 to: gauge.battWarningColor
                 duration: gauge.gaugesColorAnimation
@@ -60,8 +69,8 @@ Item {
             }
 
             height: battery.height - parent.border.width * 2
-            color: gauge.isBatteryWarning || gauge.isBatteryBlinking ? battDColor : gauge.battColor
-            width: (battery.width - parent.border.width * 2) * gauge.batteryPercents / 100
+            color: batteryBlock.isBatteryWarning || batteryBlock.isBatteryBlinking ? battDColor : gauge.battColor
+            width: (battery.width - parent.border.width * 2) * batteryBlock.batteryPercents / 100
         }
 
         Item {
@@ -75,7 +84,7 @@ Item {
 
                 font.pixelSize: batteryBlock.battFontSize
                 id: tBat
-                text: qsTr("%1 x %2").arg(gauge.batteryCellVolts.toFixed(2)).arg(gauge.batteryCells)
+                text: qsTr("%1 x %2").arg(batteryBlock.batteryCellVolts.toFixed(2)).arg(batteryBlock.batteryCells)
                 font.family: gauge.ff
             }
         }
@@ -90,7 +99,7 @@ Item {
                 font.pixelSize: batteryBlock.battFontSize
                 font.family: gauge.ff
                 id: tBatPercent
-                text: gauge.batteryPercents.toFixed(0) + '%'
+                text: batteryBlock.batteryPercents.toFixed(0) + '%'
             }
         }
 

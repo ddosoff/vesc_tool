@@ -41,10 +41,6 @@ Item {
 
     property bool isWarningStatus: false
 
-    property real batteryPercents: 0
-    property real batteryCellVolts: 0.0
-    property int batteryCells: 0
-
     property bool showCharginAnimation: false
     property string ff: 'Roboto'
     property bool smallDimension: false
@@ -106,13 +102,12 @@ Item {
     property int paddingLeft: 20
     property int paddingRight: 20
     property int marginTop: 20
-    property int batteryTopMargin: 20
     property int borderWidth: 3
 
     property int diameter: rootDiameter - paddingLeft - paddingRight
 
     implicitWidth: diameter
-    implicitHeight: diameter + (batteryBlock.height) + marginTop + batteryTopMargin
+    implicitHeight: diameter + marginTop
 
     property int diagLAnc: 55  // Angle of diagonal lines from 12 hours
 
@@ -152,10 +147,6 @@ Item {
     ********************/
     property bool debug: false
     property bool debugBlink: false
-
-    property bool isBatteryBlinking: false
-    property bool isBatteryWarning: false
-    property bool isBatteryScaleValid: false
 
     property bool isMotorKgWarning: false
     property bool isMotorKgBlinking: false
@@ -466,6 +457,7 @@ Item {
 
                 property real ropeStartAng: dl2.rotation
                 property real ropeEndAng: ropeToAng(Math.max(root.maxRopeMeters - root.ropeMeters, root.minRopeMeters))
+                property real ropeLeftMeters: root.leftRopeMeters
 
                 property real speedStartAng: speedToAng(0)
                 property real speedEndAng: speedToAng(Math.min(root.speedMs, root.maxSpeedMs))
@@ -629,8 +621,9 @@ Item {
                         root.isRopeWarning = debug.warning;
                     }
                     canvas.requestPaint();
-                    ropeCanvas.requestPaint();
                 }
+
+                onRopeLeftMetersChanged: ropeCanvas.requestPaint();
 
                 onSpeedEndAngChanged: {
                     if (root.debug && root.debugBlink) {
@@ -1875,13 +1868,5 @@ Item {
                 }
             }
         }
-    }
-
-    SkypuffBattery {
-        id: batteryBlock
-        gauge: root
-
-        isCharging: root.power < 0
-        isDischarging: root.power > 0
     }
 }

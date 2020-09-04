@@ -9,6 +9,7 @@ ColumnLayout {
     id: debug
 
     property var gauge
+    property var battery
     property int fontSize: 13
     property int valFontSize: 12
 
@@ -123,28 +124,6 @@ ColumnLayout {
         }
 
         Label {
-            text: 'Acc val:'
-            font.pixelSize: debug.fontSize
-        }
-
-        Label {
-            text: prettyNumber(acceleration.value)
-            font.pixelSize: debug.valFontSize
-        }
-
-        Slider {
-            id: acceleration
-            from: -20
-            to: 20
-            value: gauge.acceleration
-            Layout.fillWidth: true
-            Layout.rightMargin: debug.paddingLeft
-
-            onValueChanged: {
-                gauge.acceleration = value;
-            }
-        }
-        Label {
             text: 'Speed val:'
             font.pixelSize: debug.fontSize
         }
@@ -185,7 +164,6 @@ ColumnLayout {
             Layout.fillWidth: true
             Layout.rightMargin: debug.paddingLeft
             onValueChanged: {
-                gauge.tempBat = value;
                 gauge.tempFets = value;
                 gauge.tempMotor = value;
             }
@@ -206,12 +184,12 @@ ColumnLayout {
             id: batteryPercents
             from: 0
             to: 100
-            value: gauge.batteryPercents
+            value: battery.batteryPercents
             Layout.fillWidth: true
             Layout.rightMargin: debug.paddingLeft
 
             onValueChanged: {
-                gauge.batteryPercents = value;
+                battery.batteryPercents = value;
             }
         }
 
@@ -230,12 +208,12 @@ ColumnLayout {
             id: batteryCellVolts
             from: 0
             to: 15
-            value: gauge.batteryCellVolts
+            value: battery.batteryCellVolts
             Layout.fillWidth: true
             Layout.rightMargin: debug.paddingLeft
 
             onValueChanged: {
-                gauge.batteryCellVolts = value;
+                battery.batteryCellVolts = value;
             }
         }
 
@@ -254,58 +232,12 @@ ColumnLayout {
             id: batteryCells
             from: 0
             to: 100
-            value: gauge.batteryCells
+            value: battery.batteryCells
             Layout.fillWidth: true
             Layout.rightMargin: debug.paddingLeft
 
             onValueChanged: {
-                gauge.batteryCells = value;
-            }
-        }
-
-        Label {
-            text: 'WH in:'
-            font.pixelSize: debug.fontSize
-        }
-
-        Label {
-            text: prettyNumber(whIn.value)
-            font.pixelSize: debug.valFontSize
-        }
-
-        Slider {
-            id: whIn
-            from: 0
-            to: 100000
-            value: gauge.whIn
-            Layout.fillWidth: true
-            Layout.rightMargin: debug.paddingLeft
-
-            onValueChanged: {
-                gauge.whIn = value;
-            }
-        }
-
-        Label {
-            text: 'WH out:'
-            font.pixelSize: debug.fontSize
-        }
-
-        Label {
-            text: prettyNumber(whOut.value)
-            font.pixelSize: debug.valFontSize
-        }
-
-        Slider {
-            id: whOut
-            from: 0
-            to: 100000
-            value: gauge.whOut
-            Layout.fillWidth: true
-            Layout.rightMargin: debug.paddingLeft
-
-            onValueChanged: {
-                gauge.whOut = value;
+                battery.batteryCells = value;
             }
         }
 
@@ -498,7 +430,7 @@ ColumnLayout {
                 gauge.isPowerWarning = value;
                 gauge.isMotorKgWarning= value;
                 gauge.isSpeedWarning = value;
-                gauge.isBatteryWarning = value;
+                battery.isBatteryWarning = value;
             }
         }
         CheckBox {
@@ -512,7 +444,7 @@ ColumnLayout {
                 gauge.isPowerBlinking = value;
                 gauge.isMotorKgBlinking = value;
                 gauge.isSpeedBlinking = value;
-                gauge.isBatteryBlinking = value;
+                battery.isBatteryBlinking = value;
             }
         }
 

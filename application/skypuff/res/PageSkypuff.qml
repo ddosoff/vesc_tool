@@ -45,24 +45,24 @@ Page {
                 Layout.fillWidth: true
                 elide: Text.ElideMiddle
                 wrapMode: Text.WordWrap
-                text: qsTr("Reset unwinded rope?")
+                text: qsTr("Reset rope position?")
             }
             RowLayout {
                 Layout.fillWidth: true
                 Layout.margins: 20
                 Button {
-                    text: qsTr('Cancel')
-                    onClicked: confirmResetZero.close()
+                    text: qsTr('Yes')
+                    onClicked: {
+                        confirmResetZero.close()
+                        Skypuff.sendTerminal("set_zero");
+                    }
                 }
                 Item {
                     Layout.fillWidth: true
                 }
                 Button {
-                    text: qsTr('Reset')
-                    onClicked: {
-                        confirmResetZero.close()
-                        Skypuff.sendTerminal("set_zero");
-                    }
+                    text: qsTr('No')
+                    onClicked: confirmResetZero.close()
                 }
             }
         }
@@ -230,18 +230,10 @@ Page {
                 //onIsTempMcuWarningChanged: { sGauge.isTempMcuWarning = false; }
                 //onIsTempMotorWarningChanged: { sGauge.isTempMotorWarning = false; }
 
-                onIsBatteryBlinkingChanged: { sGauge.isBatteryBlinking = Skypuff.isBatteryBlinking; }
-                onIsBatteryWarningChanged: { sGauge.isBatteryWarning = Skypuff.isBatteryWarning; }
-                onIsBatteryScaleValidChanged: { sGauge.isBatteryScaleValid = Skypuff.isBatteryScaleValid; }
-
-                onBatteryPercentsChanged: { sGauge.batteryPercents = Skypuff.batteryPercents; }
-                onBatteryCellVoltsChanged: { sGauge.batteryCellVolts = Skypuff.batteryCellVolts; }
-
                 onSettingsChanged: {
                     sGauge.maxMotorKg = cfg.motor_max_kg;
                     sGauge.maxPower = cfg.power_max;
                     sGauge.minPower = cfg.power_min;
-                    sGauge.batteryCells = cfg.battery_cells;
                     sGauge.maxSpeedMs = cfg.max_speed_ms;
                 }
 
@@ -263,21 +255,8 @@ Page {
             }
         }
 
-        /*
-        GaugeDebug {
-            id: debugBlock
-            gauge: sGauge
-            visible: true
-        }
-        */
-
-        // Vertical space
-        Item {
-            Layout.fillHeight: true
-        }
-
-        // Pull force SpinBox and ManualSlow arrows
         RowLayout {
+            Layout.topMargin: 15
             function isManualSlowButtonsEnabled() {
                 return !Skypuff.isBrakingRange &&
                         ["MANUAL_SLOW_SPEED_UP",
@@ -296,6 +275,7 @@ Page {
 
             RoundButton {
                 id: rManualSlowBack
+                Layout.topMargin: -5
                 text: "←";
                 enabled: parent.isManualSlowButtonsEnabled()
                 visible: parent.isManualSlowButtonsVisible()
@@ -307,27 +287,27 @@ Page {
                 Layout.fillWidth: true
             }
 
-            RealSpinBox {
-                id: pullForce
+            SkypuffBattery {
+                id: batteryBlock
+                gauge: sGauge
 
-                //Layout.fillWidth: true
-                Layout.alignment: Qt.AlignHCenter
+                Connections {
+                    target: Skypuff
+                    onIsBatteryBlinkingChanged: { batteryBlock.isBatteryBlinking = Skypuff.isBatteryBlinking; }
+                    onIsBatteryWarningChanged: { batteryBlock.isBatteryWarning = Skypuff.isBatteryWarning; }
+                    onIsBatteryScaleValidChanged: { batteryBlock.isBatteryScaleValid = Skypuff.isBatteryScaleValid; }
 
-                enabled: false
-                font.pointSize: page.kgValFontSize
-                font.bold: true
+                    onBatteryPercentsChanged: { batteryBlock.batteryPercents = Skypuff.batteryPercents; }
+                    onBatteryCellVoltsChanged: { batteryBlock.batteryCellVolts = Skypuff.batteryCellVolts; }
 
-                decimals: 1
-                from: 1
-                suffix: qsTr("Kg")
-
-                onValueModified: Skypuff.sendTerminal("force %1".arg(value))
+                    onSettingsChanged: {
+                        batteryBlock.batteryCells = cfg.battery_cells;
+                    }
+                }
             }
-
             Item {
                 Layout.fillWidth: true
             }
-
             RoundButton {
                 id: rManualSlowForward
                 text: "→";
@@ -336,6 +316,37 @@ Page {
                 onClicked: Skypuff.sendTerminal("set manual_slow_back")
                 Material.background: page.bgGreenColor
             }
+        }
+
+        /*
+        GaugeDebug {
+            id: debugBlock
+            gauge: sGauge
+            battery: batteryBlock
+            visible: true
+        }
+        */
+
+        // Vertical space
+        Item {
+            Layout.fillHeight: true
+        }
+
+        RealSpinBox {
+            id: pullForce
+
+            //Layout.fillWidth: true
+            Layout.alignment: Qt.AlignHCenter
+
+            enabled: false
+            font.pointSize: page.kgValFontSize
+            font.bold: true
+
+            decimals: 1
+            from: 1
+            suffix: qsTr("Kg")
+
+            onValueModified: Skypuff.sendTerminal("force %1".arg(value))
         }
 
         RowLayout {

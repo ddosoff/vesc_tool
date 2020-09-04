@@ -818,7 +818,7 @@ void Skypuff::setPos(const int newTac)
             playWarning("qrc:/res/sounds/Zero meters.mp3");
 
         if(oldMetersLeft > 100 && newMetersLeft <= 100)
-            playWarning("qrc:/res/sounds/100 meters left.mp3");
+            playWarning("qrc:/res/sounds/Alert.mp3");
 
         if(oldMetersLeft > 200 && newMetersLeft <= 200)
             playWarning("qrc:/res/sounds/200 meters left.mp3");
