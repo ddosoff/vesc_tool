@@ -15,6 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <QSound>
+#include <QThread>
 #include <QTimerEvent>
 #include <QStandardPaths>
 #include <QDir>
@@ -32,6 +33,7 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
     player->setPlaylist(playlist);
 
     connect(vesc, SIGNAL(portConnectedChanged()), this, SLOT(portConnectedChanged()));
+    connect(vesc, SIGNAL(fwRxChanged(bool, bool)), this, SLOT(firmwareVersionReceived(bool, bool)));
     connect(vesc, SIGNAL(messageDialog(QString,QString,bool,bool)), this, SLOT(logVescDialog(const QString&,const QString&)));
     connect(vesc->commands(), SIGNAL(customAppDataReceived(QByteArray)), this, SLOT(customAppDataReceived(QByteArray)));
 
@@ -114,34 +116,38 @@ void Skypuff::setState(const skypuff_state newState)
     }
 }
 
+void Skypuff::firmwareVersionReceived(bool rx, bool /*limited*/)
+{
+    if(rx)
+        sendGetConf();
+}
+
 void Skypuff::portConnectedChanged()
 {
-    if(vesc->isPortConnected()) {
-        this->sendGetConf();
-    }
-    else {
-        // Stop timers
-        if(aliveTimerId) {
-            killTimer(aliveTimerId);
-            aliveTimerId = 0;
-        }
-        if(getConfTimeoutTimerId) {
-            killTimer(getConfTimeoutTimerId);
-            getConfTimeoutTimerId = 0;
-        }
-        if(this->aliveTimeoutTimerId) {
-            killTimer(aliveTimeoutTimerId);
-            aliveTimeoutTimerId = 0;
-        }
+    if(vesc->isPortConnected())
+        return;
 
-        // No more fault :)
-        setState(DISCONNECTED);
-
-        // Reset scales
-        cfg.clearScales();
-        clearStats();
-        scalesUpdated();
+    // Stop timers
+    if(aliveTimerId) {
+        killTimer(aliveTimerId);
+        aliveTimerId = 0;
     }
+    if(getConfTimeoutTimerId) {
+        killTimer(getConfTimeoutTimerId);
+        getConfTimeoutTimerId = 0;
+    }
+    if(this->aliveTimeoutTimerId) {
+        killTimer(aliveTimeoutTimerId);
+        aliveTimeoutTimerId = 0;
+    }
+
+    // No more fault :)
+    setState(DISCONNECTED);
+
+    // Reset scales
+    cfg.clearScales();
+    clearStats();
+    scalesUpdated();
 }
 
 void Skypuff::clearStats()

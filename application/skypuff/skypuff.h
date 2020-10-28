@@ -137,6 +137,7 @@ protected slots:
     //void printReceived(QString str);
     void customAppDataReceived(QByteArray data);
     void portConnectedChanged();
+    void firmwareVersionReceived(bool rx, bool limited);
     void logVescDialog(const QString & title, const QString & text);
 protected:
     VescInterface *vesc;
