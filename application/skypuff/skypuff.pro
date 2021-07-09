@@ -1,7 +1,7 @@
 VT_VERSION = 0.95
 DEFINES += VT_VERSION=$$VT_VERSION
 
-VT_IS_TEST_VERSION = 0
+VT_IS_TEST_VERSION = 1
 #VT_ANDROID_VERSION_ARMV7 = 1
 VT_ANDROID_VERSION_ARM64 = 100
 #VT_ANDROID_VERSION_X86 = 3
@@ -77,6 +77,7 @@ contains(DEFINES, HAS_BLUETOOTH) {
 include(../../application.pri)
 include(../../widgets/widgets.pri)
 include(../../lzokay/lzokay.pri)
+include(../../QCodeEditor/qcodeeditor.pri)
 
 RESOURCES += \
     qml.qrc \

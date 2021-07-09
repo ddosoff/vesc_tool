@@ -448,7 +448,7 @@ VescInterface::VescInterface(QObject *parent) : QObject(parent)
         }
     });
 
-#if VT_IS_TEST_VERSION
+#if 0
     QTimer::singleShot(1000, [this]() {
         emitMessageDialog("VESC Tool Test Version",
                           "Warning: This is a test version of VESC Tool. The included firmwares are NOT compatible with "
