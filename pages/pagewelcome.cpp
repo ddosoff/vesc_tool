@@ -21,21 +21,34 @@
 #include "ui_pagewelcome.h"
 #include "setupwizardmotor.h"
 #include "setupwizardapp.h"
-#include "utility.h"
 #include "widgets/detectallfocdialog.h"
+
 #include <QMessageBox>
+#include <QQmlEngine>
+#include <QQmlContext>
+#include <QSettings>
+#include <QmlHighlighter>
+#include <QQuickItem>
 
 PageWelcome::PageWelcome(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::PageWelcome)
 {
     ui->setupUi(this);
+
+    QString theme = Utility::getThemePath();
+    ui->autoConnectButton->setIcon(QIcon(theme +"icons/Connected-96.png"));
+    ui->wizardFocSimpleButton->setIcon(QIcon(theme +"icons/Wizard-96.png"));
+    ui->wizardAppButton->setIcon(QIcon(theme +"icons/Wizard-96.png"));
+    ui->nrfPairButton->setIcon(QIcon(theme +"icons/icons8-fantasy-96.png"));
+
     layout()->setContentsMargins(0, 0, 0, 0);
     mVesc = 0;
     ui->bgWidget->setPixmap(QPixmap("://res/bg.png"));
 
-    connect(ui->wizardFocSimpleButton, SIGNAL(clicked(bool)),
-            this, SLOT(startSetupWizardFocSimple()));
+    connect(ui->wizardFocSimpleButton, &QPushButton::clicked, [this]() {
+        QMetaObject::invokeMethod(ui->qmlWidget->rootObject(), "setupMotors");
+    });
     connect(ui->wizardAppButton, SIGNAL(clicked(bool)),
             this, SLOT(startSetupWizardApp()));
 }
@@ -49,6 +62,13 @@ void PageWelcome::startSetupWizardFocSimple()
 {
     if (mVesc) {
         DetectAllFocDialog::showDialog(mVesc, this);
+    }
+}
+
+void PageWelcome::startSetupWizardFocQml()
+{
+    if (mVesc) {
+        mQmlUi.startCustomGui(mVesc, "qrc:/res/qml/SetupMotorWindow.qml");
     }
 }
 
@@ -76,9 +96,20 @@ VescInterface *PageWelcome::vesc() const
 void PageWelcome::setVesc(VescInterface *vesc)
 {
     mVesc = vesc;
+
+    ui->qmlWidget->engine()->rootContext()->setContextProperty("VescIf", mVesc);
+    ui->qmlWidget->engine()->rootContext()->setContextProperty("QmlUi", this);
+    ui->qmlWidget->engine()->rootContext()->setContextProperty("Utility", &mUtil);
+
+    ui->qmlWidget->setSource(QUrl(QLatin1String("qrc:/res/qml/WelcomeQmlPanel.qml")));
 }
 
 void PageWelcome::on_autoConnectButton_clicked()
 {
     Utility::autoconnectBlockingWithProgress(mVesc, this);
+}
+
+void PageWelcome::on_nrfPairButton_clicked()
+{
+    QMetaObject::invokeMethod(ui->qmlWidget->rootObject(), "nrfQuickPair");
 }

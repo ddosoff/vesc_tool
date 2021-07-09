@@ -21,6 +21,7 @@
 #include "ui_pagesettings.h"
 #include <QDebug>
 #include <cmath>
+#include <QFileDialog>
 #include "utility.h"
 
 PageSettings::PageSettings(QWidget *parent) :
@@ -40,17 +41,33 @@ PageSettings::PageSettings(QWidget *parent) :
             this, SLOT(timerSlot()));
 
     ui->setupUi(this);
+    QString theme = Utility::getThemePath();
+
+    ui->pollRestoreButton->setIcon(QPixmap(theme + "icons/Restart-96.png"));
+    ui->pathScriptInputChooseButton->setIcon(QPixmap(theme + "icons/Open Folder-96.png"));
+    ui->pathRtLogChooseButton->setIcon(QPixmap(theme + "icons/Open Folder-96.png"));
+    ui->pathScriptOutputChooseButton->setIcon(QPixmap(theme + "icons/Open Folder-96.png"));
+    ui->jsConf1Button->setIcon(QPixmap(theme + "icons/Horizontal Settings Mixer-96.png"));
+    ui->jsConf2Button->setIcon(QPixmap(theme + "icons/Horizontal Settings Mixer-96.png"));
+    ui->jsConf3Button->setIcon(QPixmap(theme + "icons/Horizontal Settings Mixer-96.png"));
+    ui->jsConf4Button->setIcon(QPixmap(theme + "icons/Horizontal Settings Mixer-96.png"));
+    ui->jsConnectButton->setIcon(QPixmap(theme + "icons/Connected-96.png"));
+    ui->jsScanButton->setIcon(QPixmap(theme + "icons/Connected-96.png"));
+    ui->jsResetConfigButton->setIcon(QPixmap(theme + "icons/Restart-96.png"));
+
+
+
     layout()->setContentsMargins(0, 0, 0, 0);
-
-    if (mSettings.contains("app_scale_factor")) {
-        ui->uiScaleBox->setValue(mSettings.value("app_scale_factor").toDouble());
-    }
-
-    if (mSettings.contains("app_scale_auto")) {
-        ui->uiAutoScaleBox->setChecked(mSettings.value("app_scale_auto").toBool());
-    }
-
-    ui->uiScaleBox->setEnabled(!ui->uiAutoScaleBox->isChecked());
+    ui->uiScaleBox->setValue(mSettings.value("app_scale_factor", 1.0).toDouble());
+    ui->uiPlotWidthBox->setValue(mSettings.value("plot_line_width",4.0).toDouble());
+    ui->pathRtLogEdit->setText(mSettings.value("path_rt_log", "./log").toString());
+    ui->pathScriptInputEdit->setText(mSettings.value("path_script_input", "./log").toString());
+    ui->pathScriptOutputEdit->setText(mSettings.value("path_script_output", "./log").toString());
+    ui->pollRtDataBox->setValue(mSettings.value("poll_rate_rt_data", 50.0).toDouble());
+    ui->pollAppDataBox->setValue(mSettings.value("poll_rate_app_data", 20.0).toDouble());
+    ui->pollImuDataBox->setValue(mSettings.value("poll_rate_imu_data", 50.0).toDouble());
+    ui->pollBmsDataBox->setValue(mSettings.value("poll_rate_bms_data", 10.0).toDouble());
+    ui->darkModeBox->setChecked(Utility::isDarkMode());
 
 #ifdef HAS_GAMEPAD
     auto confAxis = [](QGamepad *gp, QGamepadManager::GamepadAxis axis) {
@@ -149,6 +166,9 @@ VescInterface *PageSettings::vesc() const
 void PageSettings::setVesc(VescInterface *vesc)
 {
     mVesc = vesc;
+    if (mVesc) {
+        ui->loadQmlUiConnectBox->setChecked(mVesc->getLoadQmlUiOnConnect());
+    }
 }
 
 void PageSettings::setUseGamepadControl(bool useControl)
@@ -275,11 +295,9 @@ void PageSettings::on_uiScaleBox_valueChanged(double arg1)
 {
     mSettings.setValue("app_scale_factor", arg1);
 }
-
-void PageSettings::on_uiAutoScaleBox_toggled(bool checked)
+void PageSettings::on_uiPlotWidthBox_valueChanged(double arg1)
 {
-    mSettings.setValue("app_scale_auto", checked);
-    ui->uiScaleBox->setEnabled(!checked);
+    mSettings.setValue("plot_line_width", arg1);
 }
 
 void PageSettings::on_jsScanButton_clicked()
@@ -313,4 +331,84 @@ void PageSettings::on_jsResetConfigButton_clicked()
         QGamepadManager::instance()->resetConfiguration(mGamepad->deviceId());
     }
 #endif
+}
+
+void PageSettings::on_loadQmlUiConnectBox_toggled(bool checked)
+{
+    if (mVesc) {
+        mVesc->setLoadQmlUiOnConnect(checked);
+    }
+}
+
+void PageSettings::on_pathRtLogChooseButton_clicked()
+{
+    ui->pathRtLogEdit->setText(
+                QFileDialog::getExistingDirectory(this, "Choose RT log output directory"));
+}
+
+void PageSettings::on_pathScriptInputChooseButton_clicked()
+{
+    ui->pathScriptInputEdit->setText(
+                QFileDialog::getExistingDirectory(this, "Choose script input file directory"));
+}
+
+void PageSettings::on_pathRtLogEdit_textChanged(const QString &arg1)
+{
+    mSettings.setValue("path_rt_log", arg1);
+    mSettings.sync();
+}
+
+void PageSettings::on_pathScriptInputEdit_textChanged(const QString &arg1)
+{
+    mSettings.setValue("path_script_input", arg1);
+    mSettings.sync();
+}
+
+void PageSettings::on_pathScriptOutputChooseButton_clicked()
+{
+    ui->pathScriptOutputEdit->setText(
+                QFileDialog::getExistingDirectory(this, "Choose script output file directory"));
+}
+
+void PageSettings::on_pathScriptOutputEdit_textChanged(const QString &arg1)
+{
+    mSettings.setValue("path_script_output", arg1);
+    mSettings.sync();
+}
+
+void PageSettings::on_pollRtDataBox_valueChanged(double arg1)
+{
+    mSettings.setValue("poll_rate_rt_data", arg1);
+    mSettings.sync();
+}
+
+void PageSettings::on_pollAppDataBox_valueChanged(double arg1)
+{
+    mSettings.setValue("poll_rate_app_data", arg1);
+    mSettings.sync();
+}
+
+void PageSettings::on_pollImuDataBox_valueChanged(double arg1)
+{
+    mSettings.setValue("poll_rate_imu_data", arg1);
+    mSettings.sync();
+}
+
+void PageSettings::on_pollBmsDataBox_valueChanged(double arg1)
+{
+    mSettings.setValue("poll_rate_bms_data", arg1);
+    mSettings.sync();
+}
+
+void PageSettings::on_pollRestoreButton_clicked()
+{
+    ui->pollRtDataBox->setValue(50.0);
+    ui->pollAppDataBox->setValue(20.0);
+    ui->pollImuDataBox->setValue(50.0);
+    ui->pollBmsDataBox->setValue(10.0);
+}
+
+void PageSettings::on_darkModeBox_toggled(bool checked)
+{
+    Utility::setDarkMode(checked);
 }

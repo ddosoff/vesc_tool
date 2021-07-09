@@ -49,7 +49,7 @@ SetupWizardMotor::SetupWizardMotor(VescInterface *vesc, QWidget *parent)
     setWindowTitle(tr("Motor Setup Wizard"));
 
     mSideLabel = new AspectImgLabel(Qt::Vertical);
-    mSideLabel->setPixmap(QPixmap("://res/logo_wizard.png"));
+    mSideLabel->setPixmap(QPixmap("://res/logo_vertical.png"));
     mSideLabel->setScaledContents(true);
     setSideWidget(mSideLabel);
 
@@ -549,9 +549,7 @@ void BldcPage::initializePage()
     if (field("SensorMode").toInt() == SetupWizardMotor::Sensor_Hall) {
         mParamTab->addParamRow(mVesc->mcConfig(), "hall_sl_erpm");
         for (int i = 0;i < 8;i++) {
-            QString str;
-            str.sprintf("hall_table_%d", i);
-            mParamTab->addParamRow(mVesc->mcConfig(), str);
+            mParamTab->addParamRow(mVesc->mcConfig(), QString("hall_table_%1").arg(i));
         }
     }
 }

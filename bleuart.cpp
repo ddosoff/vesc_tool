@@ -22,6 +22,7 @@
 
 #include <QDebug>
 #include <QLowEnergyConnectionParameters>
+#include <QSettings>
 
 BleUart::BleUart(QObject *parent) : QObject(parent)
 {
@@ -29,6 +30,7 @@ BleUart::BleUart(QObject *parent) : QObject(parent)
     mService = nullptr;
     mUartServiceFound = false;
     mConnectDone = false;
+    mScanFinished = true;
 
     mServiceUuid = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
     mRxUuid = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
@@ -59,6 +61,7 @@ void BleUart::startScan()
 {
     mDevs.clear();
     mDeviceDiscoveryAgent->start();
+    mScanFinished = false;
 }
 
 void BleUart::startConnect(QString addr)
@@ -123,6 +126,11 @@ bool BleUart::isConnecting()
     return mControl && !mConnectDone;
 }
 
+void BleUart::emitScanDone()
+{
+    emit scanDone(mDevs, mScanFinished);
+}
+
 void BleUart::writeData(QByteArray data)
 {
     if (isConnected()) {
@@ -151,11 +159,31 @@ void BleUart::addDevice(const QBluetoothDeviceInfo &dev)
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
         // macOS and iOS do not expose the hardware address of BLTE devices, must use
         // the OS generated UUID.
-        mDevs.insert(dev.deviceUuid().toString(), dev.name());
+        QString addr = dev.deviceUuid().toString();
 #else
-        mDevs.insert(dev.address().toString(), dev.name());
-
+        QString addr = dev.address().toString();
 #endif
+
+        bool preferred = false;
+
+        {
+            QSettings set;
+            int size = set.beginReadArray("blePreferred");
+            for (int i = 0; i < size; ++i) {
+                set.setArrayIndex(i);
+                QString address = set.value("address").toString();
+                bool pref = set.value("preferred").toBool();
+
+                if (addr == address && pref) {
+                    preferred = true;
+                }
+            }
+            set.endArray();
+        }
+
+        if(preferred || dev.serviceUuids().contains(QBluetoothUuid(QUuid("6e400001-b5a3-f393-e0a9-e50e24dcca9e")))) {
+            mDevs.insert(addr, dev.name());
+        }
 
         emit scanDone(mDevs, false);
     }
@@ -164,6 +192,7 @@ void BleUart::addDevice(const QBluetoothDeviceInfo &dev)
 void BleUart::scanFinished()
 {
     qDebug() << "BLE scan finished";
+    mScanFinished = true;
     emit scanDone(mDevs, true);
 }
 
@@ -171,6 +200,7 @@ void BleUart::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error e)
 {
     qWarning() << "BLE Scan error: " << e;
     mDevs.clear();
+    mScanFinished = true;
     emit scanDone(mDevs, true);
     QString errorStr = tr("BLE Scan error: ") + Utility::QEnumToQString(e);
 

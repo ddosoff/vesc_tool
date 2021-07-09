@@ -29,11 +29,10 @@ import Vedder.vesc.utility 1.0
 Item {
     id: topItem
 
-    property BleUart mBle: VescIf.bleDevice()
     property Commands mCommands: VescIf.commands()
-    property alias disconnectButton: disconnectButton
     property bool isHorizontal: width > height
     signal requestOpenControls()
+    signal requestConnect()
 
     ScrollView {
         anchors.fill: parent
@@ -50,132 +49,75 @@ Item {
             Image {
                 id: image
                 Layout.columnSpan: isHorizontal ? 2 : 1
-                Layout.preferredWidth: Math.min(topItem.width, topItem.height)
+                Layout.preferredWidth: Math.min(topItem.width, topItem.height) * 0.8
                 Layout.preferredHeight: (sourceSize.height * Layout.preferredWidth) / sourceSize.width
+                Layout.margins: Math.min(topItem.width, topItem.height) * 0.1
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
-                source: "qrc:/res/logo_white.png"
+                source: "qrc" + Utility.getThemePath() + "/logo_white.png"
+                antialiasing: true
+                Layout.bottomMargin: 0
+                Layout.topMargin: Math.min(topItem.width, topItem.height) * 0.025
             }
 
             GroupBox {
-                id: bleConnBox
-                title: qsTr("BLE Connection")
+                id: wizardBox
+                title: qsTr("Configuration")
                 Layout.fillWidth: true
-                Layout.columnSpan: 1
 
                 GridLayout {
                     anchors.topMargin: -5
                     anchors.bottomMargin: -5
                     anchors.fill: parent
-
-                    clip: false
-                    visible: true
-                    rowSpacing: -10
+                    columns: 2
                     columnSpacing: 5
-                    rows: 5
-                    columns: 6
+                    rowSpacing: isHorizontal ? 5 : 0
 
-                    Button {
-                        id: setNameButton
-                        text: qsTr("Name")
-                        Layout.columnSpan: 2
-                        Layout.preferredWidth: 500
-                        Layout.fillWidth: true
-                        enabled: bleBox.count > 0
-
-                        onClicked: {
-                            if (bleItems.rowCount() > 0) {
-                                bleNameDialog.open()
-                            } else {
-                                VescIf.emitMessageDialog("Set BLE Device Name",
-                                                         "No device selected.",
-                                                         false, false);
-                            }
-                        }
-                    }
-
-                    Button {
-                        text: "Pair"
-                        Layout.fillWidth: true
-                        Layout.preferredWidth: 500
-                        Layout.columnSpan: 2
-
-                        onClicked: {
-                            pairDialog.openDialog()
-                        }
-                    }
-
-                    Button {
-                        id: scanButton
-                        text: qsTr("Scan")
-                        Layout.columnSpan: 2
-                        Layout.preferredWidth: 500
-                        Layout.fillWidth: true
-
-                        onClicked: {
-                            scanButton.enabled = false
-                            mBle.startScan()
-                        }
-                    }
-
-                    ComboBox {
-                        id: bleBox
-                        Layout.columnSpan: 6
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                        transformOrigin: Item.Center
-
-                        textRole: "key"
-                        model: ListModel {
-                            id: bleItems
-                        }
-                    }
-
-                    Button {
-                        id: disconnectButton
-                        text: qsTr("Disconnect")
-                        enabled: false
-                        Layout.preferredWidth: 500
-                        Layout.fillWidth: true
-                        Layout.columnSpan: 3
-
-                        onClicked: {
-                            VescIf.disconnectPort()
-                        }
-                    }
-
-                    Button {
+                    ImageButton {
                         id: connectButton
-                        text: qsTr("Connect")
-                        enabled: false
-                        Layout.preferredWidth: 500
-                        Layout.fillWidth: true
-                        Layout.columnSpan: 3
 
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: 500
+                        Layout.preferredHeight: 80
+
+                        buttonText: "Connect"
+                        imageSrc: "qrc" + Utility.getThemePath() + (VescIf.isPortConnected() ? "icons/Disconnected-96.png" : "icons/Connected-96.png")
                         onClicked: {
-                            if (bleItems.rowCount() > 0) {
-                                connectButton.enabled = false
-                                VescIf.connectBle(bleItems.get(bleBox.currentIndex).value)
+                            if (VescIf.isPortConnected()) {
+                                VescIf.disconnectPort()
+                            } else {
+                                topItem.requestConnect()
                             }
                         }
                     }
-                }
-            }
 
-            GroupBox {
-                title: qsTr("Configuration Wizards")
-                Layout.fillWidth: true
-                Layout.preferredHeight: isHorizontal ? bleConnBox.height : -1
+                    ImageButton {
+                        id: nrfPairButton
 
-                ColumnLayout {
-                    anchors.topMargin: -5
-                    anchors.bottomMargin: -5
-                    anchors.fill: parent
-                    spacing: isHorizontal ? -5 : -10
-
-                    Button {
-                        text: "Motors (FOC)"
                         Layout.fillWidth: true
                         Layout.preferredWidth: 500
+                        Layout.preferredHeight: 80
+
+                        buttonText: "VESC\nRemote\nQuick Pair"
+                        imageSrc: "qrc" + Utility.getThemePath() + "icons/icons8-fantasy-96.png"
+
+                        onClicked: {
+                            if (!VescIf.isPortConnected()) {
+                                VescIf.emitMessageDialog("Quick Pair",
+                                                         "You are not connected to the VESC. Please connect in order " +
+                                                         "to quick pair an NRF-based remote.", false, false)
+                            } else {
+                                nrfPairStartDialog.open()
+                            }
+                        }
+                    }
+
+                    ImageButton {
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: 500
+                        Layout.preferredHeight: 80
+
+                        buttonText: "Setup\nMotors"
+                        imageSrc: "qrc" + Utility.getThemePath() + "icons/motor.png"
 
                         onClicked: {
                             if (!VescIf.isPortConnected()) {
@@ -188,9 +130,13 @@ Item {
                         }
                     }
 
-                    Button {
-                        text: "Input"
+                    ImageButton {
                         Layout.fillWidth: true
+                        Layout.preferredWidth: 500
+                        Layout.preferredHeight: 80
+
+                        buttonText: "Setup\nInput"
+                        imageSrc: "qrc" + Utility.getThemePath() + "icons/Wizard-96.png"
 
                         onClicked: {
                             if (!VescIf.isPortConnected()) {
@@ -208,27 +154,10 @@ Item {
                         }
                     }
 
-                    Button {
-                        id: nrfPairButton
-                        text: "NRF Quick Pair"
-                        Layout.fillWidth: true
-                        Layout.preferredWidth: 500
-
-                        onClicked: {
-                            if (!VescIf.isPortConnected()) {
-                                VescIf.emitMessageDialog("NRF Quick Pair",
-                                                         "You are not connected to the VESC. Please connect in order " +
-                                                         "to quick pair an NRF-based remote.", false, false)
-                            } else {
-                                nrfPairStartDialog.open()
-                            }
-                        }
-                    }
-
                     NrfPair {
                         id: nrfPair
                         Layout.fillWidth: true
-                        Layout.preferredWidth: 500
+                        Layout.columnSpan: 2
                         visible: false
                         hideAfterPair: true
                     }
@@ -242,7 +171,7 @@ Item {
 
             GroupBox {
                 id: canFwdBox
-                Layout.preferredHeight: isHorizontal ? toolsBox.height : -1
+                Layout.preferredHeight: isHorizontal ? wizardBox.height : -1
                 title: qsTr("CAN Forwarding")
                 Layout.fillWidth: true
 
@@ -343,26 +272,34 @@ Item {
                 title: qsTr("Tools")
                 Layout.fillWidth: true
 
-                ColumnLayout {
+                GridLayout {
                     anchors.topMargin: -5
                     anchors.bottomMargin: -5
                     anchors.fill: parent
-                    spacing: isHorizontal ? -5 : -10
+                    columns: 2
+                    columnSpacing: 5
+                    rowSpacing: 0
 
-                    Button {
-                        text: "Controls"
+                    ImageButton {
                         Layout.fillWidth: true
                         Layout.preferredWidth: 500
+                        Layout.preferredHeight: 80
+
+                        buttonText: "Controls"
+                        imageSrc: "qrc" + Utility.getThemePath() + "icons/Controller-96.png"
 
                         onClicked: {
                             requestOpenControls()
                         }
                     }
 
-                    Button {
-                        text: "Directions"
+                    ImageButton {
                         Layout.fillWidth: true
                         Layout.preferredWidth: 500
+                        Layout.preferredHeight: 80
+
+                        buttonText: "Invert\nMotor\nDirections"
+                        imageSrc: "qrc" + Utility.getThemePath() + "icons/Process-96.png"
 
                         onClicked: {
                             if (!VescIf.isPortConnected()) {
@@ -378,25 +315,63 @@ Item {
                         }
                     }
 
-                    Button {
-                        text: "Backup Configuration(s)"
+                    ImageButton {
                         Layout.fillWidth: true
                         Layout.preferredWidth: 500
+                        Layout.preferredHeight: 80
+
+                        buttonText: "Backup\nConfigs"
+                        imageSrc: "qrc" + Utility.getThemePath() + "icons/Save-96.png"
 
                         onClicked: {
                             backupConfigDialog.open()
                         }
                     }
 
-                    Button {
-                        text: "Restore Configuration(s)"
+                    ImageButton {
                         Layout.fillWidth: true
                         Layout.preferredWidth: 500
+                        Layout.preferredHeight: 80
+
+                        buttonText: "Restore\nConfigs"
+                        imageSrc: "qrc" + Utility.getThemePath() + "icons/Open Folder-96.png"
 
                         onClicked: {
                             restoreConfigDialog.open()
                         }
                     }
+
+                    ImageButton {
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: 500
+                        Layout.preferredHeight: 80
+
+                        buttonText: "Pair\nBLE"
+                        imageSrc: "qrc" + Utility.getThemePath() + "icons/bluetooth.png"
+
+                        onClicked: {
+                            pairDialog.openDialog()
+                        }
+                    }
+                }
+            }
+
+            GroupBox {
+                title: qsTr("Realtime Data Logging")
+                Layout.fillWidth: true
+
+                LogBox {
+                    anchors.fill: parent
+                    dialogParent: topItem
+                }
+            }
+
+            GroupBox {
+                title: qsTr("Wireless Bridge to Computer (TCP)")
+                Layout.fillWidth: true
+
+                TcpBox {
+                    anchors.fill: parent
                 }
             }
         }
@@ -412,72 +387,6 @@ Item {
 
     PairingDialog {
         id: pairDialog
-    }
-
-    Timer {
-        interval: 500
-        running: !scanButton.enabled
-        repeat: true
-
-        property int dots: 0
-        onTriggered: {
-            var text = "S"
-            for (var i = 0;i < dots;i++) {
-                text = "-" + text + "-"
-            }
-
-            dots++;
-            if (dots > 3) {
-                dots = 0;
-            }
-
-            scanButton.text = text
-        }
-    }
-
-    Timer {
-        interval: 100
-        running: true
-        repeat: true
-
-        onTriggered: {
-            connectButton.enabled = (bleItems.rowCount() > 0) && !VescIf.isPortConnected() && !mBle.isConnecting()
-            disconnectButton.enabled = VescIf.isPortConnected()
-        }
-    }
-
-    Connections {
-        target: mBle
-        onScanDone: {
-            if (done) {
-                scanButton.enabled = true
-                scanButton.text = qsTr("Scan")
-            }
-
-            bleItems.clear()
-
-            for (var addr in devs) {
-                var name = devs[addr]
-                var name2 = name + " [" + addr + "]"
-                var setName = VescIf.getBleName(addr)
-                if (setName.length > 0) {
-                    setName += " [" + addr + "]"
-                    bleItems.insert(0, { key: setName, value: addr })
-                } else if (name.indexOf("VESC") !== -1) {
-                    bleItems.insert(0, { key: name2, value: addr })
-                } else {
-                    bleItems.append({ key: name2, value: addr })
-                }
-            }
-
-            connectButton.enabled = (bleItems.rowCount() > 0) && !VescIf.isPortConnected()
-
-            bleBox.currentIndex = 0
-        }
-
-        onBleError: {
-            VescIf.emitMessageDialog("BLE Error", info, false, false)
-        }
     }
 
     Timer {
@@ -522,47 +431,15 @@ Item {
         }
     }
 
-    Dialog {
-        id: bleNameDialog
-        standardButtons: Dialog.Ok | Dialog.Cancel
-        modal: true
-        focus: true
-        title: "Set BLE Device Name"
-
-        width: parent.width - 20
-        height: 200
-        closePolicy: Popup.CloseOnEscape
-        x: 10
-        y: Math.max(parent.height / 4 - height / 2, 20)
-        parent: ApplicationWindow.overlay
-
-        Rectangle {
-            anchors.fill: parent
-            height: stringInput.implicitHeight + 14
-            border.width: 2
-            border.color: "#8d8d8d"
-            color: "#33a8a8a8"
-            radius: 3
-            TextInput {
-                id: stringInput
-                color: "#ffffff"
-                anchors.fill: parent
-                anchors.margins: 7
-                font.pointSize: 12
-                focus: true
-            }
-        }
-
-        onAccepted: {
-            if (stringInput.text.length > 0) {
-                var addr = bleItems.get(bleBox.currentIndex).value
-                var setName = stringInput.text + " [" + addr + "]"
-
-                VescIf.storeBleName(addr, stringInput.text)
-                VescIf.storeSettings()
-
-                bleItems.set(bleBox.currentIndex, { key: setName, value: addr })
-                bleBox.currentText
+    Connections {
+        target: VescIf
+        onPortConnectedChanged: {
+            if (VescIf.isPortConnected()) {
+                connectButton.buttonText = "Disconnect"
+                connectButton.imageSrc = "qrc" + Utility.getThemePath() + "icons/Disconnected-96.png"
+            } else {
+                connectButton.buttonText = "Connect"
+                connectButton.imageSrc = "qrc" + Utility.getThemePath() + "icons/Connected-96.png"
             }
         }
     }
@@ -601,8 +478,7 @@ Item {
         y: topItem.y + topItem.height / 2 - height / 2
 
         Text {
-            id: detectLambdaLabel
-            color: "white"
+            color: Utility.getAppHexColor("lightText")
             verticalAlignment: Text.AlignVCenter
             anchors.fill: parent
             wrapMode: Text.WordWrap
@@ -632,7 +508,7 @@ Item {
         y: topItem.y + topItem.height / 2 - height / 2
 
         Text {
-            color: "white"
+            color: Utility.getAppHexColor("lightText")
             verticalAlignment: Text.AlignVCenter
             anchors.fill: parent
             wrapMode: Text.WordWrap
@@ -663,7 +539,7 @@ Item {
         y: topItem.y + topItem.height / 2 - height / 2
 
         Text {
-            color: "white"
+            color: Utility.getAppHexColor("lightText")
             verticalAlignment: Text.AlignVCenter
             anchors.fill: parent
             wrapMode: Text.WordWrap

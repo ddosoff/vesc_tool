@@ -51,10 +51,23 @@ private slots:
     void timerSlot();
 
     void on_uiScaleBox_valueChanged(double arg1);
-    void on_uiAutoScaleBox_toggled(bool checked);
+    void on_uiPlotWidthBox_valueChanged(double arg1);
     void on_jsScanButton_clicked();
     void on_jsConnectButton_clicked();
     void on_jsResetConfigButton_clicked();
+    void on_loadQmlUiConnectBox_toggled(bool checked);
+    void on_pathRtLogChooseButton_clicked();
+    void on_pathScriptInputChooseButton_clicked();
+    void on_pathRtLogEdit_textChanged(const QString &arg1);
+    void on_pathScriptInputEdit_textChanged(const QString &arg1);
+    void on_pathScriptOutputChooseButton_clicked();
+    void on_pathScriptOutputEdit_textChanged(const QString &arg1);
+    void on_pollRtDataBox_valueChanged(double arg1);
+    void on_pollAppDataBox_valueChanged(double arg1);
+    void on_pollImuDataBox_valueChanged(double arg1);
+    void on_pollBmsDataBox_valueChanged(double arg1);
+    void on_pollRestoreButton_clicked();
+    void on_darkModeBox_toggled(bool checked);
 
 private:
     Ui::PageSettings *ui;

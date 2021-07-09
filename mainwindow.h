@@ -64,6 +64,7 @@
 #include "pages/pagecananalyzer.h"
 #include "pages/pagebms.h"
 #include "pages/pagecustomconfig.h"
+#include "pages/pagescripting.h"
 
 namespace Ui {
 class MainWindow;
@@ -79,6 +80,7 @@ public:
     bool eventFilter(QObject *object, QEvent *e);
 
 private slots:
+    void timerSlotDebugMsg();
     void timerSlot();
     void showStatusInfo(QString info, bool isGood);
     void showMessageDialog(const QString &title, const QString &msg, bool isGood, bool richText);
@@ -145,8 +147,6 @@ private slots:
     void on_scanCanButton_clicked();
     void on_canList_currentRowChanged(int currentRow);
     void on_actionGamepadControl_triggered(bool checked);
-    void on_actionLoadMeters_triggered();
-    void on_actionCloseCustomGUI_triggered();
 
 private:
     Ui::MainWindow *ui;
@@ -154,6 +154,7 @@ private:
     QSettings mSettings;
     QString mVersion;
     VescInterface *mVesc;
+    QTimer *mDebugTimer;
     QTimer *mTimer;
     QLabel *mStatusLabel;
     int mStatusInfoTime;
@@ -162,7 +163,11 @@ private:
     bool mMcConfRead;
     bool mAppConfRead;
     QMap<QString, int> mPageNameIdList;
-    QmlUi mQmlUi;
+
+    QTimer mPollRtTimer;
+    QTimer mPollAppTimer;
+    QTimer mPollImuTimer;
+    QTimer mPollBmsTimer;
 
     PageWelcome *mPageWelcome;
     PageConnection *mPageConnection;
@@ -200,6 +205,7 @@ private:
     PageCustomConfig *mPageCustomConfig0;
     PageCustomConfig *mPageCustomConfig1;
     PageCustomConfig *mPageCustomConfig2;
+    PageScripting *mPageScripting;
 
     void addPageItem(QString name,
                      QString icon = "",
@@ -210,9 +216,10 @@ private:
     void showPage(const QString &name);
     void reloadPages();
     void checkUdev();
+#ifdef Q_OS_LINUX
     bool waitProcess(QProcess &process, bool block = true, int timeoutMs = 300000);
     QString runCmd(QString cmd, QStringList args);
-
+#endif
 };
 
 #endif // MAINWINDOW_H
