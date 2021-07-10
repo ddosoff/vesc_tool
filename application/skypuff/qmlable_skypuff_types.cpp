@@ -117,6 +117,9 @@ bool QMLable_skypuff_config::saveV1(QSettings &f) const
     f.setValue("amps_per_kg", QString::number(amps_per_kg, 'f', 3));
     f.setValue("pull_applying_period", QString::number(pull_applying_period_to_seconds(), 'f', 1));
     f.setValue("rope_length", QString::number(rope_length_to_meters(), 'f', 1));
+    f.setValue("max_speed_ms", QString::number(max_speed_ms, 'f', 1));
+    f.setValue("battery_cells", battery_cells);
+    f.setValue("battery_type", battery_type);
     f.endGroup();
 
     f.beginGroup("braking_zone");
@@ -164,7 +167,7 @@ bool QMLable_skypuff_config::saveV1(QSettings &f) const
     f.setValue("reduce_kg", QString::number(antisex_reduce_amps_to_kg(), 'f', 1));
     f.setValue("reduce_steps", antisex_reduce_steps);
     f.setValue("reduce_per_step_kg", QString::number(antisex_reduce_amps_per_step_to_kg(), 'f', 1));
-    f.setValue("unwinding_gain", antisex_unwinding_gain);
+    f.setValue("unwinding_gain", QString::number(antisex_unwinding_gain, 'f', 3));
     f.setValue("gain_speed_ms", QString::number(antisex_gain_speed_to_ms(), 'f', 1));
     f.endGroup();
 
@@ -184,6 +187,9 @@ bool QMLable_skypuff_config::loadV1(QSettings &f)
     amps_per_kg = f.value("amps_per_kg").toDouble();
     seconds_to_pull_applying_period(f.value("pull_applying_period").toDouble());
     meters_to_rope_length(f.value("rope_length").toDouble());
+    max_speed_ms =  f.value("max_speed_ms").toDouble();
+    battery_cells = f.value("battery_cells").toInt();
+    battery_type = f.value("battery_type").toInt();
     f.endGroup();
 
     f.beginGroup("braking_zone");

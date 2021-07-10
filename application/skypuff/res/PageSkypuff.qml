@@ -258,8 +258,7 @@ Page {
         RowLayout {
             Layout.topMargin: 15
             function isManualSlowButtonsEnabled() {
-                return !Skypuff.isBrakingRange &&
-                        ["MANUAL_SLOW_SPEED_UP",
+                return ["MANUAL_SLOW_SPEED_UP",
                          "MANUAL_SLOW",
                          "MANUAL_SLOW_BACK_SPEED_UP",
                          "MANUAL_SLOW_BACK"].indexOf(page.state) === -1
