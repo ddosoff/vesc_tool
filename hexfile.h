@@ -1,5 +1,5 @@
 /*
-    Copyright 2016 - 2017 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2021 Radinn AB.
 
     This file is part of VESC Tool.
 
@@ -16,36 +16,15 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
+#pragma once
 
-#ifndef PAGECONTROLLERS_H
-#define PAGECONTROLLERS_H
+#include <stdint.h>
+#include <QtGlobal>
+#include <QByteArray>
+#include <QMap>
+#include <QString>
 
-#include <QWidget>
-#include "vescinterface.h"
-
-namespace Ui {
-class PageControllers;
-}
-
-class PageControllers : public QWidget
+namespace HexFile
 {
-    Q_OBJECT
-
-public:
-    explicit PageControllers(QWidget *parent = nullptr);
-    ~PageControllers();
-
-    VescInterface *vesc() const;
-    void setVesc(VescInterface *vesc);
-    void reloadParams();
-
-private slots:
-    void on_posOffsetApplyButton_clicked();
-
-private:
-    Ui::PageControllers *ui;
-    VescInterface *mVesc;
-
+bool parseFile(QString fileName, QMap<quint32, QByteArray> &output);
 };
-
-#endif // PAGECONTROLLERS_H

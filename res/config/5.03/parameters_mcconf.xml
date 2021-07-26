@@ -2642,6 +2642,27 @@ p, li { white-space: pre-wrap; }
             <suffix></suffix>
             <vTx>9</vTx>
         </gpd_current_ki>
+        <sp_pid_loop_rate>
+            <longName>PID Loop Rate</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rate at which the position and speed controllers run.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>MCCONF_SP_PID_LOOP_RATE</cDefine>
+            <valInt>5</valInt>
+            <enumNames>25 Hz</enumNames>
+            <enumNames>50 Hz</enumNames>
+            <enumNames>100 Hz</enumNames>
+            <enumNames>250 Hz</enumNames>
+            <enumNames>500 Hz</enumNames>
+            <enumNames>1000 Hz</enumNames>
+            <enumNames>2500 Hz</enumNames>
+            <enumNames>5000 Hz</enumNames>
+            <enumNames>10000 Hz</enumNames>
+        </sp_pid_loop_rate>
         <s_pid_kp>
             <longName>Speed PID Kp</longName>
             <type>1</type>
@@ -2709,7 +2730,7 @@ p, li { white-space: pre-wrap; }
             <vTx>9</vTx>
         </s_pid_kd>
         <s_pid_kd_filter>
-            <longName>Speed PID Kd Filer</longName>
+            <longName>Speed PID Kd Filter</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
@@ -2852,8 +2873,52 @@ p, li { white-space: pre-wrap; }
             <suffix></suffix>
             <vTx>9</vTx>
         </p_pid_kd>
+        <p_pid_offset>
+            <longName>Position PID Offset Angle</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Angle offset for the position controller.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>MCCONF_P_PID_OFFSET</cDefine>
+            <editorDecimalsDouble>4</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>360</maxDouble>
+            <minDouble>-360</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1</stepDouble>
+            <valDouble>0</valDouble>
+            <vTxDoubleScale>1e+06</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>9</vTx>
+        </p_pid_offset>
+        <p_pid_kd_proc>
+            <longName>Position PID Kd Process</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Derivative gain for the position controller. This derivative term is applied on the process variable (position_now) only and not on the error term (position_set - position_now). This way oscillations can be dampened without amplifying control signal input.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>MCCONF_P_PID_KD_PROC</cDefine>
+            <editorDecimalsDouble>5</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>10000</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.0001</stepDouble>
+            <valDouble>0.0004</valDouble>
+            <vTxDoubleScale>1e+06</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>9</vTx>
+        </p_pid_kd_proc>
         <p_pid_kd_filter>
-            <longName>Position PID Kd Filer</longName>
+            <longName>Position PID Kd Filter</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
@@ -3296,6 +3361,12 @@ p, li { white-space: pre-wrap; }
             <enumNames>Unused</enumNames>
             <enumNames>On when running</enumNames>
             <enumNames>On when not running</enumNames>
+            <enumNames>Temp motor &gt; 50 C</enumNames>
+            <enumNames>Temp mosfet &gt; 50 C</enumNames>
+            <enumNames>Temp motor &gt; 70 C</enumNames>
+            <enumNames>Temp mosfet &gt; 70 C</enumNames>
+            <enumNames>Temp motor or mosfet &gt; 50 C</enumNames>
+            <enumNames>Temp motor or mosfet &gt; 70 C</enumNames>
         </m_out_aux_mode>
         <m_motor_temp_sens_type>
             <longName>Motor Temperature Sensor Type</longName>
@@ -3950,6 +4021,7 @@ p, li { white-space: pre-wrap; }
         <ser>gpd_current_filter_const</ser>
         <ser>gpd_current_kp</ser>
         <ser>gpd_current_ki</ser>
+        <ser>sp_pid_loop_rate</ser>
         <ser>s_pid_kp</ser>
         <ser>s_pid_ki</ser>
         <ser>s_pid_kd</ser>
@@ -3960,9 +4032,11 @@ p, li { white-space: pre-wrap; }
         <ser>p_pid_kp</ser>
         <ser>p_pid_ki</ser>
         <ser>p_pid_kd</ser>
+        <ser>p_pid_kd_proc</ser>
         <ser>p_pid_kd_filter</ser>
         <ser>p_pid_ang_div</ser>
         <ser>p_pid_gain_dec_angle</ser>
+        <ser>p_pid_offset</ser>
         <ser>cc_startup_boost_duty</ser>
         <ser>cc_min_current</ser>
         <ser>cc_gain</ser>
@@ -4296,6 +4370,8 @@ p, li { white-space: pre-wrap; }
             <subgroup>
                 <subgroupName>General</subgroupName>
                 <subgroupParams>
+                    <param>::sep::Common</param>
+                    <param>sp_pid_loop_rate</param>
                     <param>::sep::Speed Controller</param>
                     <param>s_pid_kp</param>
                     <param>s_pid_ki</param>
@@ -4308,9 +4384,11 @@ p, li { white-space: pre-wrap; }
                     <param>p_pid_kp</param>
                     <param>p_pid_ki</param>
                     <param>p_pid_kd</param>
+                    <param>p_pid_kd_proc</param>
                     <param>p_pid_kd_filter</param>
                     <param>p_pid_ang_div</param>
                     <param>p_pid_gain_dec_angle</param>
+                    <param>p_pid_offset</param>
                 </subgroupParams>
             </subgroup>
         </group>
