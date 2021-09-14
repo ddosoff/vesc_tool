@@ -33,6 +33,7 @@ Item {
     property bool isHorizontal: width > height
     signal requestOpenControls()
     signal requestConnect()
+    signal requestOpenMultiSettings()
 
     ScrollView {
         anchors.fill: parent
@@ -53,7 +54,7 @@ Item {
                 Layout.preferredHeight: (sourceSize.height * Layout.preferredWidth) / sourceSize.width
                 Layout.margins: Math.min(topItem.width, topItem.height) * 0.1
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
-                source: "qrc" + Utility.getThemePath() + "/logo_white.png"
+                source: "qrc" + Utility.getThemePath() + "/logo.png"
                 antialiasing: true
                 Layout.bottomMargin: 0
                 Layout.topMargin: Math.min(topItem.width, topItem.height) * 0.025
@@ -351,6 +352,19 @@ Item {
 
                         onClicked: {
                             pairDialog.openDialog()
+                        }
+                    }
+
+                    ImageButton {
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: 500
+                        Layout.preferredHeight: 80
+
+                        buttonText: "Multi\nSettings"
+                        imageSrc: "qrc" + Utility.getThemePath() + "icons/Settings-96.png"
+
+                        onClicked: {
+                            requestOpenMultiSettings()
                         }
                     }
                 }

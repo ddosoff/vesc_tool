@@ -321,14 +321,12 @@ Page {
             }
         }
 
-        /*
-        GaugeDebug {
+        /*GaugeDebug {
             id: debugBlock
             gauge: sGauge
             battery: batteryBlock
             visible: true
-        }
-        */
+        }*/
 
         // Vertical space
         Item {

@@ -187,6 +187,7 @@ Item {
     onMinSpeedMsChanged: root.getSpeedLimit();
     onMinPowerChanged: root.setMinPower();
     //onAccelerationChanged: speedCanvas.requestPaint();
+    onSpeedMsChanged: speedCanvas.requestPaint();
 
     /********************/
     function setMaxRopeMeters() {
@@ -456,11 +457,11 @@ Item {
                 anchors.fill: parent
 
                 property real ropeStartAng: dl2.rotation
-                property real ropeEndAng: ropeToAng(Math.max(root.maxRopeMeters - root.ropeMeters, root.minRopeMeters))
+                property real ropeEndAng: ropeToAng(Math.min(Math.max(root.maxRopeMeters - root.ropeMeters, root.minRopeMeters), root.maxRopeMeters))
                 property real ropeLeftMeters: root.leftRopeMeters
 
                 property real speedStartAng: speedToAng(0)
-                property real speedEndAng: speedToAng(Math.min(root.speedMs, root.maxSpeedMs))
+                property real speedEndAng: speedToAng(Math.min(Math.max(root.speedMs, root.minSpeedMs), root.maxSpeedMs))
 
                 property real motorKgStartAng: dl1.rotation - 90
                 property real motorKgEndAng: kgToAng(Math.min(root.motorKg, root.maxMotorKg))
@@ -632,7 +633,6 @@ Item {
                         root.isSpeedWarning = debug.warning;
                     }
                     canvas.requestPaint();
-                    speedCanvas.requestPaint();
                 }
                 onMotorKgEndAngChanged: {
                     if (root.debug && root.debugBlink) {

@@ -9,7 +9,7 @@ VT_VERSION = 3.01
 VT_INTRO_VERSION = 1
 
 # Set to 0 for stable versions and to test version number for development versions.
-VT_IS_TEST_VERSION = 26
+VT_IS_TEST_VERSION = 29
 
 VT_ANDROID_VERSION_ARMV7 = 95
 VT_ANDROID_VERSION_ARM64 = 96
@@ -17,13 +17,8 @@ VT_ANDROID_VERSION_X86 = 97
 
 VT_ANDROID_VERSION = $$VT_ANDROID_VERSION_X86
 
-
-macx-clang: {
-   #QMAKE_APPLE_DEVICE_ARCHS=arm64
-}
-
 # Ubuntu 18.04 (should work on raspbian buster too)
-# sudo apt install qml-module-qt-labs-folderlistmodel qml-module-qtquick-extras qml-module-qtquick-controls2 qt5-default libqt5quickcontrols2-5 qtquickcontrols2-5-dev qtcreator qtcreator-doc libqt5serialport5-dev build-essential qml-module-qt3d qt3d5-dev qtdeclarative5-dev qtconnectivity5-dev qtmultimedia5-dev qtpositioning5-dev qtpositioning5-dev libqt5gamepad5-dev qml-module-qt-labs-settings
+# sudo apt install qml-module-qt-labs-folderlistmodel qml-module-qtquick-extras qml-module-qtquick-controls2 qt5-default libqt5quickcontrols2-5 qtquickcontrols2-5-dev qtcreator qtcreator-doc libqt5serialport5-dev build-essential qml-module-qt3d qt3d5-dev qtdeclarative5-dev qtconnectivity5-dev qtmultimedia5-dev qtpositioning5-dev qtpositioning5-dev libqt5gamepad5-dev qml-module-qt-labs-settings qml-module-qt-labs-platform
 
 DEFINES += VT_VERSION=$$VT_VERSION
 DEFINES += VT_INTRO_VERSION=$$VT_INTRO_VERSION
@@ -91,6 +86,7 @@ QT       += network
 QT       += quick
 QT       += quickcontrols2
 QT       += quickwidgets
+QT       += svg
 
 contains(DEFINES, HAS_SERIALPORT) {
     QT       += serialport
@@ -179,23 +175,47 @@ build_mobile {
     DEFINES += USE_MOBILE
 }
 
-SOURCES += main.cpp \
-    mainwindow.cpp
-#    parametereditor.cpp \
-#    digitalfiltering.cpp \
-#    setupwizardapp.cpp \
-#    setupwizardmotor.cpp \
-#    startupwizard.cpp
+SOURCES += main.cpp\
+        mainwindow.cpp \
+    packet.cpp \
+    preferences.cpp \
+    udpserversimple.cpp \
+    vbytearray.cpp \
+    commands.cpp \
+    configparams.cpp \
+    configparam.cpp \
+    vescinterface.cpp \
+    parametereditor.cpp \
+    digitalfiltering.cpp \
+    setupwizardapp.cpp \
+    setupwizardmotor.cpp \
+    startupwizard.cpp \
+    utility.cpp \
+    tcpserversimple.cpp \
+    hexfile.cpp
 
-HEADERS  += mainwindow.h
-#    parametereditor.h \
-#    digitalfiltering.h \
-#    setupwizardapp.h \
-#    setupwizardmotor.h \
-#    startupwizard.h
+HEADERS  += mainwindow.h \
+    packet.h \
+    preferences.h \
+    udpserversimple.h \
+    vbytearray.h \
+    commands.h \
+    datatypes.h \
+    configparams.h \
+    configparam.h \
+    vescinterface.h \
+    parametereditor.h \
+    digitalfiltering.h \
+    setupwizardapp.h \
+    setupwizardmotor.h \
+    startupwizard.h \
+    utility.h \
+    tcpserversimple.h \
+    hexfile.h
 
 FORMS    += mainwindow.ui \
-    parametereditor.ui
+    parametereditor.ui \
+    preferences.ui
 
 contains(DEFINES, HAS_BLUETOOTH) {
     SOURCES += bleuart.cpp
@@ -258,10 +278,15 @@ DISTFILES += \
 
 ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
 
+macx-clang:contains(QMAKE_HOST.arch, arm.*): {
+   QMAKE_APPLE_DEVICE_ARCHS=arm64
+}
+
 macx {
     ICON        =  macos/appIcon.icns
+
     #QMAKE_INFO_PLIST = macos/app-Info.plist
-   # DISTFILES += macos/app-Info.plist
+    # DISTFILES += macos/app-Info.plist
 }
 
 ios {
@@ -280,25 +305,12 @@ ios {
     app_launch_screen.files = $$files($$PWD/ios/MyLaunchScreen.xib)
     QMAKE_BUNDLE_DATA += app_launch_screen
 
-
     #QMAKE_IOS_DEPLOYMENT_TARGET = 11.0
 
     disable_warning.name = GCC_WARN_64_TO_32_BIT_CONVERSION
     disable_warning.value = NO
 
     QMAKE_MAC_XCODE_SETTINGS += disable_warning
-
-    # QtCreator 4.3 provides an easy way to select the development team
-    # see Project - Build - iOS Settings
-    # I have to deal with different development teams,
-    # so I include my signature here
-    # ios_signature.pri not part of project repo because of private signature details
-    # contains:
-    # QMAKE_XCODE_CODE_SIGN_IDENTITY = "iPhone Developer"
-    # MY_DEVELOPMENT_TEAM.name = DEVELOPMENT_TEAM
-    # MY_DEVELOPMENT_TEAM.value = your team Id from Apple Developer Account
-    # QMAKE_MAC_XCODE_SETTINGS += MY_DEVELOPMENT_TEAM
-    #include(ios_signature.pri)
 
     # Note for devices: 1=iPhone, 2=iPad, 1,2=Universal.
     CONFIG -= warn_on

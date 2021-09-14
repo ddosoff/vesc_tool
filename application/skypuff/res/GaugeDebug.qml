@@ -66,14 +66,37 @@ ColumnLayout {
 
         Slider {
             id: ropeMeters
-            from: gauge.minRopeMeters
-            to: gauge.maxRopeMeters
+            from: -1000
+            to: 5000
             value: gauge.ropeMeters
             Layout.fillWidth: true
             Layout.rightMargin: debug.paddingLeft
 
             onValueChanged: {
                 gauge.ropeMeters = value;
+            }
+        }
+
+        Label {
+            text: 'Rope max val:'
+            font.pixelSize: debug.fontSize
+        }
+
+        Label {
+            text: prettyNumber(maxRopeMeters.value)
+            font.pixelSize: debug.valFontSize
+        }
+
+        Slider {
+            id: maxRopeMeters
+            from: 0
+            to: 5000
+            value: gauge.maxRopeMeters
+            Layout.fillWidth: true
+            Layout.rightMargin: debug.paddingLeft
+
+            onValueChanged: {
+                gauge.maxRopeMeters = value;
             }
         }
 
@@ -90,7 +113,7 @@ ColumnLayout {
         Slider {
             id: motorKg
             from: gauge.minMotorKg
-            to: gauge.maxMotorKg
+            to: 200
             value: gauge.motorKg
             Layout.fillWidth: true
             Layout.rightMargin: debug.paddingLeft
@@ -112,8 +135,8 @@ ColumnLayout {
 
         Slider {
             id: power
-            from: gauge.minPower
-            to: gauge.maxPower
+            from: -50 * 1000
+            to: 50 * 1000
             value: gauge.power
             Layout.fillWidth: true
             Layout.rightMargin: debug.paddingLeft
@@ -135,8 +158,8 @@ ColumnLayout {
 
         Slider {
             id: speedMs
-            from: gauge.minSpeedMs
-            to: gauge.maxSpeedMs
+            from: -150
+            to: 150
             value: gauge.speedMs
             Layout.fillWidth: true
             Layout.rightMargin: debug.paddingLeft

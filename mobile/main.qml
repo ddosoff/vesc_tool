@@ -19,7 +19,7 @@
 
 import QtQuick 2.7
 import QtQuick.Controls 2.2
-import QtQuick.Controls.Material 2.12
+import QtQuick.Controls.Material 2.2
 import QtQuick.Layouts 1.3
 
 import Vedder.vesc.vescinterface 1.0
@@ -63,6 +63,10 @@ ApplicationWindow {
         parentHeight: appWindow.height - footer.height - tabBar.height
     }
 
+    MultiSettings {
+        id: multiSettings
+    }
+
     Settings {
         id: settings
     }
@@ -85,7 +89,7 @@ ApplicationWindow {
                 Layout.preferredHeight: (464 * Layout.preferredWidth) / 1550
                 Layout.margins: Math.min(parent.width, parent.height)*0.1
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
-                source: "qrc" + Utility.getThemePath() + "/logo_white.png"
+                source: "qrc" + Utility.getThemePath() + "/logo.png"
                 antialiasing: true
 
             }
@@ -189,6 +193,10 @@ ApplicationWindow {
 
                 onRequestConnect: {
                     connScreen.y = 0
+                }
+
+                onRequestOpenMultiSettings: {
+                    multiSettings.openDialog()
                 }
             }
         }
@@ -706,8 +714,7 @@ ApplicationWindow {
         }
 
         onQmlLoadDone: {
-            updateHwUi()
-            updateAppUi()
+            qmlLoadDialog.open()
         }
     }
 
@@ -733,6 +740,51 @@ ApplicationWindow {
         onValuesImuReceived: {
             vesc3d.setRotation(values.roll, values.pitch,
                                useYawBox.checked ? values.yaw : 0)
+        }
+
+        onDeserializeConfigFailed: {
+            if (isMc) {
+                confTimer.mcConfRx = true
+            }
+
+            if (isApp) {
+                confTimer.appConfRx = true
+            }
+        }
+    }
+
+    Dialog {
+        id: qmlLoadDialog
+        standardButtons: Dialog.Yes | Dialog.Cancel
+        modal: true
+        focus: true
+        rightMargin: 10
+        leftMargin: 10
+        closePolicy: Popup.CloseOnEscape
+        title: "Load Custom User Interface"
+
+        parent: ApplicationWindow.overlay
+        y: parent.y + parent.height / 2 - height / 2
+
+        Text {
+            color: Utility.getAppHexColor("lightText")
+            verticalAlignment: Text.AlignVCenter
+            anchors.fill: parent
+            wrapMode: Text.WordWrap
+            text:
+                "The hardware you are connecting to contains code that will alter the " +
+                "user interface of VESC Tool. This code has not been verified by the " +
+                "authors of VESC Tool and could contain bugs and security problems. \n\n" +
+                "Do you want to load this custom user interface?"
+        }
+
+        onAccepted: {
+            updateHwUi()
+            updateAppUi()
+        }
+
+        onRejected: {
+            VescIf.disconnectPort()
         }
     }
 }

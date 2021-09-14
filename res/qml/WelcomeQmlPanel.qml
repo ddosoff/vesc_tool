@@ -54,9 +54,52 @@ Item {
         }
     }
 
+    function dirSetup() {
+        if (!VescIf.isPortConnected()) {
+            VescIf.emitMessageDialog("Directions",
+                                     "You are not connected to the VESC. Please connect in order " +
+                                     "to map directions.", false, false)
+        } else {
+            enabled = false
+            directionSetupDialog.open()
+            directionSetup.scanCan()
+            enabled = true
+        }
+    }
+
+    function openMultiSettings() {
+        multiSettings.openDialog()
+    }
+
     SetupWizardFoc {
         id: focWizard
         dialogParent: container
+    }
+
+    MultiSettings {
+        id: multiSettings
+        dialogParent: container
+    }
+
+    Dialog {
+        id: directionSetupDialog
+        title: "Direction Setup"
+        standardButtons: Dialog.Close
+        modal: true
+        focus: true
+        padding: 10
+
+        width: parent.width - 10
+        closePolicy: Popup.CloseOnEscape
+        x: 5
+        y: parent.height / 2 - height / 2
+        parent: container
+
+        DirectionSetup {
+            id: directionSetup
+            anchors.fill: parent
+            dialogParent: container
+        }
     }
 
     Rectangle {
@@ -241,8 +284,7 @@ Item {
         }
 
         onQmlLoadDone: {
-            updateHwUi()
-            updateAppUi()
+            qmlLoadDialog.open()
         }
     }
 
@@ -272,6 +314,41 @@ Item {
         onAccepted: {
             nrfPair.visible = true
             nrfPair.startPairing()
+        }
+    }
+
+    Dialog {
+        id: qmlLoadDialog
+        standardButtons: Dialog.Yes | Dialog.Cancel
+        modal: true
+        focus: true
+        rightMargin: 10
+        leftMargin: 10
+        closePolicy: Popup.CloseOnEscape
+        title: "Load Custom User Interface"
+
+        parent: container
+        y: parent.y + parent.height / 2 - height / 2
+
+        Text {
+            color: Utility.getAppHexColor("lightText")
+            verticalAlignment: Text.AlignVCenter
+            anchors.fill: parent
+            wrapMode: Text.WordWrap
+            text:
+                "The hardware you are connecting to contains code that will alter the " +
+                "user interface of VESC Tool. This code has not been verified by the " +
+                "authors of VESC Tool and could contain bugs and security problems. \n\n" +
+                "Do you want to load this custom user interface?"
+        }
+
+        onAccepted: {
+            updateHwUi()
+            updateAppUi()
+        }
+
+        onRejected: {
+            VescIf.disconnectPort()
         }
     }
 }
