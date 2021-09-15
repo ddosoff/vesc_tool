@@ -8,7 +8,6 @@
         <file>res/PageTerminal.qml</file>
         <file>res/PageConfig.qml</file>
         <file>res/RealSpinBox.qml</file>
-        <file>res/sounds/Overvoltage.mp3</file>
         <file>res/sounds/Alert.mp3</file>
         <file>res/SkypuffGauge.qml</file>
         <file>res/sounds/Battery charged too high.mp3</file>
@@ -39,5 +38,31 @@
         <file>res/sounds/200 meters left.mp3</file>
         <file>res/sounds/200 метров осталось.mp3</file>
         <file>res/sounds/Zero meters.mp3</file>
+        <file>res/sounds/faults/Unbalanced currents.mp3</file>
+        <file>res/sounds/faults/High offset current sensor 1.mp3</file>
+        <file>res/sounds/faults/High offset current sensor 2.mp3</file>
+        <file>res/sounds/faults/High offset current sensor 3.mp3</file>
+        <file>res/sounds/faults/Overvoltage.mp3</file>
+        <file>res/sounds/faults/Undervoltage.mp3</file>
+        <file>res/sounds/faults/DRV.mp3</file>
+        <file>res/sounds/faults/Absolute over current.mp3</file>
+        <file>res/sounds/faults/Over temp FET.mp3</file>
+        <file>res/sounds/faults/Over temp motor.mp3</file>
+        <file>res/sounds/faults/Gate driver over voltage.mp3</file>
+        <file>res/sounds/faults/Gate driver under voltage.mp3</file>
+        <file>res/sounds/faults/MCU under voltage.mp3</file>
+        <file>res/sounds/faults/Booting from watchdog reset.mp3</file>
+        <file>res/sounds/faults/Encoder SPI fault.mp3</file>
+        <file>res/sounds/faults/Encoder above max amplitude.mp3</file>
+        <file>res/sounds/faults/Encoder below min amplitude.mp3</file>
+        <file>res/sounds/faults/Flash corruption.mp3</file>
+        <file>res/sounds/faults/BRK fault.mp3</file>
+        <file>res/sounds/faults/Resolver DOS fault.mp3</file>
+        <file>res/sounds/faults/Resolver LOS fault.mp3</file>
+        <file>res/sounds/faults/Resolver LOT fault.mp3</file>
+        <file>res/sounds/faults/Flash corruption application config.mp3</file>
+        <file>res/sounds/faults/Flash corruption motor config.mp3</file>
+        <file>res/sounds/faults/Encoder magnet too strong.mp3</file>
+        <file>res/sounds/faults/Encoder no magnet.mp3</file>
     </qresource>
 </RCC>

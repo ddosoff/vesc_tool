@@ -778,7 +778,82 @@ void Skypuff::playAudio()
     // Known specific alerts?
     switch (fault) {
     case FAULT_CODE_OVER_VOLTAGE:
-        playlist->addMedia(QUrl(tr("qrc:/res/sounds/Overvoltage.mp3")));
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/Overvoltage.mp3")));
+        break;
+    case FAULT_CODE_UNDER_VOLTAGE:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/Undervoltage.mp3")));
+        break;
+    case FAULT_CODE_DRV:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/DRV.mp3")));
+        break;
+    case FAULT_CODE_ABS_OVER_CURRENT:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/Absolute over current.mp3")));
+        break;
+    case FAULT_CODE_OVER_TEMP_FET:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/Over temp FET.mp3")));
+        break;
+    case FAULT_CODE_OVER_TEMP_MOTOR:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/Over temp motor.mp3")));
+        break;
+    case FAULT_CODE_GATE_DRIVER_OVER_VOLTAGE:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/Gate driver over voltage.mp3")));
+        break;
+    case FAULT_CODE_GATE_DRIVER_UNDER_VOLTAGE:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/Gate driver under voltage.mp3")));
+        break;
+    case FAULT_CODE_MCU_UNDER_VOLTAGE:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/MCU under voltage.mp3")));
+        break;
+    case FAULT_CODE_BOOTING_FROM_WATCHDOG_RESET:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/Booting from watchdog reset.mp3")));
+        break;
+    case FAULT_CODE_ENCODER_SPI:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/Encoder SPI fault.mp3")));
+        break;
+    case FAULT_CODE_ENCODER_SINCOS_BELOW_MIN_AMPLITUDE:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/Encoder below min amplitude.mp3")));
+        break;
+    case FAULT_CODE_ENCODER_SINCOS_ABOVE_MAX_AMPLITUDE:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/Encoder above max amplitude.mp3")));
+        break;
+    case FAULT_CODE_FLASH_CORRUPTION:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/Flash corruption.mp3")));
+        break;
+    case FAULT_CODE_HIGH_OFFSET_CURRENT_SENSOR_1:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/High offset current sensor 1.mp3")));
+        break;
+    case FAULT_CODE_HIGH_OFFSET_CURRENT_SENSOR_2:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/High offset current sensor 2.mp3")));
+        break;
+    case FAULT_CODE_HIGH_OFFSET_CURRENT_SENSOR_3:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/High offset current sensor 3.mp3")));
+        break;
+    case FAULT_CODE_UNBALANCED_CURRENTS:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/Unbalanced currents.mp3")));
+        break;
+    case FAULT_CODE_BRK:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/BRK fault.mp3")));
+        break;
+    case FAULT_CODE_RESOLVER_DOS:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/Resolver DOS fault.mp3")));
+        break;
+    case FAULT_CODE_RESOLVER_LOS:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/Resolver LOS fault.mp3")));
+        break;
+    case FAULT_CODE_RESOLVER_LOT:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/Resolver LOT fault.mp3")));
+        break;
+    case FAULT_CODE_FLASH_CORRUPTION_APP_CFG:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/Flash corruption application config.mp3")));
+        break;
+    case FAULT_CODE_FLASH_CORRUPTION_MC_CFG:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/Flash corruption motor config.mp3")));
+        break;
+    case FAULT_CODE_ENCODER_NO_MAGNET:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/Encoder no magnet.mp3")));
+        break;
+    case FAULT_CODE_ENCODER_MAGNET_TOO_STRONG:
+        playlist->addMedia(QUrl(tr("qrc:/res/sounds/faults/Encoder magnet too strong.mp3")));
         break;
     default:
         playlist->addMedia(QUrl(tr("qrc:/res/sounds/Fault code.mp3")));
