@@ -60,12 +60,11 @@ struct QMLable_skypuff_config : public skypuff_config, public skypuff_drive {
     Q_PROPERTY(float manual_slow_max_kg READ manual_slow_max_current_to_kg WRITE kg_to_manual_slow_max_current)
     Q_PROPERTY(float manual_slow_speed_up_kg READ manual_slow_speed_up_current_to_kg WRITE kg_to_manual_slow_speed_up_current)
     Q_PROPERTY(float manual_slow_erpm_ms READ manual_slow_erpm_to_ms WRITE ms_to_manual_slow_erpm)
-    Q_PROPERTY(float antisex_starting_integral_ms READ antisex_starting_integral_to_ms WRITE ms_to_antisex_starting_integral)
+    Q_PROPERTY(float antisex_min_pull_kg READ antisex_min_pull_amps_to_kg WRITE kg_to_antisex_min_pull_amps)
     Q_PROPERTY(float antisex_reduce_kg READ antisex_reduce_amps_to_kg WRITE kg_to_antisex_reduce_amps)
-    Q_PROPERTY(float antisex_reduce_per_step_kg READ antisex_reduce_amps_per_step_to_kg WRITE kg_to_antisex_reduce_amps_per_step)
-    Q_PROPERTY(int antisex_reduce_steps MEMBER antisex_reduce_steps)
-    Q_PROPERTY(float antisex_unwinding_gain MEMBER antisex_unwinding_gain)
-    Q_PROPERTY(float antisex_gain_speed_ms READ antisex_gain_speed_to_ms WRITE ms_to_antisex_gain_speed)
+    Q_PROPERTY(float antisex_acceleration_on_mss MEMBER antisex_acceleration_on_mss)
+    Q_PROPERTY(float antisex_acceleration_off_mss MEMBER antisex_acceleration_off_mss)
+    Q_PROPERTY(float antisex_max_period_seconds READ antisex_max_period_to_seconds WRITE seconds_to_antisex_max_period)
     Q_PROPERTY(int battery_type MEMBER battery_type)
     Q_PROPERTY(int battery_cells MEMBER battery_cells)
     Q_PROPERTY(float max_speed_ms MEMBER max_speed_ms)
@@ -151,11 +150,14 @@ public:
     float manual_slow_speed_up_current_to_kg() const {return manual_slow_speed_up_current / amps_per_kg;}
     void kg_to_manual_slow_speed_up_current(float kg) {manual_slow_speed_up_current = kg * amps_per_kg;}
 
+    float antisex_min_pull_amps_to_kg() const {return antisex_min_pull_amps / amps_per_kg;}
+    void kg_to_antisex_min_pull_amps(float kg) {antisex_min_pull_amps = kg * amps_per_kg;}
+
     float antisex_reduce_amps_to_kg() const {return antisex_reduce_amps / amps_per_kg;}
     void kg_to_antisex_reduce_amps(float kg) {antisex_reduce_amps = kg * amps_per_kg;}
 
-    float antisex_reduce_amps_per_step_to_kg() const {return antisex_reduce_amps_per_step / amps_per_kg;}
-    void kg_to_antisex_reduce_amps_per_step(float kg) {antisex_reduce_amps_per_step = kg * amps_per_kg;}
+    float antisex_max_period_to_seconds() const {return antisex_max_period_ms / (float)1000;}
+    void seconds_to_antisex_max_period(float secs) {antisex_max_period_ms = round(secs * (float)1000);}
 
     float rope_length_to_meters() const {return tac_steps_to_meters(rope_length);}
     void meters_to_rope_length(float meters) {rope_length = meters_to_tac_steps(meters);}
@@ -183,12 +185,6 @@ public:
 
     float manual_slow_erpm_to_ms() const {return erpm_to_ms(manual_slow_erpm);}
     void ms_to_manual_slow_erpm(float ms) {manual_slow_erpm = ms_to_erpm(ms);}
-
-    float antisex_starting_integral_to_ms() const {return erpm_to_ms(antisex_starting_integral);}
-    void ms_to_antisex_starting_integral(float ms) {antisex_starting_integral = ms_to_erpm(ms);}
-
-    float antisex_gain_speed_to_ms() const {return erpm_to_ms(antisex_gain_speed);}
-    void ms_to_antisex_gain_speed(float ms) {antisex_gain_speed = ms_to_erpm(ms);}
 
     inline float meters_per_rev() const {return wheel_diameter / gear_ratio * M_PI;}
     inline float steps_per_rev(void) const {return motor_poles * 3;}

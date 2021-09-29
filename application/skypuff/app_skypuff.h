@@ -62,14 +62,12 @@ typedef enum
 	PULL,					   // Nominal pull
 	FAST_PULL,				   // Fast pull
 	MANUAL_BRAKING,			   // Any position braking caused by operator or communication timeout
-	MANUAL_SLOW_SPEED_UP,	   // Speed up until manual constant speed in direction to zero
-	MANUAL_SLOW,			   // Constant speed mode in direction to zero from any position
-	MANUAL_SLOW_BACK_SPEED_UP, // Speed up back in direction from zero until manual constant speed
-	MANUAL_SLOW_BACK,		   // Constant speed mode in direction from zero
-#ifdef DEBUG_SMOOTH_MOTOR
-	MANUAL_DEBUG_SMOOTH, // Debug smooth motor movements with 'smooth' terminal commands
-#endif
-	DISCONNECTED, // UI only state
+	MANUAL_SLOW_SPEED_UP,	   // Speed up until manual constant speed with positive current
+	MANUAL_SLOW,			   // Constant speed mode with positive current
+	MANUAL_SLOW_BACK_SPEED_UP, // Speed up until manual constant speed in negative current
+	MANUAL_SLOW_BACK,		   // Constant speed mode with negative current
+	MANUAL_DEBUG_SMOOTH,       // Debug smooth motor movements with 'smooth' terminal commands
+	DISCONNECTED,              // UI only state
 } skypuff_state;
 
 // Winch settings
@@ -105,12 +103,11 @@ typedef struct
 	float max_speed_ms;					// Speed scale limit (only affects the interface)
 
 	// Antisex dampering
-	float antisex_starting_integral;	// Start antisex algorihtm if acceleration integral is higher then this
-	float antisex_reduce_amps;			// Reduce motor amps to this value on deceleration
-	int antisex_reduce_steps;			// Maximum number of steps to increase deceleration
-	float antisex_reduce_amps_per_step; // Deceleration increase amps per step
-	float antisex_unwinding_gain;		// Coefficient to multiply current when unwinding
-	float antisex_gain_speed;			// Unwinding speed when antisex_unwinding_gain applied
+	float antisex_min_pull_amps;		// Activate antisex pull currection if pulling above this only
+	float antisex_reduce_amps;			// Reduce motor amps to this value when antisex is activated
+	float antisex_acceleration_on_mss;  // Activate antisex reduce if winding direction acceleration above this
+	float antisex_acceleration_off_mss; // Deactivate antisex if acceleration less then this
+	int antisex_max_period_ms;          // Do not reduce nominal pull more then this milliseconds
 } skypuff_config;
 
 // Drive settings part of mc_configuration
@@ -192,10 +189,10 @@ inline const char *state_str(const skypuff_state s)
 		return "PULL";
 	case FAST_PULL:
 		return "FAST_PULL";
-#ifdef DEBUG_SMOOTH_MOTOR
 	case MANUAL_DEBUG_SMOOTH:
 		return "MANUAL_DEBUG_SMOOTH";
-#endif
+	case DISCONNECTED:
+		return "DISCONNECTED";
 	default:
 		return "UNKNOWN";
 	}

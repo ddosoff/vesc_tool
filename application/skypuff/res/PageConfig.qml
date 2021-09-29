@@ -596,33 +596,33 @@ Page {
 
                         RowLayout {
                             Text {
-                                text: qsTr('Starting (<a href="help">M/S</a>)')
-                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Acceleration integral"),
-                                                                          qsTr("Start antisex sequense when integral of acceleration in zero direction is above this."),
+                                text: qsTr('Min pull (<a href="help">KG</a>)')
+                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Activate antisex"),
+                                                                          qsTr("Activate antisex algorithm when pull is higher then this value."),
                                                                           false, false);
                             }
                             Item {Layout.fillWidth: true}
                             RealSpinBox {
-                                id: antisex_starting_integral
-                                from: 1
-                                to: 10
-                                value: 2.6
+                                id: antisex_min_pull_kg
+                                from: 0.1
+                                to: 1000
+                                value: 25
                                 decimals: 1
-                                stepSize: 0.2
+                                stepSize: 1
                             }
                         }
                         RowLayout {
                             Text {
                                 text: qsTr('Reduce (<a href="help">KG</a>)')
                                 onLinkActivated: VescIf.emitMessageDialog(qsTr("Reduce tension"),
-                                                                          qsTr("Reduce tension within 30ms when deceleration on this value."),
+                                                                          qsTr("Reduce pull to this value when antisex is activated."),
                                                                           false, false);
                             }
                             Item {Layout.fillWidth: true}
                             RealSpinBox {
                                 id: antisex_reduce_kg
-                                from: 1
-                                to: 20
+                                from: 0.1
+                                to: 30
                                 value: 6
                                 decimals: 1
                                 stepSize: 0.5
@@ -630,68 +630,53 @@ Page {
                         }
                         RowLayout {
                             Text {
-                                text: qsTr('Steps (<a href="help">num</a>)')
-                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Number of steps"),
-                                                                          qsTr("Will decrease tension more each step, but no more then this value."),
-                                                                          false, false);
-                            }
-                            Item {Layout.fillWidth: true}
-                            SpinBox {
-                                id: antisex_reduce_steps
-                                from: 0
-                                to: 10
-                                value: 1
-                            }
-                        }
-                        RowLayout {
-                            Text {
-                                text: qsTr('Step (<a href="help">KG</a>)')
-                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Increase tension reduce"),
-                                                                          qsTr("Each step add value to tension reduce value."),
+                                text: qsTr('Acceleration ON (<a href="help">m/s^2</a>)')
+                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Activate antisex"),
+                                                                          qsTr("Activate antisex pull reduce if winding acceleration above."),
                                                                           false, false);
                             }
                             Item {Layout.fillWidth: true}
                             RealSpinBox {
-                                id: antisex_reduce_per_step_kg
-                                from: 0
-                                to: 3
-                                value: 1.4
+                                id: antisex_acceleration_on_mss
+                                from: -30
+                                to: 30
+                                value: 5
                                 decimals: 1
-                                stepSize: 0.2
+                                stepSize: 0.5
                             }
                         }
                         RowLayout {
                             Text {
-                                text: qsTr('Unwinding (<a href="help">GAIN</a>)')
-                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Unwinding gain"),
-                                                                          qsTr("Multiply motor amps to this when unwinding."),
+                                text: qsTr('Acceleration OFF (<a href="help">m/s^2</a>)')
+                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Deactivate antisex"),
+                                                                          qsTr("Deactivate antisex pull reduce if winding acceleration below."),
                                                                           false, false);
                             }
                             Item {Layout.fillWidth: true}
                             RealSpinBox {
-                                id: antisex_unwinding_gain
-                                from: 0.8
-                                to: 1.2
-                                value: 1.04
-                                decimals: 2
-                                stepSize: 0.01
-                            }
-                        }
-                        RowLayout {
-                            Text {
-                                text: qsTr('Gain speed (<a href="help">M/S</a>)')
-                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Speed to apply unwinding gain"),
-                                                                          qsTr("Positive speed means unwinding. Zero speed is possible, but bad for motor heating."),
-                                                                          false, false);
-                            }
-                            Item {Layout.fillWidth: true}
-                            RealSpinBox {
-                                id: antisex_gain_speed_ms
-                                from: -6
-                                to: 6
-                                value: 0.8
+                                id: antisex_acceleration_off_mss
+                                from: -30
+                                to: 30
+                                value: -0.5
                                 decimals: 1
-                                stepSize: 0.1
+                                stepSize: 0.5
+                            }
+                        }
+                        RowLayout {
+                            Text {
+                                text: qsTr('Max period (<a href="help">secs</a>)')
+                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Deactivate antisex"),
+                                                                          qsTr("Deacticate antisex pull reduce if was active longer."),
+                                                                          false, false);
+                            }
+                            Item {Layout.fillWidth: true}
+                            RealSpinBox {
+                                id: antisex_max_period_seconds
+                                from: 0.1
+                                to: 60
+                                value: 5
+                                decimals: 1
+                                stepSize: 0.5
                             }
                         }
                     }
@@ -739,12 +724,11 @@ Page {
         cfg.pre_pull_timeout_seconds = pre_pull_timeout.value
         cfg.takeoff_period_seconds = takeoff_period.value
 
-        cfg.antisex_starting_integral_ms = antisex_starting_integral.value
+        cfg.antisex_min_pull_kg = antisex_min_pull_kg.value
         cfg.antisex_reduce_kg = antisex_reduce_kg.value
-        cfg.antisex_reduce_steps = antisex_reduce_steps.value
-        cfg.antisex_reduce_per_step_kg = antisex_reduce_per_step_kg.value
-        cfg.antisex_unwinding_gain = antisex_unwinding_gain.value
-        cfg.antisex_gain_speed_ms = antisex_gain_speed_ms.value
+        cfg.antisex_acceleration_on_mss = antisex_acceleration_on_mss.value
+        cfg.antisex_acceleration_off_mss = antisex_acceleration_off_mss.value
+        cfg.antisex_max_period_seconds = antisex_max_period_seconds.value
 
         cfg.max_speed_ms = max_speed_ms.value
         cfg.battery_cells = battery_cells.value
@@ -795,12 +779,11 @@ Page {
         pre_pull_timeout.value = cfg.pre_pull_timeout_seconds
         takeoff_period.value = cfg.takeoff_period_seconds
 
-        antisex_starting_integral.value = cfg.antisex_starting_integral_ms
+        antisex_min_pull_kg.value = cfg.antisex_min_pull_kg
         antisex_reduce_kg.value = cfg.antisex_reduce_kg
-        antisex_reduce_steps.value = cfg.antisex_reduce_steps
-        antisex_reduce_per_step_kg.value = cfg.antisex_reduce_per_step_kg
-        antisex_unwinding_gain.value = cfg.antisex_unwinding_gain
-        antisex_gain_speed_ms.value = cfg.antisex_gain_speed_ms
+        antisex_acceleration_on_mss.value = cfg.antisex_acceleration_on_mss
+        antisex_acceleration_off_mss.value = cfg.antisex_acceleration_off_mss
+        antisex_max_period_seconds.value = cfg.antisex_max_period_seconds
 
         max_speed_ms.value = cfg.max_speed_ms
         battery_cells.value = cfg.battery_cells

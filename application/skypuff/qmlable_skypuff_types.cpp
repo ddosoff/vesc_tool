@@ -41,12 +41,11 @@ bool QMLable_skypuff_config::deserializeV1(VByteArray& from)
     manual_slow_speed_up_current = from.vbPopFrontDouble32Auto();
     manual_slow_erpm = from.vbPopFrontDouble32Auto();
 
-    antisex_starting_integral = from.vbPopFrontDouble32Auto();
-    antisex_reduce_amps = from.vbPopFrontDouble32Auto();
-    antisex_reduce_steps = from.vbPopFrontInt32();
-    antisex_reduce_amps_per_step = from.vbPopFrontDouble32Auto();
-    antisex_unwinding_gain = from.vbPopFrontDouble16(1e2);
-    antisex_gain_speed = from.vbPopFrontDouble16(1);
+    antisex_min_pull_amps = from.vbPopFrontDouble16(10);
+    antisex_reduce_amps = from.vbPopFrontDouble16(10);
+    antisex_acceleration_on_mss = from.vbPopFrontDouble16(1e2);
+    antisex_acceleration_off_mss = from.vbPopFrontDouble16(1e2);
+    antisex_max_period_ms = (int)from.vbPopFrontUint16();
 
     max_speed_ms = from.vbPopFrontDouble16(1e2);
 
@@ -90,12 +89,13 @@ QByteArray QMLable_skypuff_config::serializeV1() const
     vb.vbAppendDouble32Auto(manual_slow_max_current);
     vb.vbAppendDouble32Auto(manual_slow_speed_up_current);
     vb.vbAppendDouble32Auto(manual_slow_erpm);
-    vb.vbAppendDouble32Auto(antisex_starting_integral);
-    vb.vbAppendDouble32Auto(antisex_reduce_amps);
-    vb.vbAppendInt32(antisex_reduce_steps);
-    vb.vbAppendDouble32Auto(antisex_reduce_amps_per_step);
-    vb.vbAppendDouble16(antisex_unwinding_gain, 1e2);
-    vb.vbAppendDouble16(antisex_gain_speed, 1);
+
+    vb.vbAppendDouble16(antisex_min_pull_amps, 10);
+    vb.vbAppendDouble16(antisex_reduce_amps, 10);
+    vb.vbAppendDouble16(antisex_acceleration_on_mss, 1e2);
+    vb.vbAppendDouble16(antisex_acceleration_off_mss, 1e2);
+    vb.vbAppendUint16(antisex_max_period_ms);
+
     vb.vbAppendDouble16(max_speed_ms, 1e2);
 
     return std::move(vb);
@@ -163,12 +163,11 @@ bool QMLable_skypuff_config::saveV1(QSettings &f) const
     f.endGroup();
 
     f.beginGroup("antisex");
-    f.setValue("starting_ms", QString::number(antisex_starting_integral_to_ms(), 'f', 1));
+    f.setValue("min_pull_kg", QString::number(antisex_min_pull_amps_to_kg(), 'f', 1));
     f.setValue("reduce_kg", QString::number(antisex_reduce_amps_to_kg(), 'f', 1));
-    f.setValue("reduce_steps", antisex_reduce_steps);
-    f.setValue("reduce_per_step_kg", QString::number(antisex_reduce_amps_per_step_to_kg(), 'f', 1));
-    f.setValue("unwinding_gain", QString::number(antisex_unwinding_gain, 'f', 3));
-    f.setValue("gain_speed_ms", QString::number(antisex_gain_speed_to_ms(), 'f', 1));
+    f.setValue("acceleration_on_mss", QString::number(antisex_acceleration_on_mss, 'f', 1));
+    f.setValue("acceleration_off_mss", QString::number(antisex_acceleration_off_mss, 'f', 1));
+    f.setValue("max_period_secs", QString::number(antisex_max_period_to_seconds(), 'f', 1));
     f.endGroup();
 
     f.sync();
@@ -233,12 +232,11 @@ bool QMLable_skypuff_config::loadV1(QSettings &f)
     f.endGroup();
 
     f.beginGroup("antisex");
-    ms_to_antisex_starting_integral(f.value("starting_ms").toDouble());
+    kg_to_antisex_min_pull_amps(f.value("min_pull_kg").toDouble());
     kg_to_antisex_reduce_amps(f.value("reduce_kg").toDouble());
-    antisex_reduce_steps = f.value("reduce_steps").toInt();
-    kg_to_antisex_reduce_amps_per_step(f.value("reduce_per_step_kg").toDouble());
-    antisex_unwinding_gain = f.value("unwinding_gain").toDouble();
-    ms_to_antisex_gain_speed(f.value("gain_speed_ms").toDouble());
+    antisex_acceleration_on_mss = f.value("acceleration_on_mss").toDouble();
+    antisex_acceleration_off_mss = f.value("acceleration_off_mss").toDouble();
+    seconds_to_antisex_max_period(f.value("max_period_secs").toDouble());
     f.endGroup();
 
     return f.status() == QSettings::NoError;
