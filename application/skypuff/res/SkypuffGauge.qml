@@ -197,7 +197,7 @@ Item {
     function setMaxMotorKg() {
         // Infinity protection
         if(root.maxMotorKg > 1000)
-            root.maxMotorKg = 0;
+            root.maxMotorKg = 100;
 
         var s = root.maxMotorKg <= 10 ? 2 : 10
         root.maxMotorKg = Math.ceil(parseInt(root.maxMotorKg, 10) / s) * s;

@@ -2,44 +2,41 @@
 
 bool QMLable_skypuff_config::deserializeV1(VByteArray& from)
 {
-    if(from.length() < 4 * 30 - 2)
-            return false;
-
     motor_poles = from.vbPopFrontUint8();
     gear_ratio = from.vbPopFrontDouble32Auto();
     wheel_diameter = from.vbPopFrontDouble32Auto();
     battery_type = (int)from.vbPopFrontUint8();
     battery_cells = (int)from.vbPopFrontUint8();
 
-    amps_per_kg = from.vbPopFrontDouble32Auto();
-    pull_applying_period = from.vbPopFrontInt16();
+    amps_per_kg = from.vbPopFrontDouble16(1e2);
+    pull_applying_period = from.vbPopFrontUint16();
     rope_length = from.vbPopFrontInt32();
     braking_length = from.vbPopFrontInt32();
     braking_extension_length = from.vbPopFrontInt32();
 
     slowing_length = from.vbPopFrontInt32();
-    slow_erpm = from.vbPopFrontDouble32Auto();
+    slow_erpm = from.vbPopFrontUint16();
     rewinding_trigger_length = from.vbPopFrontInt32();
     unwinding_trigger_length = from.vbPopFrontInt32();
-    pull_current = from.vbPopFrontDouble32Auto();
+    pull_current = from.vbPopFrontDouble16(10);
 
-    pre_pull_k = from.vbPopFrontDouble32Auto();
-    takeoff_pull_k = from.vbPopFrontDouble32Auto();
-    fast_pull_k = from.vbPopFrontDouble32Auto();
-    takeoff_trigger_length = from.vbPopFrontInt32();
-    pre_pull_timeout = from.vbPopFrontInt32();
+    pre_pull_k = from.vbPopFrontDouble16(1e4);
+    takeoff_pull_k = from.vbPopFrontDouble16(1e4);
+    fast_pull_k = from.vbPopFrontDouble16(1e4);
+    takeoff_trigger_length = from.vbPopFrontUint16();
+    pre_pull_timeout = from.vbPopFrontUint16();
 
-    takeoff_period = from.vbPopFrontInt32();
-    brake_current = from.vbPopFrontDouble32Auto();
-    slowing_current = from.vbPopFrontDouble32Auto();
-    manual_brake_current = from.vbPopFrontDouble32Auto();
-    unwinding_current = from.vbPopFrontDouble32Auto();
+    takeoff_period = from.vbPopFrontUint16();
+    brake_current = from.vbPopFrontDouble16(10);
+    slowing_current = from.vbPopFrontDouble16(10);
+    manual_brake_current = from.vbPopFrontDouble16(10);
+    unwinding_current = from.vbPopFrontDouble16(10);
 
-    rewinding_current = from.vbPopFrontDouble32Auto();
-    slow_max_current = from.vbPopFrontDouble32Auto();
-    manual_slow_max_current = from.vbPopFrontDouble32Auto();
-    manual_slow_speed_up_current = from.vbPopFrontDouble32Auto();
-    manual_slow_erpm = from.vbPopFrontDouble32Auto();
+    rewinding_current = from.vbPopFrontDouble16(10);
+    slow_max_current = from.vbPopFrontDouble16(10);
+    manual_slow_max_current = from.vbPopFrontDouble16(10);
+    manual_slow_speed_up_current = from.vbPopFrontDouble16(10);
+    manual_slow_erpm = from.vbPopFrontUint16();
 
     antisex_min_pull_amps = from.vbPopFrontDouble16(10);
     antisex_reduce_amps = from.vbPopFrontDouble16(10);
@@ -64,31 +61,35 @@ QByteArray QMLable_skypuff_config::serializeV1() const
     vb.vbAppendUint8(battery_type);
     vb.vbAppendUint8(battery_cells);
 
-    vb.vbAppendDouble32Auto(amps_per_kg);
-    vb.vbAppendInt16(pull_applying_period);
+    vb.vbAppendDouble16(amps_per_kg, 1e2);
+    vb.vbAppendUint16(pull_applying_period);
     vb.vbAppendInt32(rope_length);
     vb.vbAppendInt32(braking_length);
     vb.vbAppendInt32(braking_extension_length);
+
     vb.vbAppendInt32(slowing_length);
-    vb.vbAppendDouble32Auto(slow_erpm);
+    vb.vbAppendUint16(slow_erpm);
     vb.vbAppendInt32(rewinding_trigger_length);
     vb.vbAppendInt32(unwinding_trigger_length);
-    vb.vbAppendDouble32Auto(pull_current);
-    vb.vbAppendDouble32Auto(pre_pull_k);
-    vb.vbAppendDouble32Auto(takeoff_pull_k);
-    vb.vbAppendDouble32Auto(fast_pull_k);
-    vb.vbAppendInt32(takeoff_trigger_length);
-    vb.vbAppendInt32(pre_pull_timeout);
-    vb.vbAppendInt32(takeoff_period);
-    vb.vbAppendDouble32Auto(brake_current);
-    vb.vbAppendDouble32Auto(slowing_current);
-    vb.vbAppendDouble32Auto(manual_brake_current);
-    vb.vbAppendDouble32Auto(unwinding_current);
-    vb.vbAppendDouble32Auto(rewinding_current);
-    vb.vbAppendDouble32Auto(slow_max_current);
-    vb.vbAppendDouble32Auto(manual_slow_max_current);
-    vb.vbAppendDouble32Auto(manual_slow_speed_up_current);
-    vb.vbAppendDouble32Auto(manual_slow_erpm);
+    vb.vbAppendDouble16(pull_current, 10);
+
+    vb.vbAppendDouble16(pre_pull_k, 1e4);
+    vb.vbAppendDouble16(takeoff_pull_k, 1e4);
+    vb.vbAppendDouble16(fast_pull_k, 1e4);
+    vb.vbAppendUint16(takeoff_trigger_length);
+    vb.vbAppendUint16(pre_pull_timeout);
+
+    vb.vbAppendUint16(takeoff_period);
+    vb.vbAppendDouble16(brake_current, 10);
+    vb.vbAppendDouble16(slowing_current, 10);
+    vb.vbAppendDouble16(manual_brake_current, 10);
+    vb.vbAppendDouble16(unwinding_current, 10);
+
+    vb.vbAppendDouble16(rewinding_current, 10);
+    vb.vbAppendDouble16(slow_max_current, 10);
+    vb.vbAppendDouble16(manual_slow_max_current, 10);
+    vb.vbAppendDouble16(manual_slow_speed_up_current, 10);
+    vb.vbAppendUint16(manual_slow_erpm);
 
     vb.vbAppendDouble16(antisex_min_pull_amps, 10);
     vb.vbAppendDouble16(antisex_reduce_amps, 10);
