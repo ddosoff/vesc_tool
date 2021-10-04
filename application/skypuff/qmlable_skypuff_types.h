@@ -34,6 +34,7 @@ struct QMLable_skypuff_config : public skypuff_config, public skypuff_drive {
     Q_PROPERTY(float gear_ratio MEMBER gear_ratio)
     Q_PROPERTY(float amps_per_kg MEMBER amps_per_kg)
     Q_PROPERTY(float pull_applying_seconds READ pull_applying_period_to_seconds WRITE seconds_to_pull_applying_period)
+    Q_PROPERTY(float braking_applying_seconds READ braking_applying_period_to_seconds WRITE seconds_to_braking_applying_period)
     Q_PROPERTY(float rope_length_meters READ rope_length_to_meters WRITE meters_to_rope_length)
     Q_PROPERTY(float braking_length_meters READ braking_length_to_meters WRITE meters_to_braking_length)
     Q_PROPERTY(float braking_extension_length_meters READ braking_extension_length_to_meters WRITE meters_to_braking_extension_length)
@@ -55,6 +56,8 @@ struct QMLable_skypuff_config : public skypuff_config, public skypuff_drive {
     Q_PROPERTY(float slowing_kg READ slowing_current_to_kg WRITE kg_to_slowing_current)
     Q_PROPERTY(float manual_brake_kg READ manual_brake_current_to_kg WRITE kg_to_manual_brake_current)
     Q_PROPERTY(float unwinding_kg READ unwinding_current_to_kg WRITE kg_to_unwinding_current)
+    Q_PROPERTY(float unwinding_strong_kg READ unwinding_strong_current_to_kg WRITE kg_to_unwinding_strong_current)
+    Q_PROPERTY(float unwinding_strong_ms READ unwinding_strong_erpm_to_ms WRITE ms_to_unwinding_strong_erpm)
     Q_PROPERTY(float rewinding_kg READ rewinding_current_to_kg WRITE kg_to_rewinding_current)
     Q_PROPERTY(float slow_max_kg READ slow_max_current_to_kg WRITE kg_to_slow_max_current)
     Q_PROPERTY(float manual_slow_max_kg READ manual_slow_max_current_to_kg WRITE kg_to_manual_slow_max_current)
@@ -121,6 +124,9 @@ public:
     float pull_applying_period_to_seconds() const {return pull_applying_period / (float)1000;}
     void seconds_to_pull_applying_period(float secs) {pull_applying_period = round(secs * (float)1000);}
 
+    float braking_applying_period_to_seconds() const {return braking_applying_period / (float)1000;}
+    void seconds_to_braking_applying_period(float secs) {braking_applying_period = round(secs * (float)1000);}
+
     float motor_max_current_to_kg() const {return motor_max_current / amps_per_kg;}
 
     float pull_current_to_kg() const {return pull_current / amps_per_kg;}
@@ -134,6 +140,12 @@ public:
 
     float unwinding_current_to_kg() const {return unwinding_current / amps_per_kg;}
     void kg_to_unwinding_current(float kg) {unwinding_current = kg * amps_per_kg;}
+
+    float unwinding_strong_current_to_kg() const {return unwinding_strong_current / amps_per_kg;}
+    void kg_to_unwinding_strong_current(float kg) {unwinding_strong_current = kg * amps_per_kg;}
+
+    float unwinding_strong_erpm_to_ms() const {return erpm_to_ms(unwinding_strong_erpm);}
+    void ms_to_unwinding_strong_erpm(float ms) {unwinding_strong_erpm = ms_to_erpm(ms);}
 
     float rewinding_current_to_kg() const {return rewinding_current / amps_per_kg;}
     void kg_to_rewinding_current(float kg) {rewinding_current = kg * amps_per_kg;}

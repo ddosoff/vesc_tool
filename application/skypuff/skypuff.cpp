@@ -655,7 +655,7 @@ void Skypuff::processSettingsV1(VByteArray &vb)
     }
 
     // Enough data?
-    const int v1_settings_length = 105;
+    const int v1_settings_length = 111;
     if(vb.length() < v1_settings_length) {
         vesc->emitMessageDialog(tr("Can't deserialize V1 settings"),
                                 tr("Received %1 bytes, expected %2 bytes!").arg(vb.length()).arg(v1_settings_length),

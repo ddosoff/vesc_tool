@@ -111,14 +111,32 @@ Page {
                         }
                         RowLayout {
                             Text {
-                                text: qsTr('Applying (<a href="help">secs</a>)')
+                                text: qsTr('Pull applying (<a href="help">secs</a>)')
                                 onLinkActivated: VescIf.emitMessageDialog(qsTr("Smooth pull speed"),
-                                                                          qsTr("Number of seconds to apply default pull tension."),
+                                                                          qsTr("Number of seconds to apply nominal pull tension or decrease when going unwinding."),
                                                                           false, false);
                             }
                             Item {Layout.fillWidth: true}
                             RealSpinBox {
                                 id: pull_applying_period
+                                editable: true
+                                from: 0.1
+                                to: 10
+                                value: 2
+                                decimals: 1
+                                stepSize: 0.1
+                            }
+                        }
+                        RowLayout {
+                            Text {
+                                text: qsTr('Braking applying (<a href="help">secs</a>)')
+                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Smooth braking speed"),
+                                                                          qsTr("Number of seconds to release nominal pull tension when going braking or slowing."),
+                                                                          false, false);
+                            }
+                            Item {Layout.fillWidth: true}
+                            RealSpinBox {
+                                id: braking_applying_period
                                 editable: true
                                 from: 0.1
                                 to: 10
@@ -274,13 +292,47 @@ Page {
                             }
                         }
                         RowLayout {
-                            Text {text: qsTr("Tension (KG)")}
+                            Text {text: qsTr('Tension (KG)')}
                             Item {Layout.fillWidth: true}
                             RealSpinBox {
                                 id: unwinding_kg
-                                value: 2
+                                value: 3
                                 from: 0.2
                                 to: 20
+                                decimals: 1
+                                stepSize: 0.2
+                            }
+                        }
+                        RowLayout {
+                            Text {
+                                text: qsTr('Strong tension (<a href="help">KG</a>)')
+                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Strong unwinding force"),
+                                                                          qsTr("This helps to start motor from zero speed and prevent tangling when spool goes backward from pull states."),
+                                                                          false, false);
+                            }
+                            Item {Layout.fillWidth: true}
+                            RealSpinBox {
+                                id: unwinding_strong_kg
+                                value: 6
+                                from: 0.2
+                                to: 20
+                                decimals: 1
+                                stepSize: 0.2
+                            }
+                        }
+                        RowLayout {
+                            Text {
+                                text: qsTr('Strong speed (<a href="help">M/S</a>)')
+                                onLinkActivated: VescIf.emitMessageDialog(qsTr("Strong speed"),
+                                                                          qsTr("Use strong tension when rope speed is more. Negative values means rope pull out. -1m/s is default."),
+                                                                          false, false);
+                            }
+                            Item {Layout.fillWidth: true}
+                            RealSpinBox {
+                                id: unwinding_strong_ms
+                                value: -1
+                                from: -50
+                                to: 50
                                 decimals: 1
                                 stepSize: 0.2
                             }
@@ -696,6 +748,7 @@ Page {
 
         // This part depended on values above
         cfg.pull_applying_seconds = pull_applying_period.value
+        cfg.braking_applying_seconds = braking_applying_period.value
         cfg.rope_length_meters = rope_length.value
         cfg.braking_length_meters = braking_length.value
         cfg.braking_extension_length_meters = braking_extension_length.value
@@ -711,6 +764,8 @@ Page {
         cfg.brake_kg = brake_kg.value
         cfg.manual_brake_kg = manual_brake_kg.value
         cfg.unwinding_kg = unwinding_kg.value
+        cfg.unwinding_strong_kg = unwinding_strong_kg.value
+        cfg.unwinding_strong_ms = unwinding_strong_ms.value
         cfg.rewinding_kg = rewinding_kg.value
 
         cfg.slow_max_kg = slow_max_kg.value
@@ -751,6 +806,7 @@ Page {
         amps_per_kg.value = cfg.amps_per_kg
 
         pull_applying_period.value = cfg.pull_applying_seconds
+        braking_applying_period.value = cfg.braking_applying_seconds
         rope_length.value = cfg.rope_length_meters
         braking_length.value = cfg.braking_length_meters
         braking_extension_length.value = cfg.braking_extension_length_meters
@@ -766,6 +822,8 @@ Page {
         brake_kg.value = cfg.brake_kg
         manual_brake_kg.value = cfg.manual_brake_kg
         unwinding_kg.value = cfg.unwinding_kg
+        unwinding_strong_kg.value = cfg.unwinding_strong_kg
+        unwinding_strong_ms.value = cfg.unwinding_strong_ms
         rewinding_kg.value = cfg.rewinding_kg
 
         slow_max_kg.value = cfg.slow_max_kg

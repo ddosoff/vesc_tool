@@ -75,6 +75,7 @@ typedef struct
 {
 	float amps_per_kg;					// Winch drive force coefficient
 	int pull_applying_period;			// Milliseconds to apply pull force, amps_per_sec will be calculated from this delay
+	int braking_applying_period;        // Milliseconds to release pull force when going Manual Braking
 	int rope_length;					// Winch rope length in tachometer steps (used by interface only)
 	int braking_length;					// Tachometer range of braking zone
 	int braking_extension_length;		// Increase braking_length for passive winches when car drive 150m from takeoff
@@ -87,7 +88,7 @@ typedef struct
 	float takeoff_pull_k;				// takeoff_pull_k * pull_current = pull current during takeoff
 	float fast_pull_k;					// fast_pull_k * pull_current = pull current to get altitude fast
 	int takeoff_trigger_length;			// Minimal PRE_PULL movement for transition to TAKEOFF_PULL
-	int pre_pull_timeout;				// Timeout before saving position after PRE_PULL
+	int pre_pull_timeout;				// Milliseconds timeout to save position after PRE_PULL
 	int takeoff_period;					// Time of TAKEOFF_PULL and then switch to normal PULL
 	float brake_current;				// Braking zone force, could be set high to charge battery driving away
 	float slowing_current;				// Set zero to release motor when slowing or positive value to brake
@@ -105,8 +106,8 @@ typedef struct
 	// Antisex dampering
 	float antisex_min_pull_amps;		// Activate antisex pull currection if pulling above this only
 	float antisex_reduce_amps;			// Reduce motor amps to this value when antisex is activated
-	float antisex_acceleration_on_mss;  // Activate antisex reduce if winding direction acceleration above this
-	float antisex_acceleration_off_mss; // Deactivate antisex if acceleration less then this
+	float antisex_acceleration_on_mss;  // Activate antisex pull reduce if winding acceleration above this
+	float antisex_acceleration_off_mss; // Deactivate antisex if current acceleration below this
 	int antisex_max_period_ms;          // Do not reduce nominal pull more then this milliseconds
 } skypuff_config;
 

@@ -45,6 +45,9 @@ bool QMLable_skypuff_config::deserializeV1(VByteArray& from)
     antisex_max_period_ms = (int)from.vbPopFrontUint16();
 
     max_speed_ms = from.vbPopFrontDouble16(1e2);
+    braking_applying_period = (int)from.vbPopFrontUint16();
+    unwinding_strong_current = from.vbPopFrontDouble16(10);
+    unwinding_strong_erpm = (int)from.vbPopFrontInt16();
 
     return true;
 }
@@ -98,6 +101,9 @@ QByteArray QMLable_skypuff_config::serializeV1() const
     vb.vbAppendUint16(antisex_max_period_ms);
 
     vb.vbAppendDouble16(max_speed_ms, 1e2);
+    vb.vbAppendUint16(braking_applying_period);
+    vb.vbAppendDouble16(unwinding_strong_current, 10);
+    vb.vbAppendInt16(unwinding_strong_erpm);
 
     return std::move(vb);
 }
@@ -117,6 +123,7 @@ bool QMLable_skypuff_config::saveV1(QSettings &f) const
     f.beginGroup("skypuff_drive");
     f.setValue("amps_per_kg", QString::number(amps_per_kg, 'f', 3));
     f.setValue("pull_applying_period", QString::number(pull_applying_period_to_seconds(), 'f', 1));
+    f.setValue("braking_applying_period", QString::number(braking_applying_period_to_seconds(), 'f', 1));
     f.setValue("rope_length", QString::number(rope_length_to_meters(), 'f', 1));
     f.setValue("max_speed_ms", QString::number(max_speed_ms, 'f', 1));
     f.setValue("battery_cells", battery_cells);
@@ -132,6 +139,8 @@ bool QMLable_skypuff_config::saveV1(QSettings &f) const
     f.beginGroup("unwinding");
     f.setValue("unwinding_trigger_length", QString::number(unwinding_trigger_length_to_meters(), 'f', 1));
     f.setValue("unwinding_kg", QString::number(unwinding_current_to_kg(), 'f', 1));
+    f.setValue("unwinding_strong_kg", QString::number(unwinding_strong_current_to_kg(), 'f', 1));
+    f.setValue("unwinding_strong_ms", QString::number(unwinding_strong_erpm_to_ms(), 'f', 1));
     f.endGroup();
 
     f.beginGroup("rewinding");
@@ -186,6 +195,7 @@ bool QMLable_skypuff_config::loadV1(QSettings &f)
     f.beginGroup("skypuff_drive");
     amps_per_kg = f.value("amps_per_kg").toDouble();
     seconds_to_pull_applying_period(f.value("pull_applying_period").toDouble());
+    seconds_to_braking_applying_period(f.value("braking_applying_period").toDouble());
     meters_to_rope_length(f.value("rope_length").toDouble());
     max_speed_ms =  f.value("max_speed_ms").toDouble();
     battery_cells = f.value("battery_cells").toInt();
@@ -201,6 +211,8 @@ bool QMLable_skypuff_config::loadV1(QSettings &f)
     f.beginGroup("unwinding");
     meters_to_unwinding_trigger_length(f.value("unwinding_trigger_length").toDouble());
     kg_to_unwinding_current(f.value("unwinding_kg").toDouble());
+    kg_to_unwinding_strong_current(f.value("unwinding_strong_kg").toDouble());
+    ms_to_unwinding_strong_erpm(f.value("unwinding_strong_ms").toDouble());
     f.endGroup();
 
     f.beginGroup("rewinding");
