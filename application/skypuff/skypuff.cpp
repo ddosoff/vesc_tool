@@ -888,6 +888,9 @@ void Skypuff::setFault(const mc_fault_code newFault)
 void Skypuff::setPos(const int newTac)
 {
     if(newTac != curTac) {
+        if (curTac > 0 != newTac > 0) {
+            emit positiveTachometerChanged(newTac > 0);
+        }
         bool wasBrakingRange = isBrakingRange();
         bool wasBrakingExtensionRange = isBrakingExtensionRange();
 

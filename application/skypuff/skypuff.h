@@ -56,6 +56,7 @@ class Skypuff : public QObject
 
     // To enable transitions to braking, if pos below or equal braking_length + braking_extension_length
     Q_PROPERTY(bool isBrakingExtensionRange READ isBrakingExtensionRange NOTIFY brakingExtensionRangeChanged)
+    Q_PROPERTY(bool isPositiveTachometer READ isPositiveTachometer NOTIFY positiveTachometerChanged)
     // To enable manual_slow buttons
     Q_PROPERTY(bool isBrakingRange READ isBrakingRange NOTIFY brakingRangeChanged)
     Q_PROPERTY(float ropeMeters READ getRopeMeters NOTIFY settingsChanged)
@@ -109,6 +110,7 @@ signals:
     void settingsChanged(const QMLable_skypuff_config & cfg);
     void statusChanged(const QString &newStatus, bool isWarning = false);
     void brakingExtensionRangeChanged(const bool isBrakingExtensionRange);
+    void positiveTachometerChanged(const bool isPositiveTachometer);
     void brakingRangeChanged(const bool isBrakingRange);
     void posChanged(const float meters);
     void speedChanged(const float ms);
@@ -172,8 +174,9 @@ protected:
     // Getters
     bool isBrakingRange() const {return abs(curTac) <= cfg.braking_length;}
     bool isBrakingExtensionRange() const {return abs(curTac) <= cfg.braking_length + cfg.braking_extension_length;}
+    bool isPositiveTachometer() const {return curTac > 0;}
     float getRopeMeters() {return cfg.rope_length_to_meters();}
-    float getDrawnMeters() {return cfg.tac_steps_to_meters(abs(curTac));}
+    float getDrawnMeters() {return cfg.tac_steps_to_meters(curTac);}
     float getLeftMeters() {return cfg.tac_steps_to_meters(cfg.rope_length - abs(curTac));}
     float getSpeedMs() {return cfg.erpm_to_ms(erpm);}
     float getMotorKg() {return motorAmps / cfg.amps_per_kg;}

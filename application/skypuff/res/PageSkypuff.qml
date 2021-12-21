@@ -515,7 +515,7 @@ Page {
             case "MANUAL_BRAKING":
                 set_manual_state_visible()
                 bStop.enabled = false
-                bUnwinding.enabled = true
+                bUnwinding.enabled = !Skypuff.isPositiveTachometer
                 bSetZero.enabled = true
                 break
             case "MANUAL_SLOW_SPEED_UP":
@@ -564,6 +564,12 @@ Page {
                 bPrePull.enabled = false
                 pullForce.enabled = false
                 break
+            }
+        }
+
+        onPositiveTachometerChanged: {
+            if (page.state == "MANUAL_BRAKING") {
+                bUnwinding.enabled = !isPositiveTachometer
             }
         }
 
