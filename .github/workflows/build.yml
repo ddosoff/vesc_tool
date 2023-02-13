@@ -1,0 +1,74 @@
+name: Build
+on:
+  push:
+    branches: [ master ]
+    paths-ignore:
+    - '**.md'
+  pull_request:
+    paths-ignore:
+    - '**.md'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Skypuff APK
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: jurplel/install-qt-action@v3
+      with:
+        version: 5.12.12
+        cache: true
+        target: android
+        arch: android_armv7
+        dir: ${{ github.workspace }}
+
+    - uses: actions/setup-java@v3
+      with:
+        java-version: '8'
+        distribution: adopt
+
+    - name: Prepare NDK dir for caching ( workaround for https://github.com/actions/virtual-environments/issues/1337 )
+      run: |
+        sudo mkdir -p /usr/local/lib/android/sdk/ndk
+        sudo chmod -R 777 /usr/local/lib/android/sdk/ndk
+        sudo chown -R $USER:$USER /usr/local/lib/android/sdk/ndk
+
+    - name: NDK Cache
+      id: ndk-cache
+      uses: actions/cache@v2
+      with:
+        path: /usr/local/lib/android/sdk/ndk
+        key: ndk-cache-21.3.6528147
+
+    - name: Install NDK
+      if: steps.ndk-cache.outputs.cache-hit != 'true'
+      run: echo "y" | sudo /usr/local/lib/android/sdk/tools/bin/sdkmanager --install "ndk;21.3.6528147"
+
+    - name: Build APK
+      working-directory: application/skypuff
+      run: |
+        export ANDROID_API_VERSION=android-23
+        export ANDROID_NDK_HOST=linux-x86_64
+        export ANDROID_NDK_PLATFORM=android-23
+        export ANDROID_NDK_TOOLCHAIN_VERSION=4.9
+        export ANDROID_NDK_ROOT=/usr/local/lib/android/sdk/ndk/21.3.6528147
+        export ANDROID_NDK_TOOLCHAIN_PREFIX=arm-linux-androideabi
+        export ANDROID_NDK_TOOLS_PREFIX=arm-linux-androideabi
+        export ANDROID_SDK_ROOT=${ANDROID_HOME}
+
+        export PATH=${{ github.workspace }}/Qt/5.12.12/android_armv7/bin/:$ANDROID_HOME/tools:$PATH
+
+        qmake -config release
+        make clean
+        make -j8
+        make install INSTALL_ROOT=build/android/build
+        androiddeployqt --gradle --no-gdbserver --output build/android/build --input android-libskypuff.so-deployment-settings.json --android-platform android-29
+        mv build/android/build/build/outputs/apk/debug/build-debug.apk skypuff-andoird.apk
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: skypuff-android-apk
+        path: |
+          application/skypuff/skypuff-andoird.apk
