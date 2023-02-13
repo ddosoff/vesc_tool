@@ -59,8 +59,12 @@ android: {
     manifest.input = $$PWD/android/AndroidManifest.xml.in
     manifest.output = $$PWD/android/AndroidManifest.xml
     QMAKE_SUBSTITUTES += manifest
+    DESTDIR = build/android
+    OBJECTS_DIR = build/android/obj
+    MOC_DIR = build/android/obj
+    RCC_DIR = build/android/obj
+    UI_DIR = build/android/obj
 }
-
 
 INCLUDEPATH += ../..
 

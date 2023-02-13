@@ -31,3 +31,11 @@ If you have custom hardware and you want to add support for it in the official r
 1) Go to https://github.com/vedderb/bldc and use the github fork function.  
 2) Make your changes, test them and make a pull request to the main repository.  
 3) If the pull request gets accepted your hardware will become part of the next official release. It will show up in the binary beta typically after a few days and in the stable version the next time a stable release is made.
+
+## Building
+
+- Install Qt 5.12 https://download.qt.io/archive/qt/5.12/5.12.12/
+- Install Android SDK https://developer.android.com/about/versions/11/setup-sdk
+- Install Android NDK r21e https://github.com/android/ndk/wiki/Unsupported-Downloads#r21e
+- Update export variables values in .env.android
+- run ./build_android

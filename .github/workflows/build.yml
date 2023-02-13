@@ -37,7 +37,7 @@ jobs:
 
     - name: NDK Cache
       id: ndk-cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: /usr/local/lib/android/sdk/ndk
         key: ndk-cache-21.3.6528147
@@ -46,9 +46,9 @@ jobs:
       if: steps.ndk-cache.outputs.cache-hit != 'true'
       run: echo "y" | sudo /usr/local/lib/android/sdk/tools/bin/sdkmanager --install "ndk;21.3.6528147"
 
-    - name: Build APK
-      working-directory: application/skypuff
+    - name: Update .env
       run: |
+        cat << 'EOF' > .env.android
         export ANDROID_API_VERSION=android-23
         export ANDROID_NDK_HOST=linux-x86_64
         export ANDROID_NDK_PLATFORM=android-23
@@ -57,15 +57,13 @@ jobs:
         export ANDROID_NDK_TOOLCHAIN_PREFIX=arm-linux-androideabi
         export ANDROID_NDK_TOOLS_PREFIX=arm-linux-androideabi
         export ANDROID_SDK_ROOT=${ANDROID_HOME}
-
         export PATH=${{ github.workspace }}/Qt/5.12.12/android_armv7/bin/:$ANDROID_HOME/tools:$PATH
+        EOF
 
-        qmake -config release
-        make clean
-        make -j8
-        make install INSTALL_ROOT=build/android/build
-        androiddeployqt --gradle --no-gdbserver --output build/android/build --input android-libskypuff.so-deployment-settings.json --android-platform android-29
-        mv build/android/build/build/outputs/apk/debug/build-debug.apk skypuff-andoird.apk
+    - name: Build APK
+      working-directory: application/skypuff
+      run: |
+        ./build_android
 
     - uses: actions/upload-artifact@v3
       with:
