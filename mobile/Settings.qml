@@ -96,6 +96,27 @@ Item {
                 }
 
                 CheckBox {
+                    id: qmlUiAskBox
+                    Layout.fillWidth: true
+                    text: "Ask before loading QML UI"
+                    checked: VescIf.askQmlLoad()
+                }
+
+                CheckBox {
+                    id: reconnectLastCanBox
+                    Layout.fillWidth: true
+                    text: "Reconnect CAN on connect"
+                    checked: VescIf.reconnectLastCan()
+                }
+
+                CheckBox {
+                    id: scanCanConnectBox
+                    Layout.fillWidth: true
+                    text: "Scan CAN on connect"
+                    checked: VescIf.scanCanOnConnect()
+                }
+
+                CheckBox {
                     id: darkModeBox
                     Layout.fillWidth: true
                     text: "Use Dark Mode"
@@ -113,6 +134,9 @@ Item {
             screenOnBox.checked = VescIf.keepScreenOn()
             screenRotBox.checked = VescIf.getAllowScreenRotation()
             qmlUiBox.checked = VescIf.getLoadQmlUiOnConnect()
+            qmlUiAskBox.checked = VescIf.askQmlLoad()
+            reconnectLastCanBox.checked = VescIf.reconnectLastCan()
+            scanCanConnectBox.checked = VescIf.scanCanOnConnect()
         }
 
         onClosed: {
@@ -121,6 +145,9 @@ Item {
             VescIf.setKeepScreenOn(screenOnBox.checked)
             VescIf.setAllowScreenRotation(screenRotBox.checked)
             VescIf.setLoadQmlUiOnConnect(qmlUiBox.checked)
+            VescIf.setAskQmlLoad(qmlUiAskBox.checked)
+            VescIf.setReconnectLastCan(reconnectLastCanBox.checked)
+            VescIf.setScanCanOnConnect(scanCanConnectBox.checked)
             VescIf.storeSettings()
 
             Utility.keepScreenOn(VescIf.keepScreenOn())

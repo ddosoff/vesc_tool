@@ -59,13 +59,13 @@ private slots:
     void on_tcpConnectButton_clicked();
     void on_udpConnectButton_clicked();
     void on_helpButton_clicked();
-    void on_canFwdButton_toggled(bool checked);
+    void on_canFwdButton_clicked();
     void on_autoConnectButton_clicked();
     void on_bleScanButton_clicked();
     void on_bleDisconnectButton_clicked();
     void on_bleConnectButton_clicked();
     void on_bleSetNameButton_clicked();
-    void on_canFwdBox_currentIndexChanged(const QString &arg1);
+    void on_canFwdBox_activated(int);
     void on_canRefreshButton_clicked();
     void on_canDefaultButton_clicked();
     void on_pairConnectedButton_clicked();
@@ -78,6 +78,9 @@ private slots:
     void on_udpServerEnableBox_toggled(bool isEnabled);
     void on_tcpDetectConnectButton_clicked();
     void on_tcpDetectDisconnectButton_clicked();
+    void on_tcpHubConnectButton_clicked();
+    void on_tcpHubDisconnectButton_clicked();
+    void on_hubDefaultButton_clicked();
 
 private:
     Ui::PageConnection *ui;

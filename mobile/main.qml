@@ -114,7 +114,7 @@ ApplicationWindow {
         sourceComponent: Drawer {
             id: canDrawer
             edge: Qt.RightEdge
-            width: Math.min(0.6 *appWindow.width, 0.8 *appWindow.height)
+            width: Math.min(0.6 * appWindow.width, 0.8 * appWindow.height)
             height: appWindow.height > appWindow.width ?  appWindow.height - footer.height - headerBar.height : appWindow.height
             y: appWindow.height > appWindow.width ?  headerBar.height : 0
             dragMargin: 20
@@ -125,7 +125,14 @@ ApplicationWindow {
             }
 
             CanScreen {
+                id: canScreen
                 anchors.fill: parent
+            }
+
+            onVisibleChanged: {
+                if (visible) {
+                    canScreen.scanIfEmpty()
+                }
             }
         }
     }
@@ -222,12 +229,12 @@ ApplicationWindow {
                 flat: true
 
                 onClicked: {
-                    if(Qt.platform.os == "ios"){
+                    if (Qt.platform.os == "ios"){
                         VescIf.emitMessageDialog(
                                     mInfoConf.getLongName("ios_license_text"),
                                     mInfoConf.getDescription("ios_license_text"),
                                     true, true)
-                    }else{
+                    } else {
                         VescIf.emitMessageDialog(
                                     mInfoConf.getLongName("gpl_text"),
                                     mInfoConf.getDescription("gpl_text"),
@@ -240,6 +247,7 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 text: "Privacy Policy"
                 flat: true
+
                 onClicked: {
                     Qt.openUrlExternally("https://vesc-project.com/privacy_policies")
                 }
@@ -300,6 +308,8 @@ ApplicationWindow {
         }
 
         Page {
+            id: rtDataPage
+
             PageIndicator {
                 count: rtSwipeView.count
                 currentIndex: rtSwipeView.currentIndex
@@ -431,53 +441,13 @@ ApplicationWindow {
         }
 
         Page {
+            id: bmsPage
             Loader {
                 anchors.fill: parent
                 asynchronous: true
                 visible: status == Loader.Ready
                 sourceComponent: BMS {
                     anchors.fill: parent
-                }
-            }
-        }
-
-        Page {
-            Loader {
-                anchors.fill: parent
-                asynchronous: true
-                visible: status == Loader.Ready
-                sourceComponent: FwUpdate {
-                    anchors.fill: parent
-                }
-            }
-        }
-
-        Page {
-            Loader {
-                id: confPageMotor
-                anchors.fill: parent
-                asynchronous: true
-                visible: status == Loader.Ready
-                sourceComponent: ConfigPageMotor {
-                    //id: confPageMotor
-                    anchors.fill: parent
-                    anchors.leftMargin: 10
-                    anchors.rightMargin: 10
-                }
-            }
-        }
-
-        Page {
-            Loader {
-                id: confPageApp
-                anchors.fill: parent
-                asynchronous: true
-                visible: status == Loader.Ready
-                sourceComponent: ConfigPageApp {
-                    //id: confPageApp
-                    anchors.fill: parent
-                    anchors.leftMargin: 10
-                    anchors.rightMargin: 10
                 }
             }
         }
@@ -524,17 +494,18 @@ ApplicationWindow {
                                                    tabBar.width /
                                                    (rep.model.length +
                                                     (uiHwPage.visible ? 1 : 0) +
-                                                    (uiAppPage.visible ? 1 : 0)))
+                                                    (uiAppPage.visible ? 1 : 0) +
+                                                    (confCustomButton.visible ? 1 : 0) +
+                                                    (confPageMotor.visible ? 1 : 0) +
+                                                    (confPageApp.visible ? 1 : 0)))
 
                 Repeater {
                     id: rep
-                    model: ["Start", "RT Data", "Profiles", "BMS", "Firmware", "Motor Cfg",
-                        "App Cfg", "Terminal"]
+                    model: ["Start", "RT Data", "Profiles", "BMS", "Terminal"]
 
                     TabButton {
                         text: modelData
                         width: tabBar.buttonWidth
-
                     }
                 }
             }
@@ -556,6 +527,7 @@ ApplicationWindow {
             id: uiHw
             anchors.fill: parent
             property var tabBarItem: tabBar
+            property var swipeViewItem: swipeView
         }
     }
 
@@ -574,19 +546,75 @@ ApplicationWindow {
             id: uiApp
             anchors.fill: parent
             property var tabBarItem: tabBar
+            property var swipeViewItem: swipeView
+        }
+    }
+
+    TabButton {
+        id: confMotorButton
+        visible: confPageMotor.visible
+        text: "Motor Cfg"
+        width: tabBar.buttonWidth
+    }
+
+    TabButton {
+        id: confAppButton
+        visible: confPageApp.visible
+        text: "App Cfg"
+        width: tabBar.buttonWidth
+    }
+
+    TabButton {
+        id: confCustomButton
+        visible: confCustomPage.visible
+        text: "Custom Cfg"
+        width: tabBar.buttonWidth
+    }
+
+    Page {
+        id: confPageMotor
+        visible: false
+
+        Loader {
+            id: confMotorLoader
+            anchors.fill: parent
+            asynchronous: true
+            sourceComponent: ConfigPageMotor {
+                anchors.fill: parent
+                anchors.leftMargin: 10
+                anchors.rightMargin: 10
+            }
         }
     }
 
     Page {
-        id: rtDataBalance
+        id: confPageApp
         visible: false
+
         Loader {
+            id: confAppLoader
             anchors.fill: parent
             asynchronous: true
-            active: parent.visible
-            visible: status == Loader.Ready
-            sourceComponent: RtDataBalance {
+            sourceComponent: ConfigPageApp {
                 anchors.fill: parent
+                anchors.leftMargin: 10
+                anchors.rightMargin: 10
+            }
+        }
+    }
+
+    Page {
+        id: confCustomPage
+        visible: false
+
+        Loader {
+            id: confCustomLoader
+            anchors.fill: parent
+            asynchronous: true
+            sourceComponent: ConfigPageCustom {
+                anchors.fill: parent
+                anchors.leftMargin: 10
+                anchors.rightMargin: 10
             }
         }
     }
@@ -715,6 +743,11 @@ ApplicationWindow {
             height: parent.height
             width: parent.width
             opened: true
+
+            Component.onCompleted: {
+                startBleScan()
+            }
+
             onYChanged: {
                 parent.color.a = Math.min(1, Math.max(1 - y / height, 0))
 
@@ -783,14 +816,6 @@ ApplicationWindow {
         repeat: true
 
         onTriggered: {
-            if(mAppConf.getParamEnum("app_to_use") === 9 && rtSwipeView.count == 4) {
-                rtSwipeView.addItem(rtDataBalance)
-                rtDataBalance.visible = true
-            } else if(mAppConf.getParamEnum("app_to_use") !== 9 && rtSwipeView.count == 5) {
-                rtSwipeView.removeItem(4)
-                rtDataBalance.visible = false
-            }
-
             if (VescIf.isPortConnected()) {
                 // Sample RT data when the corresponding page is selected, or when
                 // RT logging is active.
@@ -801,39 +826,33 @@ ApplicationWindow {
                     mCommands.getValuesSetup()
                     mCommands.getImuData(0xFFFF)
 
-                    if (tabBar.currentIndex == (3 + indexOffset())) {
+                    if (swipeView.currentItem == bmsPage) {
                         mCommands.bmsGetValues()
                     }
                 } else {
-                    if ((tabBar.currentIndex == (1 + indexOffset()) && rtSwipeView.currentIndex == 0)) {
+                    if (swipeView.currentItem == rtDataPage && rtSwipeView.currentIndex == 0) {
                         interval = 50
                         mCommands.getValues()
                     }
 
-                    if (tabBar.currentIndex == (1 + indexOffset()) && rtSwipeView.currentIndex == 1) {
+                    if (swipeView.currentItem == rtDataPage && rtSwipeView.currentIndex == 1) {
                         interval = 50
                         mCommands.getValuesSetup()
                         mCommands.getImuData(0x2)
                     }
 
-                    if (tabBar.currentIndex == (1 + indexOffset()) && rtSwipeView.currentIndex == 2) {
+                    if (swipeView.currentItem == rtDataPage && rtSwipeView.currentIndex == 2) {
                         interval = 20
                         mCommands.getImuData(0x1FF)
                     }
 
-                    if (tabBar.currentIndex == (1 + indexOffset()) && rtSwipeView.currentIndex == 3) {
+                    if (swipeView.currentItem == rtDataPage && rtSwipeView.currentIndex == 3) {
                         interval = 100
                         mCommands.getValuesSetupSelective(0x7E00)
                         mCommands.getStats(0xFFFFFFFF)
                     }
 
-                    if (tabBar.currentIndex == (1 + indexOffset()) && rtSwipeView.currentIndex == 4) {
-                        interval = 50
-                        mCommands.getValuesSetup()
-                        mCommands.getDecodedBalance()
-                    }
-
-                    if (tabBar.currentIndex == (3 + indexOffset())) {
+                    if (swipeView.currentItem == bmsPage) {
                         interval = 100
                         mCommands.bmsGetValues()
                     }
@@ -900,11 +919,17 @@ ApplicationWindow {
     }
 
     property var hwUiObj: 0
+    property var appUiObj: 0
 
-    function updateHwUi () {
+    function updateHwAppUi () {
         if (hwUiObj != 0) {
             hwUiObj.destroy()
             hwUiObj = 0
+        }
+
+        if (appUiObj != 0) {
+            appUiObj.destroy()
+            appUiObj = 0
         }
 
         swipeView.interactive = true
@@ -922,26 +947,21 @@ ApplicationWindow {
             swipeView.insertItem(1, uiHwPage)
             tabBar.insertItem(1, uiHwButton)
             uiHwPage.visible = true
-            swipeView.setCurrentIndex(0)
-            swipeView.setCurrentIndex(1)
+
+            uiHwButton.text = "HwUi"
+            if (hwUiObj.tabTitle) {
+                uiHwButton.text = hwUiObj.tabTitle
+            }
+
+            if (VescIf.getLastFwRxParams().qmlHwFullscreen) {
+                swipeView.setCurrentIndex(0)
+                swipeView.setCurrentIndex(1)
+            }
         } else {
             uiHwPage.visible = false
             uiHwPage.parent = null
             uiHwButton.parent = null
         }
-    }
-
-    property var appUiObj: 0
-
-    function updateAppUi () {
-        if (appUiObj != 0) {
-            appUiObj.destroy()
-            appUiObj = 0
-        }
-
-        swipeView.interactive = true
-        headerBar.visible = true
-        tabBar.enabled = true
 
         if (VescIf.isPortConnected() && VescIf.qmlAppLoaded()) {
             if (VescIf.getLastFwRxParams().qmlAppFullscreen) {
@@ -954,13 +974,50 @@ ApplicationWindow {
             swipeView.insertItem(1, uiAppPage)
             tabBar.insertItem(1, uiAppButton)
             uiAppPage.visible = true
-            swipeView.setCurrentIndex(0)
-            swipeView.setCurrentIndex(1)
+
+            uiAppButton.text = "AppUi"
+            if (appUiObj.tabTitle) {
+                uiAppButton.text = appUiObj.tabTitle
+            }
+
+            if (VescIf.getLastFwRxParams().qmlAppFullscreen) {
+                swipeView.setCurrentIndex(0)
+                swipeView.setCurrentIndex(1)
+            }
         } else {
             uiAppPage.visible = false
             uiAppPage.parent = null
             uiAppButton.parent = null
         }
+    }
+
+    Timer {
+        id: confCustomTimer
+        running: false
+        triggeredOnStart: true
+        interval: 500
+        repeat: true
+        onTriggered: {
+            if (confCustomLoader.status == Loader.Ready) {
+                stop()
+
+                if (VescIf.isPortConnected() && VescIf.customConfig(0) !== null) {
+                    swipeView.insertItem(4, confCustomPage)
+                    tabBar.insertItem(4, confCustomButton)
+                    confCustomPage.visible = true
+                    confCustomLoader.item.reloadConfig()
+                    confCustomButton.text = VescIf.customConfig(0).getLongName("hw_name")
+                } else {
+                    confCustomPage.visible = false
+                    confCustomPage.parent = null
+                    confCustomButton.parent = null
+                }
+            }
+        }
+    }
+
+    function updateConfCustom () {
+        confCustomTimer.start()
     }
 
     function indexOffset() {
@@ -976,7 +1033,7 @@ ApplicationWindow {
 
     Connections {
         target: VescIf
-        onPortConnectedChanged: {
+        function onPortConnectedChanged() {
             connectedText.text = VescIf.getConnectedPortName()
             if (!VescIf.isPortConnected()) {
                 confTimer.mcConfRx = false
@@ -995,54 +1052,80 @@ ApplicationWindow {
             }
         }
 
-        onUnintentionalBleDisconnect: {
+        function onUnintentionalBleDisconnect() {
             bleDisconnectTimer.trysLeft = 5
             bleDisconnectTimer.start()
         }
 
-        onStatusMessage: {
+        function onStatusMessage(msg, isGood) {
             connectedText.text = msg
             connectedRect.color = isGood ? Utility.getAppHexColor("lightAccent") : Utility.getAppHexColor("red")
             statusTimer.restart()
         }
 
-        onMessageDialog: {
+        function onMessageDialog(title, msg, isGood, richText) {
+            if (!richText && msg.trim().startsWith("#")) {
+                vescDialogLabel.textFormat = Text.MarkdownText
+            } else {
+                vescDialogLabel.textFormat = richText ? Text.RichText : Text.AutoText
+            }
+
             vescDialog.title = title
             vescDialogLabel.text = (richText ? "<style>a:link { color: lightblue; }</style>" : "") + msg
-            vescDialogLabel.textFormat = richText ? Text.RichText : Text.AutoText
             vescDialogScroll.ScrollBar.vertical.position = 0
             vescDialog.open()
         }
 
-        onFwRxChanged: {
+        function onFwRxChanged(rx, limited) {
             if (rx) {
-                if (limited && !VescIf.getFwSupportsConfiguration()) {
-                    confPageMotor.enabled = false
-                    confPageApp.enabled = false
-                    swipeView.setCurrentIndex(4 + indexOffset())
+                if (VescIf.getFwSupportsConfiguration()) {
+                    confPageMotor.visible = true
+                    confPageApp.visible = true
+
+                    swipeView.insertItem(4, confPageApp)
+                    tabBar.insertItem(4, confAppButton)
+                    swipeView.insertItem(4, confPageMotor)
+                    tabBar.insertItem(4, confMotorButton)
                 } else {
-                    confPageMotor.enabled = true
-                    confPageApp.enabled = true
+                    confPageMotor.visible = false
+                    confPageApp.visible = false
+                    confPageMotor.parent = null
+                    confPageApp.parent = null
+                    confMotorButton.parent = null
+                    confAppButton.parent = null
+                }
+
+                if (!limited && VescIf.getFwSupportsConfiguration()) {
                     mCommands.getMcconf()
                     mCommands.getAppConf()
                 }
+
                 fwReadCorrectly = true
                 bleDisconnectTimer.stop()
+            } else {
+                updateConfCustom()
             }
 
-            updateHwUi()
-            updateAppUi()
+            updateHwAppUi()
         }
 
-        onQmlLoadDone: {
-            qmlLoadDialog.open()
+        function onQmlLoadDone() {
+            if (VescIf.askQmlLoad()) {
+                qmlLoadDialog.open()
+            } else {
+                updateHwAppUi()
+            }
+        }
+
+        function onCustomConfigLoadDone() {
+            updateConfCustom()
         }
     }
 
     Connections {
         target: mMcConf
 
-        onUpdated: {
+        function onUpdated() {
             confTimer.mcConfRx = true
         }
     }
@@ -1050,14 +1133,14 @@ ApplicationWindow {
     Connections {
         target: mAppConf
 
-        onUpdated: {
+        function onUpdated() {
             confTimer.appConfRx = true
         }
     }
 
     Connections {
         target: mCommands
-        onValuesImuReceived: {
+        function onValuesImuReceived(values, mask) {
             if (tabBar.currentIndex == (1 + indexOffset()) && rtSwipeView.currentIndex == 2) {
                 vesc3dLoader.item.setRotation(values.roll, values.pitch,
                                               useYawBox.checked ? values.yaw : 0)
@@ -1065,7 +1148,7 @@ ApplicationWindow {
             }
         }
 
-        onDeserializeConfigFailed: {
+        function onDeserializeConfigFailed(isMc, isApp) {
             if (isMc) {
                 confTimer.mcConfRx = true
             }
@@ -1092,22 +1175,34 @@ ApplicationWindow {
 
         parent: ApplicationWindow.overlay
         y: parent.y + parent.height / 2 - height / 2
+        width: parent.width - 20
 
-        Text {
-            color: Utility.getAppHexColor("lightText")
-            verticalAlignment: Text.AlignVCenter
+        ColumnLayout {
             anchors.fill: parent
-            wrapMode: Text.WordWrap
-            text:
-                "The hardware you are connecting to contains code that will alter the " +
-                "user interface of VESC Tool. This code has not been verified by the " +
-                "authors of VESC Tool and could contain bugs and security problems. \n\n" +
-                "Do you want to load this custom user interface?"
+
+            Text {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                color: Utility.getAppHexColor("lightText")
+                verticalAlignment: Text.AlignVCenter
+                wrapMode: Text.WordWrap
+                text:
+                    "The hardware you are connecting to contains code that will alter the " +
+                    "user interface of VESC Tool. This code has not been verified by the " +
+                    "authors of VESC Tool and could contain bugs and security problems. \n\n" +
+                    "Do you want to load this custom user interface?"
+            }
+
+            CheckBox {
+                Layout.fillWidth: true
+                id: qmlDoNotAskAgainBox
+                text: "Load without asking"
+            }
         }
 
         onAccepted: {
-            updateHwUi()
-            updateAppUi()
+            VescIf.setAskQmlLoad(!qmlDoNotAskAgainBox.checked)
+            updateHwAppUi()
         }
 
         onRejected: {

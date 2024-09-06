@@ -27,6 +27,7 @@
 #include "mobile/qmlui.h"
 #include "widgets/scripteditor.h"
 #include "utility.h"
+#include "codeloader.h"
 
 namespace Ui {
 class PageScripting;
@@ -43,6 +44,7 @@ public:
     VescInterface *vesc() const;
     void setVesc(VescInterface *vesc);
     void reloadParams();
+    bool hasUnsavedTabs();
 
 signals:
     void reloadQml(QString str);
@@ -53,6 +55,7 @@ public slots:
 private slots:
     void on_runButton_clicked();
     void on_stopButton_clicked();
+    void on_reloadAndRunButton_clicked();
     void on_runWindowButton_clicked();
     void on_fullscreenButton_clicked();
     void on_openRecentButton_clicked();
@@ -69,6 +72,8 @@ private slots:
     void on_uploadButton_clicked();
     void on_eraseOnlyButton_clicked();
     void on_calcSizeButton_clicked();
+    void on_recentFilterEdit_textChanged(const QString &arg1);
+    void on_exampleFilterEdit_textChanged(const QString &arg1);
 
 private:
     Ui::PageScripting *ui;
@@ -77,6 +82,7 @@ private:
     QStringList mRecentFiles;
     QString mDirNow;
     Utility mUtil;
+    CodeLoader mLoader;
 
     void updateRecentList();
     void makeEditorConnections(ScriptEditor *editor);
@@ -84,9 +90,9 @@ private:
     void removeEditor(ScriptEditor *editor);
     void setEditorDirty(ScriptEditor *editor);
     void setEditorClean(ScriptEditor *editor);
-    QString qmlToRun(bool importDir = true);
+    QString qmlToRun(bool importDir = true, bool prependImports = true);
     bool exportCArray(QString name);
-    bool eraseQml();
+    bool eraseQml(int size, bool reload = true);
     void openExample();
     void openRecentList();
 

@@ -35,21 +35,20 @@ PageSwdProg::PageSwdProg(QWidget *parent) :
     layout()->setContentsMargins(0, 0, 0, 0);
     mVesc = nullptr;
 
-    QString theme = Utility::getThemePath();
-    ui->chooseButton->setIcon(QPixmap(theme + "icons/Open Folder-96.png"));
-    ui->choose2Button->setIcon(QPixmap(theme + "icons/Open Folder-96.png"));
-    ui->choose3Button->setIcon(QPixmap(theme + "icons/Open Folder-96.png"));
-    ui->choose4Button->setIcon(QPixmap(theme + "icons/Open Folder-96.png"));
-    ui->uicrReadButton->setIcon(QPixmap(theme + "icons/Upload-96.png"));
-    ui->uicrWriteButton->setIcon(QPixmap(theme + "icons/Download-96.png"));
-    ui->uicrEraseButton->setIcon(QPixmap(theme + "icons/Delete-96.png"));
-    ui->connectButton->setIcon(QPixmap(theme + "icons/Connected-96.png"));
-    ui->connectNrf5xButton->setIcon(QPixmap(theme + "icons/Connected-96.png"));
-    ui->disconnectButton->setIcon(QPixmap(theme + "icons/Disconnected-96.png"));
-    ui->resetButton->setIcon(QPixmap(theme + "icons/Restart-96.png"));
-    ui->eraseFlashButton->setIcon(QPixmap(theme + "icons/Delete-96.png"));
-    ui->uploadButton->setIcon(QPixmap(theme + "icons/Download-96.png"));
-    ui->cancelButton->setIcon(QPixmap(theme + "icons/Cancel-96.png"));
+    ui->chooseButton->setIcon(Utility::getIcon("icons/Open Folder-96.png"));
+    ui->choose2Button->setIcon(Utility::getIcon("icons/Open Folder-96.png"));
+    ui->choose3Button->setIcon(Utility::getIcon("icons/Open Folder-96.png"));
+    ui->choose4Button->setIcon(Utility::getIcon("icons/Open Folder-96.png"));
+    ui->uicrReadButton->setIcon(Utility::getIcon("icons/Upload-96.png"));
+    ui->uicrWriteButton->setIcon(Utility::getIcon("icons/Download-96.png"));
+    ui->uicrEraseButton->setIcon(Utility::getIcon("icons/Delete-96.png"));
+    ui->connectButton->setIcon(Utility::getIcon("icons/Connected-96.png"));
+    ui->connectNrf5xButton->setIcon(Utility::getIcon("icons/Connected-96.png"));
+    ui->disconnectButton->setIcon(Utility::getIcon("icons/Disconnected-96.png"));
+    ui->resetButton->setIcon(Utility::getIcon("icons/Restart-96.png"));
+    ui->eraseFlashButton->setIcon(Utility::getIcon("icons/Delete-96.png"));
+    ui->uploadButton->setIcon(Utility::getIcon("icons/Download-96.png"));
+    ui->cancelButton->setIcon(Utility::getIcon("icons/Cancel-96.png"));
 
     mTimer = new QTimer(this);
     mTimer->start(500);
@@ -65,7 +64,7 @@ PageSwdProg::PageSwdProg(QWidget *parent) :
     if (set.contains("pageswdprog/lastcustomfile3")) {
         ui->fw3Edit->setText(set.value("pageswdprog/lastcustomfile3").toString());
     }
-    if (set.contains("pageswdprog/lastcustomfil4e")) {
+    if (set.contains("pageswdprog/lastcustomfile4")) {
         ui->fw4Edit->setText(set.value("pageswdprog/lastcustomfile4").toString());
     }
 
@@ -87,10 +86,9 @@ PageSwdProg::PageSwdProg(QWidget *parent) :
         le->setFont(font);
         ui->uicrTable->setCellWidget(ui->uicrTable->rowCount() - 1, 2, le);
 
-        QString theme = Utility::getThemePath();
         QPushButton *readButton = new QPushButton;
         readButton->setText("Read");
-        readButton->setIcon(QIcon(theme +"icons/Upload-96.png"));
+        readButton->setIcon(Utility::getIcon("icons/Upload-96.png"));
         ui->uicrTable->setCellWidget(ui->uicrTable->rowCount() - 1, 3, readButton);
 
         connect(readButton, &QAbstractButton::clicked, [this, offset, le]() {
@@ -119,7 +117,7 @@ PageSwdProg::PageSwdProg(QWidget *parent) :
 
         QPushButton *writeButton = new QPushButton;
         writeButton->setText("Write");
-        writeButton->setIcon(QIcon(theme +"icons/Download-96.png"));
+        writeButton->setIcon(Utility::getIcon("icons/Download-96.png"));
         ui->uicrTable->setCellWidget(ui->uicrTable->rowCount() - 1, 4, writeButton);
 
         connect(writeButton, &QAbstractButton::clicked, [this, offset, le, name]() {
@@ -500,6 +498,15 @@ void PageSwdProg::bmConnRes(int res)
     } else if (res == 10) {
         ui->targetLabel->setText("STM32L47x");
         mFlashOffset = 0x08000000;
+    } else if (res == 11) {
+        ui->targetLabel->setText("STM32G43");
+        mFlashOffset = 0x08000000;
+    } else if (res == 12) {
+        ui->targetLabel->setText("STM32G47");
+        mFlashOffset = 0x08000000;
+    } else if (res == 13) {
+        ui->targetLabel->setText("STM32G49");
+        mFlashOffset = 0x08000000;
     }
 
     switch (res) {
@@ -565,10 +572,21 @@ void PageSwdProg::bmConnRes(int res)
         addSwdFw("Trampa 18s Light BMS",
                  "://res/firmwares_bms/18s_light/vesc_default.bin", 0,
                  "://res/bootloaders_bms/generic.bin", 0x3E000);
+        addSwdFw("Trampa 18s Light LMP BMS",
+                 "://res/firmwares_bms/18s_light_lmp/vesc_default.bin", 0,
+                 "://res/bootloaders_bms/generic.bin", 0x3E000);
+        addSwdFw("Trampa 18s Light MK2 BMS",
+                 "://res/firmwares_bms/18s_light_mk2/vesc_default.bin", 0,
+                 "://res/bootloaders_bms/generic.bin", 0x3E000);
         addSwdFw("Power Switch 120V",
                  "://res/other_fw/vesc_power_switch_120.bin", 0,
                  "://res/bootloaders_bms/generic.bin", 0x3E000);
         break;
+
+    case 11:
+        addSwdFw("STR-DCDC",
+                 "://res/firmwares_custom_module/str-dcdc/vesc_default.bin", 0,
+                 "://res/bootloaders_custom_module/stm32g431/stm32g431.bin", 0x1E000);
 
     default:
         break;

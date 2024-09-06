@@ -28,6 +28,7 @@
         <name>if</name>
         <name>implements</name>
         <name>in</name>
+        <name>of</name>
         <name>instanceof</name>
         <name>int</name>
         <name>interface</name>
@@ -99,6 +100,7 @@
         <name>SwipeView</name>
         <name>Page</name>
         <name>CheckBox</name>
+        <name>SpinBox</name>
         <name>DoubleSpinBox</name>
         <name>Slider</name>
         <name>PageIndicator</name>
@@ -123,5 +125,9 @@
         <name>ComboBox</name>
         <name>ListModel</name>
         <name>RadioButton</name>
+        <name>FwHelper</name>
+        <name>ParamList</name>
+        <name>TcpHub</name>
+        <name>QMiniMp3</name>
     </section>
 </root>

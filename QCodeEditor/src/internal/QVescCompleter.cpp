@@ -69,6 +69,7 @@ QVescCompleter::QVescCompleter(QObject *parent) :
         addItem("getAppConf()");
         addItem("getAppConfDefault()");
         addItem("setAppConf()");
+        addItem("setAppConfNoStore()");
         addItem("getMcconf()");
         addItem("getMcconfDefault()");
         addItem("setMcconf(check)");
@@ -97,11 +98,22 @@ QVescCompleter::QVescCompleter(QObject *parent) :
         addItem("setBleName(name)");
         addItem("setBlePin(pin)");
         addItem("sendCustomAppData(data)");
+        addItem("customConfigGet(confInd, isDefault)");
+        addItem("customConfigSet(confInd, config)");
+        addItem("fileBlockList(path)");
+        addItem("fileBlockRead(path)");
+        addItem("fileBlockWrite(path, data)");
+        addItem("fileBlockMkdir(path)");
+        addItem("fileBlockRemove(path)");
+        addItem("getGnss(mask)");
+        addItem("lispSendReplCmd(str)");
         level--;
     };
 
     auto addConfigCmds = [&]() {
         level++;
+        addItem("addParam(name, param)");
+        addItem("getParamCopy(name)");
         addItem("getParamDouble(paramName)");
         addItem("getParamInt(paramName)");
         addItem("getParamEnum(paramName)");
@@ -134,6 +146,7 @@ QVescCompleter::QVescCompleter(QObject *parent) :
         addItem("canTmpOverrideEnd()");
         addItem("emitMessageDialog(title, text, isGood, isRichText)");
         addItem("emitStatusMessage(msg, isGood)");
+        addItem("customConfig(confInd)");
         level--;
     }
 
@@ -249,6 +262,7 @@ QVescCompleter::QVescCompleter(QObject *parent) :
         addItem("bottomMargin: ");
         addItem("preferredWidth: ");
         addItem("preferredHeight: ");
+        addItem("columnSpan: ");
         level--;
     }
 
@@ -260,6 +274,9 @@ QVescCompleter::QVescCompleter(QObject *parent) :
         addItem("measureHallFocBlocking(VescIf, current)");
         addItem("getMcValuesBlocking(VescIf)");
         addItem("waitMotorStop(VescIf, erpmTres, timeoutMs)");
+        addItem("measureEncoderBlocking(VescIf, current)");
+        addItem("sleepWithEventLoop(timeMs)");
+        addItem("readInternalImuType(VescIf)");
         level--;
     }
 

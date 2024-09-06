@@ -1,10 +1,11 @@
 FORMS += \
-    $$PWD/pageappbalance.ui \
     $$PWD/pageapppas.ui \
     $$PWD/pagebms.ui \
     $$PWD/pagecananalyzer.ui \
     $$PWD/pageconnection.ui \
     $$PWD/pagecustomconfig.ui \
+    $$PWD/pagedisplaytool.ui \
+    $$PWD/pageespprog.ui \
     $$PWD/pagelisp.ui \
     $$PWD/pagemotor.ui \
     $$PWD/pagedebugprint.ui \
@@ -24,6 +25,7 @@ FORMS += \
     $$PWD/pagefirmware.ui \
     $$PWD/pagertdata.ui \
     $$PWD/pagesampleddata.ui \
+    $$PWD/pagevescpackage.ui \
     $$PWD/pagewelcome.ui \
     $$PWD/pagemotorsettings.ui \
     $$PWD/pageappsettings.ui \
@@ -38,12 +40,13 @@ FORMS += \
     $$PWD/pageloganalysis.ui
 
 HEADERS += \
-    $$PWD/pageappbalance.h \
     $$PWD/pageapppas.h \
     $$PWD/pagebms.h \
     $$PWD/pagecananalyzer.h \
     $$PWD/pageconnection.h \
     $$PWD/pagecustomconfig.h \
+    $$PWD/pagedisplaytool.h \
+    $$PWD/pageespprog.h \
     $$PWD/pagelisp.h \
     $$PWD/pagemotor.h \
     $$PWD/pagedebugprint.h \
@@ -63,6 +66,7 @@ HEADERS += \
     $$PWD/pagefirmware.h \
     $$PWD/pagertdata.h \
     $$PWD/pagesampleddata.h \
+    $$PWD/pagevescpackage.h \
     $$PWD/pagewelcome.h \
     $$PWD/pagemotorsettings.h \
     $$PWD/pageappsettings.h \
@@ -77,12 +81,13 @@ HEADERS += \
     $$PWD/pageloganalysis.h
 
 SOURCES += \
-    $$PWD/pageappbalance.cpp \
     $$PWD/pageapppas.cpp \
     $$PWD/pagebms.cpp \
     $$PWD/pagecananalyzer.cpp \
     $$PWD/pageconnection.cpp \
     $$PWD/pagecustomconfig.cpp \
+    $$PWD/pagedisplaytool.cpp \
+    $$PWD/pageespprog.cpp \
     $$PWD/pagelisp.cpp \
     $$PWD/pagemotor.cpp \
     $$PWD/pagedebugprint.cpp \
@@ -102,6 +107,7 @@ SOURCES += \
     $$PWD/pagefirmware.cpp \
     $$PWD/pagertdata.cpp \
     $$PWD/pagesampleddata.cpp \
+    $$PWD/pagevescpackage.cpp \
     $$PWD/pagewelcome.cpp \
     $$PWD/pagemotorsettings.cpp \
     $$PWD/pageappsettings.cpp \

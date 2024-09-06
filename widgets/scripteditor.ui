@@ -106,10 +106,6 @@
         <property name="text">
          <string/>
         </property>
-        <property name="icon">
-         <iconset resource="../res.qrc">
-          <normaloff>:/res/icons/Cancel-96.png</normaloff>:/res/icons/Cancel-96.png</iconset>
-        </property>
         <property name="flat">
          <bool>true</bool>
         </property>
@@ -138,12 +134,11 @@
      </item>
      <item>
       <widget class="QPushButton" name="openFileButton">
-       <property name="text">
-        <string>Open</string>
+       <property name="toolTip">
+        <string>Open file...</string>
        </property>
-       <property name="icon">
-        <iconset resource="../res.qrc">
-         <normaloff>:/res/icons/Open Folder-96.png</normaloff>:/res/icons/Open Folder-96.png</iconset>
+       <property name="text">
+        <string/>
        </property>
        <property name="flat">
         <bool>false</bool>
@@ -152,12 +147,11 @@
      </item>
      <item>
       <widget class="QPushButton" name="saveButton">
-       <property name="text">
-        <string>Save</string>
+       <property name="toolTip">
+        <string>Save file</string>
        </property>
-       <property name="icon">
-        <iconset resource="../res.qrc">
-         <normaloff>:/res/icons/Save-96.png</normaloff>:/res/icons/Save-96.png</iconset>
+       <property name="text">
+        <string/>
        </property>
        <property name="flat">
         <bool>false</bool>
@@ -166,15 +160,24 @@
      </item>
      <item>
       <widget class="QPushButton" name="saveAsButton">
-       <property name="text">
-        <string>Save As</string>
+       <property name="toolTip">
+        <string>Save file as...</string>
        </property>
-       <property name="icon">
-        <iconset resource="../res.qrc">
-         <normaloff>:/res/icons/Save as-96.png</normaloff>:/res/icons/Save as-96.png</iconset>
+       <property name="text">
+        <string/>
        </property>
        <property name="flat">
         <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="refreshButton">
+       <property name="toolTip">
+        <string>Refresh editor with file content. Warning: This will replace unsaved changes in the editor.</string>
+       </property>
+       <property name="text">
+        <string/>
        </property>
       </widget>
      </item>
@@ -189,8 +192,6 @@
    <header>QCodeEditor</header>
   </customwidget>
  </customwidgets>
- <resources>
-  <include location="../res.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

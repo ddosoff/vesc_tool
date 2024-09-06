@@ -22,6 +22,7 @@
 
 #include <QObject>
 #include <QHash>
+#include <QStringList>
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
 #include "configparam.h"
@@ -32,18 +33,18 @@ class ConfigParams : public QObject
     Q_OBJECT
 public:
     explicit ConfigParams(QObject *parent = nullptr);
-    void addParam(const QString &name, ConfigParam param);
-    void deleteParam(const QString &name);
+    Q_INVOKABLE void addParam(const QString &name, ConfigParam param);
+    Q_INVOKABLE void deleteParam(const QString &name);
     Q_INVOKABLE void setUpdateOnly(const QString &name);
     Q_INVOKABLE QString getUpdateOnly();
     Q_INVOKABLE bool getUpdatesEnabled() const;
     Q_INVOKABLE void setUpdatesEnabled(bool updatesEnabled);
-    void clearParams();
-    void clearAll();
+    Q_INVOKABLE void clearParams();
+    Q_INVOKABLE void clearAll();
 
     Q_INVOKABLE bool hasParam(const QString &name);
     ConfigParam *getParam(const QString &name);
-    ConfigParam getParamCopy(const QString &name) const;
+    Q_INVOKABLE ConfigParam getParamCopy(const QString &name) const;
 
     Q_INVOKABLE bool isParamDouble(const QString &name);
     Q_INVOKABLE bool isParamInt(const QString &name);
@@ -67,6 +68,7 @@ public:
     Q_INVOKABLE int getParamMaxInt(const QString &name);
     Q_INVOKABLE int getParamMinInt(const QString &name);
     Q_INVOKABLE int getParamStepInt(const QString &name);
+    Q_INVOKABLE int getParamMaxLen(const QString &name);
     Q_INVOKABLE QStringList getParamEnumNames(const QString &name);
     Q_INVOKABLE double getParamEditorScale(const QString &name);
     Q_INVOKABLE QString getParamSuffix(const QString &name);
@@ -74,7 +76,7 @@ public:
     Q_INVOKABLE bool getParamShowDisplay(const QString &name);
     Q_INVOKABLE bool getParamTransmittable(const QString &name);
 
-    QStringList getParamOrder() const;
+    Q_INVOKABLE QStringList getParamOrder() const;
     void setParamOrder(const QStringList &order);
 
     QWidget *getEditor(const QString &name, QWidget *parent = nullptr);
@@ -86,13 +88,13 @@ public:
     void setSerializeOrder(const QStringList &serializeOrder);
     void clearSerializeOrder();
 
-    void serialize(VByteArray &vb);
-    bool deSerialize(VByteArray &vb);
+    Q_INVOKABLE void serialize(VByteArray &vb);
+    Q_INVOKABLE bool deSerialize(VByteArray &vb);
 
     void getXML(QXmlStreamWriter &stream, QString configName);
     bool setXML(QXmlStreamReader &stream, QString configName);
-    bool saveXml(QString fileName, QString configName);
-    bool loadXml(QString fileName, QString configName);
+    Q_INVOKABLE bool saveXml(QString fileName, QString configName);
+    Q_INVOKABLE bool loadXml(QString fileName, QString configName);
     QString xmlStatus();
     QString saveCompressed(QString configName);
     bool loadCompressed(QString data, QString configName);

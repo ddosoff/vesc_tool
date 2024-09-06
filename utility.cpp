@@ -36,7 +36,9 @@
 #include <QtGlobal>
 #include <QNetworkInterface>
 #include <QDirIterator>
+#include <QPixmapCache>
 
+#include "maddy/parser.h"
 
 #ifdef Q_OS_ANDROID
 #include <QtAndroid>
@@ -206,7 +208,7 @@ void Utility::checkVersion(VescInterface *vesc)
 
 QString Utility::fwChangeLog()
 {
-    QFile cl("://res/firmwares/CHANGELOG");
+    QFile cl("://res/firmwares/CHANGELOG.md");
     if (cl.open(QIODevice::ReadOnly | QIODevice::Text)) {
         return QString::fromUtf8(cl.readAll());
     } else {
@@ -216,7 +218,7 @@ QString Utility::fwChangeLog()
 
 QString Utility::vescToolChangeLog()
 {
-    QFile cl("://res/CHANGELOG");
+    QFile cl("://res/CHANGELOG.md");
     if (cl.open(QIODevice::ReadOnly | QIODevice::Text)) {
         return QString::fromUtf8(cl.readAll());
     } else {
@@ -230,6 +232,7 @@ QString Utility::aboutText()
           #if VT_IS_TEST_VERSION
               "Test Version %2<br>"
           #endif
+              "GIT Commit " STR(VT_GIT_COMMIT) "<br>"
           #if defined(VER_ORIGINAL)
               "Original Version<br>"
           #elif defined(VER_PLATINUM)
@@ -243,10 +246,10 @@ QString Utility::aboutText()
           #elif defined(VER_FREE)
               "Free of Charge Version<br>"
           #endif
-              "&copy; Benjamin Vedder 2016 - 2021<br>"
+              "&copy; Benjamin Vedder 2016 - 2024<br>"
               "<a href=\"mailto:benjamin@vedder.se\">benjamin@vedder.se</a><br>"
-              "<a href=\"https://vesc-project.com/\">https://vesc-project.com/</a>").
-            arg(QString::number(VT_VERSION, 'f', 2))
+              "<a href=\"https://vesc-project.com/\">https://vesc-project.com/</a>")
+            .arg(QString::number(VT_VERSION, 'f', 2))
         #if VT_IS_TEST_VERSION
             .arg(QString::number(VT_IS_TEST_VERSION))
         #endif
@@ -267,13 +270,40 @@ QString Utility::uuid2Str(QByteArray uuid, bool space)
 
 bool Utility::requestFilePermission()
 {
+    // Not working since android 13, can only write files
+    return true;
+}
+
+bool Utility::requestBleScanPermission()
+{
 #ifdef Q_OS_ANDROID
 #if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
-    // https://codereview.qt-project.org/#/c/199162/
-    QtAndroid::PermissionResult r = QtAndroid::checkPermission("android.permission.WRITE_EXTERNAL_STORAGE");
+    QtAndroid::PermissionResult r = QtAndroid::checkPermission("android.permission.BLUETOOTH_SCAN");
     if(r == QtAndroid::PermissionResult::Denied) {
-        QtAndroid::requestPermissionsSync( QStringList() << "android.permission.WRITE_EXTERNAL_STORAGE", 5000);
-        r = QtAndroid::checkPermission("android.permission.WRITE_EXTERNAL_STORAGE");
+        QtAndroid::requestPermissionsSync( QStringList() << "android.permission.BLUETOOTH_SCAN", 10000);
+        r = QtAndroid::checkPermission("android.permission.BLUETOOTH_SCAN");
+        if(r == QtAndroid::PermissionResult::Denied) {
+            return false;
+        }
+    }
+
+    return true;
+#else
+    return true;
+#endif
+#else
+    return true;
+#endif
+}
+
+bool Utility::requestBleConnectPermission()
+{
+#ifdef Q_OS_ANDROID
+#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
+    QtAndroid::PermissionResult r = QtAndroid::checkPermission("android.permission.BLUETOOTH_CONNECT");
+    if(r == QtAndroid::PermissionResult::Denied) {
+        QtAndroid::requestPermissionsSync( QStringList() << "android.permission.BLUETOOTH_CONNECT", 10000);
+        r = QtAndroid::checkPermission("android.permission.BLUETOOTH_CONNECT");
         if(r == QtAndroid::PermissionResult::Denied) {
             return false;
         }
@@ -386,6 +416,9 @@ QString Utility::detectAllFoc(VescInterface *vesc,
     QString res;
     bool detectOk = true;
 
+    vesc->commands()->disableAppOutput(180000, true);
+    Utility::sleepWithEventLoop(100);
+
     vesc->commands()->detectAllFoc(detect_can, max_power_loss, min_current_in,
                                    max_current_in, openloop_rpm, sl_erpm);
 
@@ -395,8 +428,6 @@ QString Utility::detectAllFoc(VescInterface *vesc,
     timeoutTimer.setSingleShot(true);
     timeoutTimer.start(180000);
     pollTimer.start(100);
-
-    vesc->commands()->disableAppOutput(180000, true);
 
     int resDetect = 0;
     auto conn = connect(vesc->commands(), &Commands::detectAllFocReceived,
@@ -456,10 +487,14 @@ QString Utility::detectAllFoc(VescInterface *vesc,
 
             QVector<int> canDevs;
             if (detect_can) {
-                canDevs = Utility::scanCanVescOnly(vesc);
-            }
+                if (!vesc->commands()->getSendCan()) {
+                    res = genRes();
+                }
 
-            res = genRes();
+                canDevs = Utility::scanCanVescOnly(vesc);
+            } else {
+                res = genRes();
+            }
 
             int canLastFwd = vesc->commands()->getSendCan();
             int canLastId = vesc->commands()->getCanSendId();
@@ -471,7 +506,6 @@ QString Utility::detectAllFoc(VescInterface *vesc,
 
             for (int id: canDevs) {
                 vesc->commands()->setSendCan(true, id);
-
                 if (!checkFwCompatibility(vesc)) {
                     vesc->emitMessageDialog("FW Versions",
                                             "All VESCs must have the latest firmware to perform this operation.",
@@ -495,10 +529,40 @@ QString Utility::detectAllFoc(VescInterface *vesc,
         } else {
             QString reason;
             switch (resDetect) {
-            case -1: reason = "Sensor detection failed"; break;
+            case -1: reason = "Peristent fault, check realtime data page"; break;
             case -10: reason = "Flux linkage detection failed"; break;
             case -50: reason = "CAN detection timeout"; break;
             case -51: reason = "CAN detection failed"; break;
+            case -100 + FAULT_CODE_NONE: reason = "No fault, detection failed for an unknown reason"; break;
+            case -100 + FAULT_CODE_OVER_VOLTAGE: reason = "Over voltage fault, check voltage is below set limit"; break;
+            case -100 + FAULT_CODE_UNDER_VOLTAGE: reason = "Under voltage fault, check voltage is above set limit. If using a power supply make sure the current limit is high enough."; break;
+            case -100 + FAULT_CODE_DRV: reason = "DRV fault, hardware fault occured. Check there are no shorts"; break;
+            case -100 + FAULT_CODE_ABS_OVER_CURRENT: reason = "Overcurrent fault, Check there are no shorts and ABS Overcurrent limit is sensible"; break;
+            case -100 + FAULT_CODE_OVER_TEMP_FET: reason = "Mosfet Overtemperature fault, Mosfets overheated, check for shorts. Cool down device"; break;
+            case -100 + FAULT_CODE_OVER_TEMP_MOTOR: reason = "Motor Overtemperature fault, Motor overheated, is the current limit OK?"; break;
+            case -100 + FAULT_CODE_GATE_DRIVER_OVER_VOLTAGE: reason = "Gate Driver over voltage, check for hardware failure"; break;
+            case -100 + FAULT_CODE_GATE_DRIVER_UNDER_VOLTAGE: reason = "Gate Driver under voltage, check for hardware failure"; break;
+            case -100 + FAULT_CODE_MCU_UNDER_VOLTAGE: reason = "MCU under voltage, check for hardware failure, shorts on outputs"; break;
+            case -100 + FAULT_CODE_BOOTING_FROM_WATCHDOG_RESET: reason = "Boot from watchdog reset, software locked up check for firmware corruption"; break;
+            case -100 + FAULT_CODE_ENCODER_SPI: reason = "Encoder SPI fault, check encoder connections"; break;
+            case -100 + FAULT_CODE_ENCODER_SINCOS_BELOW_MIN_AMPLITUDE: reason = "Encoder SINCOS below min amplitude, check encoder connections and magnet alignment / distance"; break;
+            case -100 + FAULT_CODE_ENCODER_SINCOS_ABOVE_MAX_AMPLITUDE: reason = "Encoder SINCOS above max amplitude, check encoder connections and magnet alignment / distance"; break;
+            case -100 + FAULT_CODE_FLASH_CORRUPTION: reason = "Flash corruption, reflash firmware immediately!"; break;
+            case -100 + FAULT_CODE_HIGH_OFFSET_CURRENT_SENSOR_1: reason = "High offset on current sensor 1, check for hardware failure"; break;
+            case -100 + FAULT_CODE_HIGH_OFFSET_CURRENT_SENSOR_2: reason = "High offset on current sensor 2, check for hardware failure"; break;
+            case -100 + FAULT_CODE_HIGH_OFFSET_CURRENT_SENSOR_3: reason = "High offset on current sensor 3, check for hardware failure"; break;
+            case -100 + FAULT_CODE_UNBALANCED_CURRENTS: reason = "Unbalanced currents, check for hardware failure"; break;
+            case -100 + FAULT_CODE_BRK: reason = "BRK, hardware protection triggered, check for shorts or possible hardware failure"; break;
+            case -100 + FAULT_CODE_RESOLVER_LOT: reason = "Encoder/Resolver: Loss of tracking"; break;
+            case -100 + FAULT_CODE_RESOLVER_DOS: reason = "Encoder/Resolver: Degradation of signal"; break;
+            case -100 + FAULT_CODE_RESOLVER_LOS: reason = "Encoder/Resolver: Loss of signal"; break;
+            case -100 + FAULT_CODE_FLASH_CORRUPTION_APP_CFG: reason = "Flash corruption, App config corrupt, rewrite app config to restore"; break;
+            case -100 + FAULT_CODE_FLASH_CORRUPTION_MC_CFG: reason = "Flash corruption, Motor config corrupt, rewrite motor config to restore"; break;
+            case -100 + FAULT_CODE_ENCODER_NO_MAGNET: reason = "Encoder no magnet, magnet is too weak or too far from the encoder"; break;
+            case -100 + FAULT_CODE_ENCODER_MAGNET_TOO_STRONG: reason = "Magnet too strong, magnet is too strong or too close to the encoder"; break;
+            case -100 + FAULT_CODE_PHASE_FILTER: reason = "Phase filter fault, invalid phase filter readings"; break;
+            case -100 + FAULT_CODE_ENCODER_FAULT: reason = "Encoder fault, check encoder connections and alignment"; break;
+
             default: reason = QString::number(resDetect); break;
             }
 
@@ -561,7 +625,6 @@ double Utility::measureLinkageOpenloopBlocking(VescInterface *vesc, double curre
 QVector<int> Utility::measureHallFocBlocking(VescInterface *vesc, double current)
 {
     QVector<int> resDetect;
-
     vesc->commands()->measureHallFoc(current);
 
     auto conn = connect(vesc->commands(), &Commands::focHallTableReceived,
@@ -576,6 +639,22 @@ QVector<int> Utility::measureHallFocBlocking(VescInterface *vesc, double current
     if (!rx) {
         resDetect.append(-10);
     }
+
+    return resDetect;
+}
+
+ENCODER_DETECT_RES Utility::measureEncoderBlocking(VescInterface *vesc, double current)
+{
+    ENCODER_DETECT_RES resDetect;
+    vesc->commands()->measureEncoder(current);
+
+    auto conn = connect(vesc->commands(), &Commands::encoderParamReceived,
+                        [&resDetect](ENCODER_DETECT_RES res) {
+            resDetect = res;
+    });
+
+    waitSignal(vesc->commands(), SIGNAL(encoderParamReceived(ENCODER_DETECT_RES)), 50000);
+    disconnect(conn);
 
     return resDetect;
 }
@@ -604,86 +683,18 @@ bool Utility::resetInputCan(VescInterface *vesc, QVector<int> canIds)
 
     vesc->ignoreCanChange(true);
 
-    // Local VESC first
-    ConfigParams *ap = vesc->appConfig();
-    vesc->commands()->setSendCan(false);
+    auto update = [vesc]() {
+        bool res = true;
+        ConfigParams *ap = vesc->appConfig();
 
-    if (!checkFwCompatibility(vesc)) {
-        vesc->emitMessageDialog("FW Versions",
-                                "All VESCs must have the latest firmware to perform this operation.",
-                                false, false);
-        res = false;
-        qWarning() << "Incompatible firmware";
-    }
-
-    if (res) {
-        vesc->commands()->getAppConf();
-        res = waitSignal(ap, SIGNAL(updated()), 4000);
-
-        if (!res) {
-            qWarning() << "Appconf not received";
-        }
-    }
-
-    if (res) {
-        int canId = ap->getParamInt("controller_id");
-
-        int canStatus;
-        int canStatus2;
-        bool has_bitfield_params = ap->hasParam("can_status_msgs_r1");
-        if (has_bitfield_params) {
-            canStatus = ap->getParamInt("can_status_msgs_r1");
-            canStatus2 = ap->getParamInt("can_status_msgs_r2");
-        } else {
-            canStatus = ap->getParamEnum("send_can_status");
-        }
-
-        vesc->commands()->getAppConfDefault();
-        res = waitSignal(ap, SIGNAL(updated()), 4000);
-
-        if (!res) {
-            qWarning() << "Default appconf not received";
-        }
-
-        if (res) {
-            ap->updateParamInt("controller_id", canId);
-            if (has_bitfield_params) {
-                ap->updateParamInt("can_status_msgs_r1", canStatus);
-                ap->updateParamInt("can_status_msgs_r2", canStatus2);
-            } else {
-                ap->updateParamEnum("send_can_status", canStatus);
-            }
-
-            vesc->commands()->setAppConf();
-            res = waitSignal(vesc->commands(), SIGNAL(ackReceived(QString)), 4000);
-
-            if (!res) {
-                qWarning() << "Appconf set no ack received";
-            }
-        }
-    }
-
-    // All VESCs on CAN-bus
-    if (res) {
-        for (int id: canIds) {
-            vesc->commands()->setSendCan(true, id);
-
-            FW_RX_PARAMS params;
-            getFwVersionBlocking(vesc, &params);
-            if (params.hwType != HW_TYPE_VESC) {
-                continue;
-            }
-
+        if (isConnectedToHwVesc(vesc)) {
             if (!checkFwCompatibility(vesc)) {
                 vesc->emitMessageDialog("FW Versions",
                                         "All VESCs must have the latest firmware to perform this operation.",
                                         false, false);
                 res = false;
-            }
-
-            if (!res) {
                 qWarning() << "Incompatible firmware";
-                break;
+                return false;
             }
 
             vesc->commands()->getAppConf();
@@ -691,7 +702,7 @@ bool Utility::resetInputCan(VescInterface *vesc, QVector<int> canIds)
 
             if (!res) {
                 qWarning() << "Appconf not received";
-                break;
+                return false;
             }
 
             int canId = ap->getParamInt("controller_id");
@@ -711,11 +722,10 @@ bool Utility::resetInputCan(VescInterface *vesc, QVector<int> canIds)
 
             if (!res) {
                 qWarning() << "Default appconf not received";
-                break;
+                return false;
             }
 
             ap->updateParamInt("controller_id", canId);
-
             if (has_bitfield_params) {
                 ap->updateParamInt("can_status_msgs_r1", canStatus);
                 ap->updateParamInt("can_status_msgs_r2", canStatus2);
@@ -728,16 +738,38 @@ bool Utility::resetInputCan(VescInterface *vesc, QVector<int> canIds)
 
             if (!res) {
                 qWarning() << "Appconf set no ack received";
+                return false;
+            }
+        }
+
+        return res;
+    };
+
+    // Local VESC first
+    vesc->commands()->setSendCan(false);
+    res = update();
+
+    // All VESCs on CAN-bus
+    if (res) {
+        for (int id: canIds) {
+            vesc->commands()->setSendCan(true, id);
+
+            res = update();
+            if (!res) {
                 break;
             }
         }
     }
 
     vesc->commands()->setSendCan(canLastFwd, canLastId);
-    vesc->commands()->getAppConf();
-    if (!waitSignal(ap, SIGNAL(updated()), 4000)) {
-        qWarning() << "Appconf not received";
-        res = false;
+
+    if (isConnectedToHwVesc(vesc)) {
+        vesc->commands()->getAppConf();
+        ConfigParams *ap = vesc->appConfig();
+        if (!waitSignal(ap, SIGNAL(updated()), 4000)) {
+            qWarning() << "Appconf not received";
+            res = false;
+        }
     }
 
     vesc->ignoreCanChange(false);
@@ -752,7 +784,7 @@ bool Utility::setBatteryCutCan(VescInterface *vesc, QVector<int> canIds, double 
     return setMcParamsFromCurrentConfigAllCan(vesc, canIds, {"l_battery_cut_start", "l_battery_cut_end"});
 }
 
-bool Utility::setBatteryCutCanFromCurrentConfig(VescInterface *vesc, QVector<int> canIds)
+bool Utility::setBatteryCutCanFromCurrentConfig(VescInterface *vesc, QVector<int> canIds, bool cautious)
 {
     ConfigParams *p = vesc->mcConfig();
 
@@ -761,14 +793,26 @@ bool Utility::setBatteryCutCanFromCurrentConfig(VescInterface *vesc, QVector<int
     double start = -1.0;
     double end = -1.0;
 
-    if (battType == 0) {
-        start = 3.4;
-        end = 3.0;
-    } else if (battType == 1) {
-        start = 2.9;
-        end = 2.6;
+    if (cautious) {
+        if (battType == 0) {
+            start = 3.4;
+            end = 3.0;
+        } else if (battType == 1) {
+            start = 2.9;
+            end = 2.6;
+        } else {
+            return false;
+        }
     } else {
-        return false;
+        if (battType == 0) {
+            start = 2.7;
+            end = 2.5;
+        } else if (battType == 1) {
+            start = 2.5;
+            end = 2.2;
+        } else {
+            return false;
+        }
     }
 
     start *= (double)cells;
@@ -845,9 +889,7 @@ bool Utility::setMcParamsFromCurrentConfigAllCan(VescInterface *vesc, QVector<in
     // Start with local VESC
     vesc->canTmpOverride(false, 0);
 
-    FW_RX_PARAMS fwParams;
-    getFwVersionBlocking(vesc, &fwParams);
-    if (fwParams.hwType == HW_TYPE_VESC) {
+    if (isConnectedToHwVesc(vesc)) {
         res = updateConf();
     }
 
@@ -856,8 +898,7 @@ bool Utility::setMcParamsFromCurrentConfigAllCan(VescInterface *vesc, QVector<in
         for (int id: canIds) {
             vesc->canTmpOverride(true, id);
 
-            getFwVersionBlocking(vesc, &fwParams);
-            if (fwParams.hwType == HW_TYPE_VESC) {
+            if (isConnectedToHwVesc(vesc)) {
                 res = updateConf();
                 if (!res) {
                     break;
@@ -960,6 +1001,7 @@ bool Utility::getInvertDirection(VescInterface *vesc, int canId)
 QString Utility::testDirection(VescInterface *vesc, int canId, double duty, int ms)
 {
     vesc->commands()->disableAppOutput(ms, true);
+    Utility::sleepWithEventLoop(100);
 
     vesc->canTmpOverride(canId >= 0, canId);
 
@@ -1029,94 +1071,72 @@ bool Utility::restoreConfAll(VescInterface *vesc, bool can, bool mc, bool app)
     bool canLastFwd = vesc->commands()->getSendCan();
     int canLastId = vesc->commands()->getCanSendId();
 
-    if (can) {
-        vesc->ignoreCanChange(true);
-        vesc->commands()->setSendCan(false);
+    vesc->ignoreCanChange(true);
+    vesc->commands()->setSendCan(false);
+
+    auto update = [mc, app, vesc]() {
+        bool res = true;
+        if (!isConnectedToHwVesc(vesc)) {
+            return true;
+        }
+
         if (!checkFwCompatibility(vesc)) {
             vesc->emitMessageDialog("FW Versions",
                                     "All VESCs must have the latest firmware to perform this operation.",
                                     false, false);
-            vesc->commands()->setSendCan(canLastFwd, canLastId);
-            vesc->ignoreCanChange(false);
             return false;
         }
-    }
 
-    if (mc) {
-        ConfigParams *p = vesc->mcConfig();
-        vesc->commands()->getMcconfDefault();
-        res = waitSignal(p, SIGNAL(updated()), 4000);
+        if (mc) {
+            ConfigParams *p = vesc->mcConfig();
+            vesc->commands()->getMcconfDefault();
+            res = waitSignal(p, SIGNAL(updated()), 4000);
 
-        if (res) {
-            vesc->commands()->setMcconf(false);
-            res = waitSignal(vesc->commands(), SIGNAL(ackReceived(QString)), 4000);
+            if (res) {
+                vesc->commands()->setMcconf(false);
+                res = waitSignal(vesc->commands(), SIGNAL(ackReceived(QString)), 4000);
+            } else {
+                return false;
+            }
         }
-    }
 
-    if (app) {
-        ConfigParams *p = vesc->appConfig();
-        vesc->commands()->getAppConfDefault();
-        res = waitSignal(p, SIGNAL(updated()), 4000);
+        if (app) {
+            ConfigParams *p = vesc->appConfig();
+            vesc->commands()->getAppConfDefault();
+            res = waitSignal(p, SIGNAL(updated()), 4000);
 
-        if (res) {
-            vesc->commands()->setAppConf();
-            res = waitSignal(vesc->commands(), SIGNAL(ackReceived(QString)), 4000);
+            if (res) {
+                vesc->commands()->setAppConf();
+                res = waitSignal(vesc->commands(), SIGNAL(ackReceived(QString)), 4000);
+            } else {
+                return false;
+            }
         }
-    }
+
+        return res;
+    };
+
+    res = update();
 
     if (res && can) {
         QVector<int> canDevs = Utility::scanCanVescOnly(vesc);
 
         for (int d: canDevs) {
             vesc->commands()->setSendCan(true, d);
-
-            if (!checkFwCompatibility(vesc)) {
-                vesc->emitMessageDialog("FW Versions",
-                                        "All VESCs must have the latest firmware to perform this operation.",
-                                        false, false);
-                vesc->commands()->setSendCan(canLastFwd, canLastId);
-                vesc->ignoreCanChange(false);
-                return false;
-            }
-
-            if (mc) {
-                ConfigParams *p = vesc->mcConfig();
-                vesc->commands()->getMcconfDefault();
-                res = waitSignal(p, SIGNAL(updated()), 4000);
-
-                if (!res) {
-                    break;
-                }
-
-                vesc->commands()->setMcconf(false);
-                res = waitSignal(vesc->commands(), SIGNAL(ackReceived(QString)), 4000);
-
-                if (!res) {
-                    break;
-                }
-            }
-
-            if (app) {
-                ConfigParams *p = vesc->appConfig();
-                vesc->commands()->getAppConfDefault();
-                res = waitSignal(p, SIGNAL(updated()), 4000);
-
-                if (!res) {
-                    break;
-                }
-
-                vesc->commands()->setAppConf();
-                res = waitSignal(vesc->commands(), SIGNAL(ackReceived(QString)), 4000);
-
-                if (!res) {
-                    break;
-                }
+            res = update();
+            if (!res) {
+                break;
             }
         }
     }
 
+    vesc->commands()->setSendCan(canLastFwd, canLastId);
+    vesc->ignoreCanChange(false);
+
     if (can) {
-        vesc->commands()->setSendCan(canLastFwd, canLastId);
+        if (!isConnectedToHwVesc(vesc)) {
+            return res;
+        }
 
         if (mc) {
             ConfigParams *p = vesc->mcConfig();
@@ -1135,8 +1155,6 @@ bool Utility::restoreConfAll(VescInterface *vesc, bool can, bool mc, bool app)
                 qWarning() << "Could not restore app conf";
             }
         }
-
-        vesc->ignoreCanChange(false);
     }
 
     return res;
@@ -1202,6 +1220,7 @@ bool Utility::createParamParserC(VescInterface *vesc, QString filename)
     outHeader << "#endif\n";
 
     outSource << "// This file is autogenerated by VESC Tool\n\n";
+    outSource << "#include <string.h>\n";
     outSource << "#include \"buffer.h\"\n";
     outSource << "#include \"conf_general.h\"\n";
     outSource << "#include \"" << headerInfo.fileName() << "\"\n\n";
@@ -1307,6 +1326,7 @@ bool Utility::createParamParserC(ConfigParams *params, QString configName, QStri
     outHeader << "#endif\n";
 
     outSource << "// This file is autogenerated by VESC Tool\n\n";
+    outSource << "#include <string.h>\n";
     outSource << "#include \"buffer.h\"\n";
     outSource << "#include \"conf_general.h\"\n";
     outSource << "#include \"" << headerInfo.fileName() << "\"\n\n";
@@ -1391,7 +1411,7 @@ bool Utility::createCompressedConfigC(ConfigParams *params, QString configName, 
 
     outSource << "// This file is autogenerated by VESC Tool\n\n";
     outSource << "#include \"" << headerInfo.fileName() << "\"\n\n";
-    outSource << "uint8_t data_" << configNameStr << "[" << compressed.size() << "] = {\n\t";
+    outSource << "__attribute__((used)) uint8_t data_" << configNameStr << "[" << compressed.size() << "] = {\n\t";
 
     int posCnt = 0;
     for (auto b: compressed) {
@@ -1431,7 +1451,7 @@ uint32_t Utility::crc32c(uint8_t *data, uint32_t len)
     return ~crc;
 }
 
-bool Utility::getFwVersionBlocking(VescInterface *vesc, FW_RX_PARAMS *params)
+bool Utility::getFwVersionBlocking(VescInterface *vesc, FW_RX_PARAMS *params, int timeout)
 {
     bool res = false;
 
@@ -1447,7 +1467,7 @@ bool Utility::getFwVersionBlocking(VescInterface *vesc, FW_RX_PARAMS *params)
                vesc, SLOT(fwVersionReceived(FW_RX_PARAMS)));
 
     vesc->commands()->getFwVersion();
-    waitSignal(vesc->commands(), SIGNAL(fwVersionReceived(FW_RX_PARAMS)), 4000);
+    waitSignal(vesc->commands(), SIGNAL(fwVersionReceived(FW_RX_PARAMS)), timeout);
 
     disconnect(conn);
 
@@ -1457,12 +1477,19 @@ bool Utility::getFwVersionBlocking(VescInterface *vesc, FW_RX_PARAMS *params)
     return res;
 }
 
-bool Utility::getFwVersionBlockingCan(VescInterface *vesc, FW_RX_PARAMS *params, int canId)
+bool Utility::getFwVersionBlockingCan(VescInterface *vesc, FW_RX_PARAMS *params, int canId, int timeout)
 {
-    vesc->canTmpOverride(true, canId);
-    bool res = getFwVersionBlocking(vesc, params);
+    vesc->canTmpOverride(canId >= 0, canId);
+    bool res = getFwVersionBlocking(vesc, params, timeout);
     vesc->canTmpOverrideEnd();
     return res;
+}
+
+bool Utility::isConnectedToHwVesc(VescInterface *vesc)
+{
+    FW_RX_PARAMS paramsRx;
+    getFwVersionBlocking(vesc, &paramsRx);
+    return paramsRx.hwType == HW_TYPE_VESC;
 }
 
 FW_RX_PARAMS Utility::getFwVersionBlocking(VescInterface *vesc)
@@ -1554,6 +1581,41 @@ bool Utility::isBleScanEnabled()
 #else
     return true;
 #endif
+}
+
+QString Utility::strCrc32(QString str)
+{
+    uint32_t crc = 0xFFFFFFFF;
+    auto data = str.toLocal8Bit();
+
+    for (auto b: data) {
+        uint32_t byte = quint8(b);
+        crc = crc ^ byte;
+
+        for (int j = 7;j >= 0;j--) {
+            uint32_t mask = -(crc & 1);
+            crc = (crc >> 1) ^ (0x82F63B78 & mask);
+        }
+    }
+
+    crc = ~crc;
+
+    return QString::number(crc);
+}
+
+QString Utility::readInternalImuType(VescInterface *vesc)
+{
+    QString res = "Timeout";
+    auto conn = connect(vesc->commands(), &Commands::printReceived, [&](QString str) {
+            res = str;
+    });
+
+    vesc->commands()->sendTerminalCmdSync("imu_type_internal");
+    waitSignal(vesc->commands(), SIGNAL(printReceived(QString)), 2000);
+
+    disconnect(conn);
+
+    return res;
 }
 
 void Utility::llhToXyz(double lat, double lon, double height, double *x, double *y, double *z)
@@ -1720,7 +1782,7 @@ QPair<int, int> Utility::configLatestSupported()
         QStringList names = fi.fileName().split("_o_");
 
         if (fi.isDir()) {
-            for(auto name: names) {
+            foreach (auto name, names) {
                 auto parts = name.split(".");
                 if (parts.size() == 2) {
                     QPair<int, int> ver = qMakePair(parts.at(0).toInt(), parts.at(1).toInt());
@@ -1900,6 +1962,11 @@ void Utility::serialFunc(ConfigParams *params, QTextStream &s) {
                 }
                 break;
 
+            case CFG_T_QSTRING:
+                s << "\t" << "strcpy((char*)buffer + ind, conf->" << name << ");\n";
+                s << "\t" << "ind += strlen(conf->" << name << ") + 1;\n";
+                break;
+
             default:
                 qWarning() << name << ": type not supported.";
                 break;
@@ -1989,6 +2056,11 @@ void Utility::deserialFunc(ConfigParams *params, QTextStream &s) {
                 }
                 break;
 
+            case CFG_T_QSTRING:
+                s << "\t" << "strcpy(conf->" << name << ", (char*)buffer + ind);\n";
+                s << "\t" << "ind += strlen(conf->" << name << ") + 1;\n";
+                break;
+
             default:
                 qWarning() << name << ": type not supported.";
                 break;
@@ -2019,11 +2091,16 @@ void Utility::defaultFunc(ConfigParams *params, QTextStream &s) {
 
         if (p) {
             QString def = p->cDefine;
-            // Kind of a hack...
-            if (name == "controller_id") {
-                def = "HW_DEFAULT_ID";
+
+            if (p->type == CFG_T_QSTRING) {
+                s << "\t" << "strcpy(conf->" << name << ", " << def << ");\n";
+            } else {
+                // Kind of a hack...
+                if (name == "controller_id") {
+                    def = "HW_DEFAULT_ID";
+                }
+                s << "\tconf->" << name << " = " << def << ";\n";
             }
-            s << "\tconf->" << name << " = " << def << ";\n";
         } else {
             qWarning() << name << "not found.";
         }
@@ -2155,6 +2232,117 @@ void Utility::plotSavePng(QCustomPlot *plot, int width, int height, QString titl
     }
 }
 
+QString Utility::waitForLine(QTcpSocket *socket, int timeoutMs)
+{
+    QEventLoop loop;
+    QTimer timeoutTimer;
+    timeoutTimer.setSingleShot(true);
+    timeoutTimer.start(timeoutMs);
+    auto conn = QObject::connect(&timeoutTimer, SIGNAL(timeout()), &loop, SLOT(quit()));
+
+    QByteArray rxLine;
+    auto conn2 = connect(socket, &QTcpSocket::readyRead, [&rxLine,socket,&loop]() {
+        while (socket->bytesAvailable() > 0) {
+            QByteArray rxb = socket->read(1);
+            if (rxb.size() == 1) {
+                if (rxb[0] != '\n') {
+                    rxLine.append(rxb[0]);
+                } else {
+                    rxLine.append('\0');
+                    loop.quit();
+                }
+            } else {
+                break;
+            }
+        }
+    });
+
+    loop.exec();
+
+    disconnect(conn);
+    disconnect(conn2);
+
+    auto res = QString::fromLocal8Bit(rxLine);
+    if (!timeoutTimer.isActive()) {
+        res = "";
+    }
+
+    return res;
+}
+
+QPixmap Utility::getIcon(QString path)
+{
+    while (path.startsWith("/")) {
+        path.remove(0, 1);
+    }
+
+    QPixmap pm;
+    if (!QPixmapCache::find(path, &pm)) {
+        pm.load(getThemePath() + path);
+        QPixmapCache::insert(path, pm);
+    }
+
+    return pm;
+}
+
+bool Utility::downloadUrlEventloop(QString path, QString dest)
+{
+    bool res = false;
+
+    QUrl url(path);
+
+    if (!url.isValid()) {
+        return res;
+    }
+
+    QNetworkAccessManager manager;
+    QNetworkRequest request(url);
+    QNetworkReply *reply = manager.get(request);
+
+    QEventLoop loop;
+    connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+    loop.exec();
+
+    if (reply->error() == QNetworkReply::NoError) {
+        QFile file(dest);
+        if (file.open(QIODevice::WriteOnly)) {
+            file.write(reply->readAll());
+            file.close();
+            res = true;
+        }
+    }
+
+    reply->abort();
+    reply->deleteLater();
+
+    return res;
+}
+
+QString Utility::md2html(QString md)
+{
+    std::shared_ptr<maddy::ParserConfig> config = std::make_shared<maddy::ParserConfig>();
+    config->enabledParsers = maddy::types::DEFAULT;
+    std::shared_ptr<maddy::Parser> parser = std::make_shared<maddy::Parser>(config);
+
+    std::stringstream markdownInput(md.toStdString());
+
+    QString result = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n";
+    result.append(QString::fromStdString(parser->Parse(markdownInput)));
+
+    return result;
+}
+
+QByteArray Utility::readAllFromFile(const QString &filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return QByteArray();
+    }
+    QByteArray data = file.readAll();
+    file.close();
+    return data;
+}
+
 void Utility::setDarkMode(bool isDarkSetting)
 {
     isDark = isDarkSetting;
@@ -2167,7 +2355,7 @@ bool Utility::isDarkMode()
 
 QString Utility::getThemePath()
 {
-    if(isDark) {
+    if (isDark) {
         return ":/res/";
     } else {
         return ":/res/+theme_light/";

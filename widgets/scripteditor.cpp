@@ -26,6 +26,7 @@
 #include <QLispCompleter>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QSettings>
 #include "utility.h"
 
 ScriptEditor::ScriptEditor(QWidget *parent) :
@@ -35,11 +36,11 @@ ScriptEditor::ScriptEditor(QWidget *parent) :
     ui->setupUi(this);
     mIsModeLisp = false;
 
-    QString theme = Utility::getThemePath();
-    ui->searchHideButton->setIcon(QPixmap(theme + "icons/Cancel-96.png"));
-    ui->openFileButton->setIcon(QPixmap(theme + "icons/Open Folder-96.png"));
-    ui->saveButton->setIcon(QPixmap(theme + "icons/Save-96.png"));
-    ui->saveAsButton->setIcon(QPixmap(theme + "icons/Save as-96.png"));
+    ui->searchHideButton->setIcon(Utility::getIcon("icons/Cancel-96.png"));
+    ui->openFileButton->setIcon(Utility::getIcon("icons/Open Folder-96.png"));
+    ui->saveButton->setIcon(Utility::getIcon("icons/Save-96.png"));
+    ui->saveAsButton->setIcon(Utility::getIcon("icons/Save as-96.png"));
+    ui->refreshButton->setIcon(Utility::getIcon("icons/Refresh-96.png"));
     ui->searchWidget->setVisible(false);
     ui->codeEdit->setTabReplaceSize(4);
 
@@ -54,6 +55,7 @@ ScriptEditor::ScriptEditor(QWidget *parent) :
         }
         ui->codeEdit->searchForString(ui->searchEdit->text());
         ui->searchEdit->setFocus();
+        ui->searchEdit->selectAll();
     });
 }
 
@@ -82,6 +84,7 @@ void ScriptEditor::setModeQml()
 {
     ui->codeEdit->setHighlighter(new QmlHighlighter);
     ui->codeEdit->setCompleter(new QVescCompleter);
+    ui->codeEdit->setHighlightBlocks(false);
     mIsModeLisp = false;
 }
 
@@ -90,9 +93,60 @@ void ScriptEditor::setModeLisp()
     ui->codeEdit->setHighlighter(new LispHighlighter);
     ui->codeEdit->setCompleter(new QLispCompleter);
     ui->codeEdit->setCommentStr(";");
-    ui->codeEdit->setIndentStrs("", "");
-    ui->codeEdit->setAutoParentheses(false);
+    ui->codeEdit->setIndentStrs("{(", "})");
+    ui->codeEdit->setAutoParentheses(true);
+    ui->codeEdit->setSeparateMinus(false);
+    ui->codeEdit->setHighlightBlocks(true);
     mIsModeLisp = true;
+}
+
+QString ScriptEditor::contentAsText()
+{
+    QString res = ui->codeEdit->toPlainText();
+
+    if (!QSettings().value("scripting/uploadContentEditor", true).toBool()) {
+        QString fileName = ui->fileNowLabel->text();
+
+        QFileInfo fi(fileName);
+        if (!fi.exists()) {
+            return res;
+        }
+
+        QFile file(fileName);
+        if (!file.open(QIODevice::ReadOnly)) {
+            return res;
+        }
+
+        res = file.readAll();
+
+        file.close();
+    }
+
+    return res;
+}
+
+bool ScriptEditor::hasUnsavedContent()
+{
+    bool res = false;
+
+    QString fileName = ui->fileNowLabel->text();
+    QFileInfo fi(fileName);
+    if (!fi.exists()) {
+        // Use a threshold of 5 characters
+        if (ui->codeEdit->toPlainText().size() > 5) {
+            res = true;
+        }
+    } else {
+        QFile file(fileName);
+        if (file.open(QIODevice::ReadOnly)) {
+            if (QString::fromUtf8(file.readAll()) !=
+                    ui->codeEdit->toPlainText().toUtf8()) {
+                res = true;
+            }
+        }
+    }
+
+    return res;
 }
 
 void ScriptEditor::keyPressEvent(QKeyEvent *event)
@@ -106,17 +160,24 @@ void ScriptEditor::keyPressEvent(QKeyEvent *event)
 
 void ScriptEditor::on_openFileButton_clicked()
 {
+    QString path = ui->fileNowLabel->text();
+    if (path.isEmpty()) {
+        path = QSettings().value("scripting/lastPath", "").toString();
+    }
+
     QString fileName = QFileDialog::getOpenFileName(this,
-                                                    tr("Open QML File"), "",
+                                                    tr("Open %1 File").arg(mIsModeLisp ? "Lisp" : "Qml"), path,
                                                     mIsModeLisp ? tr("Lisp files (*.lisp)") : tr("QML files (*.qml)"));
 
     if (!fileName.isEmpty()) {
         QFile file(fileName);
         if (!file.open(QIODevice::ReadOnly)) {
-            QMessageBox::critical(this, "Open QML File",
+            QMessageBox::critical(this, tr("Open %1 File").arg(mIsModeLisp ? "Lisp" : "Qml"),
                                   "Could not open\n" + fileName + "\nfor reading");
             return;
         }
+
+        QSettings().setValue("scripting/lastPath", QFileInfo(file).canonicalPath());
 
         ui->codeEdit->setPlainText(file.readAll());
         ui->fileNowLabel->setText(fileName);
@@ -134,14 +195,13 @@ void ScriptEditor::on_saveButton_clicked()
 
     QFileInfo fi(fileName);
     if (!fi.exists()) {
-        QMessageBox::critical(this, "Save File",
-                              "Current file path not valid. Use save as instead.");
+        on_saveAsButton_clicked();
         return;
     }
 
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly)) {
-        QMessageBox::critical(this, "Save QML File",
+        QMessageBox::critical(this, tr("Save %1 File").arg(mIsModeLisp ? "Lisp" : "Qml"),
                               "Could not open\n" + fileName + "\nfor writing");
         return;
     }
@@ -155,7 +215,7 @@ void ScriptEditor::on_saveButton_clicked()
 void ScriptEditor::on_saveAsButton_clicked()
 {
     QString fileName = QFileDialog::getSaveFileName(this,
-                                                    tr("Save QML"), "",
+                                                    tr("Save %1").arg(mIsModeLisp ? "Lisp" : "Qml"), ui->fileNowLabel->text(),
                                                     mIsModeLisp ? tr("Lisp files (*.lisp)") : tr("QML files (*.qml)"));
 
     QString ending = mIsModeLisp ? ".lisp" : ".qml";
@@ -167,7 +227,7 @@ void ScriptEditor::on_saveAsButton_clicked()
 
         QFile file(fileName);
         if (!file.open(QIODevice::WriteOnly)) {
-            QMessageBox::critical(this, "Save QML File",
+            QMessageBox::critical(this, tr("Save %1 File").arg(mIsModeLisp ? "Lisp" : "Qml"),
                                   "Could not open\n" + fileName + "\nfor writing");
             return;
         }
@@ -209,10 +269,10 @@ void ScriptEditor::on_replaceThisButton_clicked()
 
 void ScriptEditor::on_replaceAllButton_clicked()
 {
-    ui->codeEdit->searchNextResult();
-    while (!ui->codeEdit->textCursor().selectedText().isEmpty()) {
-        ui->codeEdit->textCursor().insertText(ui->replaceEdit->text());
+    auto matches = ui->codeEdit->searchMatches();
+    for (int i = 0;i < matches;i++) {
         ui->codeEdit->searchNextResult();
+        ui->codeEdit->textCursor().insertText(ui->replaceEdit->text());
     }
 }
 
@@ -226,4 +286,37 @@ void ScriptEditor::on_searchHideButton_clicked()
 void ScriptEditor::on_searchCaseSensitiveBox_toggled(bool checked)
 {
     ui->codeEdit->searchSetCaseSensitive(checked);
+}
+
+void ScriptEditor::on_refreshButton_clicked()
+{
+    QString fileName = ui->fileNowLabel->text();
+
+    QFileInfo fi(fileName);
+    if (!fi.exists()) {
+        QMessageBox::warning(this, tr("Refresh File"), tr("No file is open."));
+        return;
+    }
+
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly)) {
+        QMessageBox::critical(this, tr("Refresh File"),
+                              "Could not open\n" + fileName + "\nfor reading.");
+        return;
+    }
+
+    ui->codeEdit->setPlainText(QString::fromUtf8(file.readAll()));
+    ui->fileNowLabel->setText(fileName);
+    emit fileOpened(fileName);
+
+    file.close();
+}
+
+void ScriptEditor::on_searchEdit_returnPressed()
+{
+    if (QApplication::keyboardModifiers() == Qt::ControlModifier) {
+        ui->codeEdit->searchPreviousResult();
+    } else {
+        ui->codeEdit->searchNextResult();
+    }
 }

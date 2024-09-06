@@ -25,11 +25,6 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QDirIterator>
-#include <QNetworkAccessManager>
-#include <QUrl>
-#include <QNetworkRequest>
-#include <QNetworkReply>
-#include <QEventLoop>
 
 PageFirmware::PageFirmware(QWidget *parent) :
     QWidget(parent),
@@ -40,17 +35,16 @@ PageFirmware::PageFirmware(QWidget *parent) :
     ui->cancelButton->setEnabled(false);
     mVesc = nullptr;
 
-    QString theme = Utility::getThemePath();
-    ui->changelogButton->setIcon(QPixmap(theme + "icons/About-96.png"));
-    ui->chooseButton->setIcon(QPixmap(theme + "icons/Open Folder-96.png"));
-    ui->choose2Button->setIcon(QPixmap(theme + "icons/Open Folder-96.png"));
-    ui->choose3Button->setIcon(QPixmap(theme + "icons/Open Folder-96.png"));
-    ui->choose4Button->setIcon(QPixmap(theme + "icons/Open Folder-96.png"));
-    ui->cancelButton->setIcon(QPixmap(theme + "icons/Cancel-96.png"));
-    ui->uploadButton->setIcon(QPixmap(theme + "icons/Download-96.png"));
-    ui->uploadAllButton->setIcon(QPixmap(theme + "icons/Download-96.png"));
-    ui->readVersionButton->setIcon(QPixmap(theme + "icons/Upload-96.png"));
-    ui->dlArchiveButton->setIcon(QPixmap(theme + "icons/Download-96.png"));
+    ui->changelogButton->setIcon(Utility::getIcon("icons/About-96.png"));
+    ui->chooseButton->setIcon(Utility::getIcon("icons/Open Folder-96.png"));
+    ui->choose2Button->setIcon(Utility::getIcon("icons/Open Folder-96.png"));
+    ui->choose3Button->setIcon(Utility::getIcon("icons/Open Folder-96.png"));
+    ui->choose4Button->setIcon(Utility::getIcon("icons/Open Folder-96.png"));
+    ui->cancelButton->setIcon(Utility::getIcon("icons/Cancel-96.png"));
+    ui->uploadButton->setIcon(Utility::getIcon("icons/Download-96.png"));
+    ui->uploadAllButton->setIcon(Utility::getIcon("icons/Download-96.png"));
+    ui->readVersionButton->setIcon(Utility::getIcon("icons/Upload-96.png"));
+    ui->dlArchiveButton->setIcon(Utility::getIcon("icons/Download-96.png"));
 
     updateHwList(FW_RX_PARAMS());
     updateBlList(FW_RX_PARAMS());
@@ -105,6 +99,11 @@ void PageFirmware::setVesc(VescInterface *vesc)
                 this, SLOT(fwUploadStatus(QString,double,bool)));
         connect(mVesc, SIGNAL(fwRxChanged(bool,bool)),
                 this, SLOT(fwRxChanged(bool,bool)));
+
+        connect(mVesc, &VescInterface::fwArchiveDlProgress, [this](QString msg, double prog) {
+            ui->displayDl->setText(msg);
+            ui->displayDl->setValue(100.0 * prog);
+        });
     }
 }
 
@@ -222,11 +221,8 @@ void PageFirmware::updateHwList(FW_RX_PARAMS params)
         fwDir = "://res/firmwares_bms";
     }
 
-    QDirIterator it(fwDir);
-    while (it.hasNext()) {
-        QFileInfo fi(it.next());
+    foreach (const auto &fi, QDir(fwDir).entryInfoList(QDir::NoFilter, QDir::Name)) {
         QStringList names = fi.fileName().split("_o_");
-
         if (fi.isDir() && (params.hw.isEmpty() || names.contains(params.hw, Qt::CaseInsensitive))) {
             QListWidgetItem *item = new QListWidgetItem;
 
@@ -239,6 +235,31 @@ void PageFirmware::updateHwList(FW_RX_PARAMS params)
             item->setData(Qt::UserRole, fi.absoluteFilePath());
             ui->hwList->insertItem(ui->hwList->count(), item);
         }
+    }
+
+    // Manually added entries. TODO: Come up with a system for them
+    QString extraPath;
+    if (params.hw == "VESC Express T") {
+        extraPath = "://res/firmwares_esp/ESP32-C3/VESC Express";
+    } else if (params.hw == "Devkit C3") {
+        extraPath = "://res/firmwares_esp/ESP32-C3/DevKitM-1";
+    } else if (params.hw == "STR-DCDC") {
+        extraPath = "://res/firmwares_custom_module/str-dcdc";
+    } else if (params.hw == "VBMS32") {
+        extraPath = "://res/firmwares_esp/ESP32-C3/VBMS32";
+    } else if (params.hw == "STR365 IO") {
+        extraPath = "://res/firmwares_esp/ESP32-C3/STR365";
+    } else if (params.hw == "VDisp") {
+        extraPath = "://res/firmwares_esp/ESP32-C3/VDisp";
+    } else if (params.hw == "VDisp Dual") {
+        extraPath = "://res/firmwares_esp/ESP32-C3/VDisp Dual";
+    }
+
+    if (!extraPath.isEmpty()) {
+        QListWidgetItem *item = new QListWidgetItem;
+        item->setText(params.hw);
+        item->setData(Qt::UserRole, extraPath);
+        ui->hwList->insertItem(ui->hwList->count(), item);
     }
 
     if (ui->hwList->count() > 0) {
@@ -259,7 +280,8 @@ void PageFirmware::updateFwList()
         while (it.hasNext()) {
             QFileInfo fi(it.next());
             if (ui->showNonDefaultBox->isChecked() ||
-                    fi.fileName().toLower() == "vesc_default.bin") {
+                    fi.fileName().toLower() == "vesc_default.bin" ||
+                    fi.fileName().toLower() == "vesc_express.bin") {
                 QListWidgetItem *item = new QListWidgetItem;
                 item->setText(fi.fileName());
                 item->setData(Qt::UserRole, fi.absoluteFilePath());
@@ -320,10 +342,35 @@ void PageFirmware::updateBlList(FW_RX_PARAMS params)
 {
     ui->blList->clear();
 
-    QString blDir = "://res/bootloaders";
+    QString blDir = "";
+    switch (params.hwType) {
+    case HW_TYPE_VESC:
+        blDir = "://res/bootloaders";
+        break;
 
-    if (params.hwType != HW_TYPE_VESC) {
+    case HW_TYPE_VESC_BMS:
         blDir = "://res/bootloaders_bms";
+        break;
+
+    case HW_TYPE_CUSTOM_MODULE:
+        QByteArray endEsp;
+        endEsp.append('\0');
+        endEsp.append('\0');
+        endEsp.append('\0');
+        endEsp.append('\0');
+
+        if (!params.uuid.endsWith(endEsp)) {
+            if (params.hw == "hm1") {
+                blDir = "://res/bootloaders_bms";
+            } else {
+                blDir = "://res/bootloaders_custom_module/stm32g431";
+            }
+        }
+        break;
+    }
+
+    if (blDir.isEmpty()) {
+        return;
     }
 
     QDirIterator it(blDir);
@@ -346,12 +393,24 @@ void PageFirmware::updateBlList(FW_RX_PARAMS params)
     }
 
     if (ui->blList->count() == 0) {
-        QFileInfo generic(blDir + "/generic.bin");
-        if (generic.exists()) {
-            QListWidgetItem *item = new QListWidgetItem;
-            item->setText("generic");
-            item->setData(Qt::UserRole, generic.absoluteFilePath());
-            ui->blList->insertItem(ui->blList->count(), item);
+        {
+            QFileInfo generic(blDir + "/generic.bin");
+            if (generic.exists()) {
+                QListWidgetItem *item = new QListWidgetItem;
+                item->setText("generic");
+                item->setData(Qt::UserRole, generic.absoluteFilePath());
+                ui->blList->insertItem(ui->blList->count(), item);
+            }
+        }
+
+        {
+            QFileInfo stm32g431(blDir + "/stm32g431.bin");
+            if (stm32g431.exists()) {
+                QListWidgetItem *item = new QListWidgetItem;
+                item->setText("stm32g431");
+                item->setData(Qt::UserRole, stm32g431.absoluteFilePath());
+                ui->blList->insertItem(ui->blList->count(), item);
+            }
         }
     }
 
@@ -363,7 +422,7 @@ void PageFirmware::updateBlList(FW_RX_PARAMS params)
 void PageFirmware::on_chooseButton_clicked()
 {
     QString filename = QFileDialog::getOpenFileName(this,
-                                                    tr("Choose Firmware File"), ".",
+                                                    tr("Choose Firmware File"), ui->fwEdit->text(),
                                                     tr("Firmware files (*.bin *.hex)"));
     if (!filename.isNull()) {
         ui->fwEdit->setText(filename);
@@ -373,7 +432,7 @@ void PageFirmware::on_chooseButton_clicked()
 void PageFirmware::on_choose2Button_clicked()
 {
     QString filename = QFileDialog::getOpenFileName(this,
-                                                    tr("Choose Firmware File"), ".",
+                                                    tr("Choose Firmware File"), ui->fw2Edit->text(),
                                                     tr("Firmware files (*.bin *.hex)"));
     if (!filename.isNull()) {
         ui->fw2Edit->setText(filename);
@@ -383,7 +442,7 @@ void PageFirmware::on_choose2Button_clicked()
 void PageFirmware::on_choose3Button_clicked()
 {
     QString filename = QFileDialog::getOpenFileName(this,
-                                                    tr("Choose Firmware File"), ".",
+                                                    tr("Choose Firmware File"), ui->fw3Edit->text(),
                                                     tr("Firmware files (*.bin *.hex)"));
     if (!filename.isNull()) {
         ui->fw3Edit->setText(filename);
@@ -393,7 +452,7 @@ void PageFirmware::on_choose3Button_clicked()
 void PageFirmware::on_choose4Button_clicked()
 {
     QString filename = QFileDialog::getOpenFileName(this,
-                                                    tr("Choose Firmware File"), ".",
+                                                    tr("Choose Firmware File"), ui->fw4Edit->text(),
                                                     tr("Firmware files (*.bin *.hex)"));
     if (!filename.isNull()) {
         ui->fw4Edit->setText(filename);
@@ -435,7 +494,7 @@ void PageFirmware::uploadFw(bool allOverCan)
         if (!mVesc->isPortConnected()) {
             QMessageBox::critical(this,
                                   tr("Connection Error"),
-                                  tr("The VESC is not connected. Please connect it."));
+                                  tr("Not connected to device. Please connect first."));
             return;
         }
 
@@ -493,6 +552,14 @@ void PageFirmware::uploadFw(bool allOverCan)
                                       tr("The selected file name seems to be invalid."));
                 return;
             }
+
+            if (ui->fwCustomBlBox->isChecked() && mVesc->commands()->getLimitedSupportsEraseBootloader()) {
+                QListWidgetItem *item = ui->blList->currentItem();
+
+                if (item) {
+                    fileBl.setFileName(item->data(Qt::UserRole).toString());
+                }
+            }
         } else {
             QListWidgetItem *item = ui->blList->currentItem();
 
@@ -532,7 +599,7 @@ void PageFirmware::uploadFw(bool allOverCan)
             }
         }
 
-        if (file.size() > 700000 && !(file.fileName().toLower().endsWith(".hex"))) {
+        if (file.size() > 1500000 && !(file.fileName().toLower().endsWith(".hex"))) {
             QMessageBox::critical(this,
                                   tr("Upload Error"),
                                   tr("The selected file is too large to be a firmware."));
@@ -544,7 +611,7 @@ void PageFirmware::uploadFw(bool allOverCan)
         if ((ui->fwTabWidget->currentIndex() == 0 && ui->hwList->count() == 1) || ui->fwTabWidget->currentIndex() == 3) {
             reply = QMessageBox::warning(this,
                                          tr("Warning"),
-                                         tr("Uploading new firmware will clear all settings on your VESC "
+                                         tr("Uploading new firmware will clear all settings in the VESC firmware "
                                             "and you have to do the configuration again. Do you want to "
                                             "continue?"),
                                          QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
@@ -552,21 +619,21 @@ void PageFirmware::uploadFw(bool allOverCan)
             reply = QMessageBox::warning(this,
                                          tr("Warning"),
                                          tr("Uploading firmware for the wrong hardware version "
-                                            "WILL damage the VESC for sure. Are you sure that you have "
+                                            "WILL damage the hardware. Are you sure that you have "
                                             "chosen the correct hardware version?"),
                                          QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
         } else if (ui->fwTabWidget->currentIndex() == 2) {
             if (mVesc->commands()->getLimitedSupportsEraseBootloader()) {
                 reply = QMessageBox::warning(this,
                                              tr("Warning"),
-                                             tr("This will attempt to upload a bootloader to the connected VESC. "
+                                             tr("This will attempt to upload a bootloader to the connected device. "
                                                 "Do you want to continue?"),
                                              QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
             } else {
                 reply = QMessageBox::warning(this,
                                              tr("Warning"),
-                                             tr("This will attempt to upload a bootloader to the connected VESC. "
-                                                "If the connected VESC already has a bootloader this will destroy "
+                                             tr("This will attempt to upload a bootloader to the connected device. "
+                                                "If the connected device already has a bootloader this will destroy "
                                                 "the bootloader and firmware updates cannot be done anymore. Do "
                                                 "you want to continue?"),
                                              QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
@@ -619,12 +686,21 @@ void PageFirmware::uploadFw(bool allOverCan)
             }
 
             if (!file.fileName().isEmpty()) {
+                QString blMsg = tr("");
+
+                // No bootloader was uploaded prior to the firmware
+                if (fileBl.fileName().isEmpty()) {
+                    blMsg = tr("\n\n"
+                               "NOTE: If the old firmware is loaded again after the reboot a bootloader is probably missing. You "
+                               "can try uploading one from the bootloader tab if that is the case.");
+                }
+
                 if (uploadFw(&file, false, allOverCan)) {
                     QMessageBox::warning(this,
                                          tr("Warning"),
-                                         tr("The firmware upload is done. You must wait at least "
-                                            "10 seconds before unplugging power. Otherwise the firmware will get corrupted and your "
-                                            "VESC will become bricked. If that happens you need a SWD programmer to recover it."));
+                                         tr("The firmware upload is done. The device should reboot automatically within 10 seconds. Do "
+                                            "NOT remove power before the reboot is done as that can brick the CPU and requires a programmer "
+                                            "to fix.") + blMsg);
                 }
             }
         }
@@ -633,8 +709,7 @@ void PageFirmware::uploadFw(bool allOverCan)
 
 void PageFirmware::reloadArchive()
 {
-    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) +
-            "/res_fw.rcc";
+    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/res_fw.rcc";
     QFile file(path);
     if (file.exists()) {
         QResource::unregisterResource(path);
@@ -659,40 +734,13 @@ void PageFirmware::reloadArchive()
 void PageFirmware::on_dlArchiveButton_clicked()
 {
     ui->dlArchiveButton->setEnabled(false);
-
     ui->displayDl->setText("Preparing download...");
 
-    QString version = QString::number(VT_VERSION);
-    QUrl url("http://home.vedder.se/vesc_fw_archive/res_fw.rcc");
-    QNetworkAccessManager manager;
-    QNetworkRequest request(url);
-    QNetworkReply *reply = manager.get(request);
-
-    connect(reply, &QNetworkReply::downloadProgress, [this](qint64 bytesReceived, qint64 bytesTotal) {
-        ui->displayDl->setText("Downloading...");
-        ui->displayDl->setValue(100.0 * (double)bytesReceived / (double)bytesTotal);
-    });
-
-    QEventLoop loop;
-    connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
-    loop.exec();
-
-    if (reply->error() == QNetworkReply::NoError) {
-        ui->displayDl->setText("Download Finished");
-        QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) +
-                "/res_fw.rcc";
-        QFile file(path);
-        if (file.open(QIODevice::WriteOnly)) {
-            file.write(reply->readAll());
-            file.close();
+    if (mVesc) {
+        if (mVesc->downloadFwArchive()) {
             reloadArchive();
         }
-    } else {
-        ui->displayDl->setText("Download Failed");
     }
-
-    reply->abort();
-    reply->deleteLater();
 
     ui->dlArchiveButton->setEnabled(true);
 }

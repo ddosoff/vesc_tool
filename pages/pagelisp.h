@@ -23,6 +23,7 @@
 #include <QWidget>
 #include "vescinterface.h"
 #include "widgets/scripteditor.h"
+#include "codeloader.h"
 
 namespace Ui {
 class PageLisp;
@@ -39,6 +40,8 @@ public:
     VescInterface *vesc() const;
     void setVesc(VescInterface *vesc);
     void reloadParams();
+    bool hasUnsavedTabs();
+    void disablePolling();
 
 private slots:
     void on_openRecentButton_clicked();
@@ -56,6 +59,9 @@ private slots:
     void on_helpButton_clicked();
     void on_replEdit_returnPressed();
     void on_replHelpButton_clicked();
+    void on_streamButton_clicked();
+    void on_recentFilterEdit_textChanged(const QString &arg1);
+    void on_exampleFilterEdit_textChanged(const QString &arg1);
 
 private:
     Ui::PageLisp *ui;
@@ -64,6 +70,7 @@ private:
     QString mDirNow;
     QTimer mPollTimer;
     QMap<QString, QVector<QPair<qint64, double> > > mBindingData;
+    CodeLoader mLoader;
 
     void updateRecentList();
     void makeEditorConnections(ScriptEditor *editor);
@@ -73,7 +80,7 @@ private:
     void setEditorClean(ScriptEditor * editor);
     void openExample();
     void openRecentList();
-    bool eraseCode();
+    bool eraseCode(int size);
 
 };
 

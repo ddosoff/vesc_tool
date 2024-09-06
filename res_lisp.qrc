@@ -32,5 +32,27 @@
         <file>res/Lisp/Examples/m365_dash.lisp</file>
         <file>res/Lisp/Examples/ssd1306_oled_cube_native.lisp</file>
         <file>res/Lisp/Examples/ws2812_native.lisp</file>
+        <file>res/Lisp/Examples/plot_vesc_tool.lisp</file>
+        <file>res/Lisp/Examples/log_can.lisp</file>
+        <file>res/Lisp/Examples/crc16.lisp</file>
+        <file>res/Lisp/Examples/encoder_sincos_cal.lisp</file>
+        <file>res/Lisp/Examples/test_extensions.lisp</file>
+        <file>res/Lisp/Examples/est_temp.lisp</file>
+        <file>res/Lisp/Examples/plot_interpolation.lisp</file>
+        <file>res/Lisp/Examples/input_capture.lisp</file>
+        <file>res/Lisp/Examples/event_custom_data.lisp</file>
+        <file>res/Lisp/Examples/crc16_v2.lisp</file>
+        <file>res/Lisp/Examples/speed_test_tak_q2.lisp</file>
+        <file>res/Lisp/Examples/log_vesc_tool.lisp</file>
+        <file>res/Lisp/Examples/fw_update.lisp</file>
+        <file>res/Lisp/Examples/lbm_update.lisp</file>
+        <file>res/Lisp/Examples/sort_test1.lisp</file>
+        <file>res/Lisp/Examples/sort_test2.lisp</file>
+        <file>res/Lisp/Examples/foc_melody.lisp</file>
+        <file>res/Lisp/Examples/play_mp3.lisp</file>
+        <file>res/Lisp/Examples/rgbled_demo.lisp</file>
+        <file>res/Lisp/Examples/speed_test_i64.lisp</file>
+        <file>res/Lisp/Examples/speed_test_strings.lisp</file>
+        <file>res/Lisp/Examples/str_find_any.lisp</file>
     </qresource>
 </RCC>

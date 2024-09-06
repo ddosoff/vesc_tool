@@ -83,7 +83,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Roboto';&quot;&gt;Maximum motor current.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Maximum motor current.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>MCCONF_L_CURRENT_MAX</cDefine>
             <editorDecimalsDouble>2</editorDecimalsDouble>
             <editorScale>1</editorScale>
@@ -214,7 +214,7 @@ p, li { white-space: pre-wrap; }
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; font-weight:400; font-style:normal;&quot;&gt;
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The maximum electrical RPM.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>MCCONF_L_RPM_MAX</cDefine>
             <editorDecimalsDouble>2</editorDecimalsDouble>
@@ -1156,116 +1156,6 @@ p, li { white-space: pre-wrap; }
             <suffix></suffix>
             <vTx>9</vTx>
         </foc_encoder_ratio>
-        <foc_encoder_sin_gain>
-            <longName>Sin/Cos Sine Gain Compensation</longName>
-            <type>1</type>
-            <transmittable>1</transmittable>
-            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Sin/Cos Encoder Sine gain compensation to reduce nonlinearity errors in the signal path.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
-            <cDefine>MCCONF_FOC_ENCODER_SIN_GAIN</cDefine>
-            <editorDecimalsDouble>2</editorDecimalsDouble>
-            <editorScale>1</editorScale>
-            <editAsPercentage>0</editAsPercentage>
-            <maxDouble>2</maxDouble>
-            <minDouble>0</minDouble>
-            <showDisplay>0</showDisplay>
-            <stepDouble>0.01</stepDouble>
-            <valDouble>1</valDouble>
-            <vTxDoubleScale>1000</vTxDoubleScale>
-            <suffix></suffix>
-            <vTx>7</vTx>
-        </foc_encoder_sin_gain>
-        <foc_encoder_cos_gain>
-            <longName>Sin/Cos Cosine Gain Compensation</longName>
-            <type>1</type>
-            <transmittable>1</transmittable>
-            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Sin/Cos Encoder Cosine gain compensation to reduce nonlinearity errors in the signal path.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
-            <cDefine>MCCONF_FOC_ENCODER_COS_GAIN</cDefine>
-            <editorDecimalsDouble>2</editorDecimalsDouble>
-            <editorScale>1</editorScale>
-            <editAsPercentage>0</editAsPercentage>
-            <maxDouble>2</maxDouble>
-            <minDouble>0</minDouble>
-            <showDisplay>0</showDisplay>
-            <stepDouble>0.01</stepDouble>
-            <valDouble>1</valDouble>
-            <vTxDoubleScale>1000</vTxDoubleScale>
-            <suffix></suffix>
-            <vTx>7</vTx>
-        </foc_encoder_cos_gain>
-        <foc_encoder_sin_offset>
-            <longName>Sin/Cos Sine Offset</longName>
-            <type>1</type>
-            <transmittable>1</transmittable>
-            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Sin/Cos Encoder Sine Offset.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
-            <cDefine>MCCONF_FOC_ENCODER_SIN_OFFSET</cDefine>
-            <editorDecimalsDouble>2</editorDecimalsDouble>
-            <editorScale>1</editorScale>
-            <editAsPercentage>0</editAsPercentage>
-            <maxDouble>3.3</maxDouble>
-            <minDouble>0</minDouble>
-            <showDisplay>0</showDisplay>
-            <stepDouble>0.01</stepDouble>
-            <valDouble>1.65</valDouble>
-            <vTxDoubleScale>1000</vTxDoubleScale>
-            <suffix></suffix>
-            <vTx>7</vTx>
-        </foc_encoder_sin_offset>
-        <foc_encoder_cos_offset>
-            <longName>Sin/Cos Cosine Offset</longName>
-            <type>1</type>
-            <transmittable>1</transmittable>
-            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Sin/Cos Encoder Sine Offset.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
-            <cDefine>MCCONF_FOC_ENCODER_COS_OFFSET</cDefine>
-            <editorDecimalsDouble>2</editorDecimalsDouble>
-            <editorScale>1</editorScale>
-            <editAsPercentage>0</editAsPercentage>
-            <maxDouble>3.3</maxDouble>
-            <minDouble>0</minDouble>
-            <showDisplay>0</showDisplay>
-            <stepDouble>0.01</stepDouble>
-            <valDouble>1.65</valDouble>
-            <vTxDoubleScale>1000</vTxDoubleScale>
-            <suffix></suffix>
-            <vTx>7</vTx>
-        </foc_encoder_cos_offset>
-        <foc_encoder_sincos_filter_constant>
-            <longName>Sin/Cos Filter Constant</longName>
-            <type>1</type>
-            <transmittable>1</transmittable>
-            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Sin/Cos Encoder low pass filter constant. Will affect the ratio between lag and noise on the encoder position feedback. Range 0 to 1, where 0 has the lowest noise and most phase lag, and 1 has no lag and unfiltered noise.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
-            <cDefine>MCCONF_FOC_ENCODER_SINCOS_FILTER</cDefine>
-            <editorDecimalsDouble>2</editorDecimalsDouble>
-            <editorScale>1</editorScale>
-            <editAsPercentage>0</editAsPercentage>
-            <maxDouble>1</maxDouble>
-            <minDouble>0</minDouble>
-            <showDisplay>0</showDisplay>
-            <stepDouble>0.01</stepDouble>
-            <valDouble>0.5</valDouble>
-            <vTxDoubleScale>1000</vTxDoubleScale>
-            <suffix></suffix>
-            <vTx>7</vTx>
-        </foc_encoder_sincos_filter_constant>
         <foc_sensor_mode>
             <longName>Sensor Mode</longName>
             <type>4</type>
@@ -2416,7 +2306,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Override HFI position with observer position for this amount of time after dropping below the HFI ERPM threshold. This can prevent oscillating between the two at a transition. Settings this value too high can make HFI catch the motor 180 electrical degrees off, as the observer position might degrade too much.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Override HFI position with observer position for this amount of time after dropping below the HFI ERPM threshold. This can prevent oscillating between the two at a transition. Setting this value too high can make HFI catch the motor 180 electrical degrees off, as the observer position might degrade too much.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>MCCONF_FOC_HFI_OBS_OVR_SEC</cDefine>
             <editorDecimalsDouble>1</editorDecimalsDouble>
             <editorScale>1000</editorScale>
@@ -3440,14 +3330,18 @@ p, li { white-space: pre-wrap; }
             <vTx>9</vTx>
         </m_current_backoff_gain>
         <m_encoder_counts>
-            <longName>ABI Encoder Counts</longName>
+            <longName>Encoder counts</longName>
             <type>2</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Number of counts for the A-B-Index encoder. This usually is the encoder resolution times 4, since every edge in the quadrature signal is counted. This setting only matters when using an ABI encoder.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;ABI Encoder&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Number of counts for the A-B-Index encoder. This usually is the encoder resolution times 4, since every edge in the quadrature signal is counted. This setting only matters when using an ABI encoder.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;BISSC Encoder&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Number of bit for the BISSC encoder. This is the encoder resolution bit number for monoturn encoder.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>MCCONF_M_ENCODER_COUNTS</cDefine>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
@@ -3459,6 +3353,138 @@ p, li { white-space: pre-wrap; }
             <suffix></suffix>
             <vTx>5</vTx>
         </m_encoder_counts>
+        <m_encoder_sin_amp>
+            <longName>Sine Amplitude</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Amplitude of the sine-input in volts.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>MCCONF_M_ENCODER_SIN_AMP</cDefine>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>2</maxDouble>
+            <minDouble>0.01</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.01</stepDouble>
+            <valDouble>1</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> V</suffix>
+            <vTx>7</vTx>
+        </m_encoder_sin_amp>
+        <m_encoder_cos_amp>
+            <longName>Cosine Amplitude</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Amplitude of the cosine-input in volts.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>MCCONF_M_ENCODER_COS_AMP</cDefine>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>2</maxDouble>
+            <minDouble>0.01</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.01</stepDouble>
+            <valDouble>1</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> V</suffix>
+            <vTx>7</vTx>
+        </m_encoder_cos_amp>
+        <m_encoder_sin_offset>
+            <longName>Sine Offset</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Sine offset in volts.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>MCCONF_M_ENCODER_SIN_OFFSET</cDefine>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>3.3</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.01</stepDouble>
+            <valDouble>1.65</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> V</suffix>
+            <vTx>7</vTx>
+        </m_encoder_sin_offset>
+        <m_encoder_cos_offset>
+            <longName>Cosine Offset</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Cosine offset in volts.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>MCCONF_M_ENCODER_COS_OFFSET</cDefine>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>3.3</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.01</stepDouble>
+            <valDouble>1.65</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> V</suffix>
+            <vTx>7</vTx>
+        </m_encoder_cos_offset>
+        <m_encoder_sincos_filter_constant>
+            <longName>Sin/Cos Filter Constant</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Sin/Cos Encoder low pass filter constant. Will affect the ratio between lag and noise on the encoder position feedback. Range 0 to 1, where 0 has the lowest noise and most phase lag, and 1 has no lag and unfiltered noise.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>MCCONF_M_ENCODER_SINCOS_FILTER</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.01</stepDouble>
+            <valDouble>0.5</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </m_encoder_sincos_filter_constant>
+        <m_encoder_sincos_phase_correction>
+            <longName>Sin/Cos Phase Correction</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Sin/Cos Phase error compensation in deg. Some sin/cos encoders do not output perfect 90° phase between sin and cos signals. This parameter allows for compensating a phase error between sin and cos signals.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>MCCONF_M_ENCODER_SINCOS_PHASE</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>45</maxDouble>
+            <minDouble>-45</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.01</stepDouble>
+            <valDouble>0</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </m_encoder_sincos_phase_correction>
         <m_sensor_port_mode>
             <longName>Sensor Port Mode</longName>
             <type>4</type>
@@ -3467,33 +3493,46 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Roboto';&quot;&gt;Mode for the sensor port. Can be changed for compatibility with different rotor position sensors. Notice that this setting does not have any impact when running sensorless. &lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Roboto';&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Roboto';&quot;&gt;The modes are:&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Roboto';&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Roboto'; font-weight:600;&quot;&gt;Hall Sensors&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Roboto';&quot;&gt;The motor has hall sensors built in which give a position resolution of 120 degrees.&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Roboto';&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Roboto'; font-weight:600;&quot;&gt;ABI Encoder&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Roboto';&quot;&gt;A rotary encoder with A-B-Index output. Notice that this encoder does not help until the index pulse is found, so when running FOC open loop mode will be used for up to one mechanical revolution to find the index position when trying to run a motor for the first time after a power cycle.&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Roboto';&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Roboto';&quot;&gt;Notice that you also have to set the number of encoder counts in order to use this type of encoder. This usually is the number of pulses per revolution times 4, since every edge of both pulse trains is counted.&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Roboto';&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Roboto'; font-weight:600;&quot;&gt;AS5047 Encoder&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Roboto';&quot;&gt;An AS5047 magnetic encoder connected over SPI. This one provides absolute positions from start, but tends to have a bit of nonlinearity.&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Roboto';&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Roboto'; font-weight:600;&quot;&gt;SIN/COS Encoder&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Roboto';&quot;&gt;A Sin/Cos encoder is a position feedback device similar to a quadrature encoder, except instead of outputting digital pulses, it outputs analog voltages with sinusoidal shapes offset by 90°. Provides absolute positions from the start, but its sensitive to EMI and requires special filtering,  transient protections and shielded wiring.&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Roboto';&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Roboto'; font-weight:600;&quot;&gt;TS5700N8501 Encoder&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Roboto';&quot;&gt;This encoder uses RS485, so it has to be connected to the COMM port. A RS485-transceiver such as the &lt;/span&gt;&lt;span style=&quot; font-family:'sans-serif';&quot;&gt;ADM485 is required, where RX and TX are used as the data lines. ADC1 is used to trigger between RX and TX, which is needed as the communication is half duplex. To use this encoder, you have to make sure that no app uses UART or ADC1.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Mode for the sensor port. Can be changed for compatibility with different rotor position sensors. Notice that this setting does not have any impact when running sensorless. &lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The modes are:&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Hall Sensors&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The motor has hall sensors built in which give a position resolution of 120 degrees.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;ABI Encoder&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;A rotary encoder with A-B-Index output. Notice that this encoder does not help until the index pulse is found, so when running FOC open loop mode will be used for up to one mechanical revolution to find the index position when trying to run a motor for the first time after a power cycle.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Notice that you also have to set the number of encoder counts in order to use this type of encoder. This usually is the number of pulses per revolution times 4, since every edge of both pulse trains is counted.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;AS5047 Encoder&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;An AS5047 magnetic encoder connected over SPI. This one provides absolute positions from start, but tends to have a bit of nonlinearity.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;AS5X47U Encoder&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;An AS5147U or AS5247U magnetic encoder connected over SPI. It is similar to the AS5047 but with additional safety features making it capable of automotive safety levels. It must be connected to SPI in the COMM port. To use this encoder, you have to make sure that no app uses UART, I2C, ADC2, or ADC3.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;SIN/COS Encoder&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;A Sin/Cos encoder is a position feedback device similar to a quadrature encoder, except instead of outputting digital pulses, it outputs analog voltages with sinusoidal shapes offset by 90°. Provides absolute positions from the start, but its sensitive to EMI and requires special filtering,  transient protections and shielded wiring.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;TS5700N8501 Encoder&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;This encoder uses RS485, so it has to be connected to the COMM port. A RS485-transceiver such as the &lt;span style=&quot; font-family:'sans-serif';&quot;&gt;ADM485 is required, where RX and TX are used as the data lines. ADC1 is used to trigger between RX and TX, which is needed as the communication is half duplex. To use this encoder, you have to make sure that no app uses UART or ADC1.&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'sans-serif';&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Roboto'; font-weight:600;&quot;&gt;TS5700N8501 Encoder Multiturn&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Roboto';&quot;&gt;Same as above, but uses the multiturn function. The angle is divided by 10000, thus can be used for up to 10000 revolutions. The position PID parameters need to be increased by a factor of around 10000 for this to work similarly to the single turn mode. Note that this is not a good implementation and needs improvement in the future. 180 degrees PID setpoint corresponds to multiturn position 0.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;TS5700N8501 Encoder Multiturn&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Same as above, but uses the multiturn function. The angle is divided by 10000, thus can be used for up to 10000 revolutions. The position PID parameters need to be increased by a factor of around 10000 for this to work similarly to the single turn mode. Note that this is not a good implementation and needs improvement in the future. 180 degrees PID setpoint corresponds to multiturn position 0.&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'sans-serif';&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Roboto'; font-weight:600;&quot;&gt;MT6816 Encoder&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Roboto';&quot;&gt;A magnetic encoder using a high speed SPI communication. Provides absolute position from start. It has to be connected to a hardware-based SPI peripheral.&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Roboto';&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;MT6816 Encoder&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;A magnetic encoder using a high speed SPI communication. Provides absolute position from start. It has to be connected to a hardware-based SPI peripheral.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;BISSC Encoder&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;This encoder uses  RS422, so it has to be connected to the COMM port for high speed communication. A RS422-transceiver such as the MAX490 is required, where CLK and MISO are used as clock and data input lines. To use this encoder, you have to make sure that no app uses UART or ADC1. The ABI resolution field is used to set the BISSC encoder accuracy: 2^(BissC Resolution)&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;TLE5102 Encoder&lt;/span&gt; &lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;A magnetic encoder using the bidirectional SSC protocol. Provides absolute position from start and error protected communication. Currently both “SSC SW” and “SSC HW” use software bitbanging. “SSC SW” uses the hall connector pins which must not have filters. “SSC HW” uses the 7-8 pin adc/uart connector. Recommend 5v sensor power.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Wires must be shielded and/or run together or you will get communication errors.&lt;br /&gt;&lt;br /&gt;“SSC SW” Connections: H1 = SCK, H2 = DATA , H3 = CS &lt;br /&gt;“SSC HW” Connections: ADC1 = SCK, TX = DATA , NSS = CS&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Custom Encoder&lt;/span&gt; &lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;This means that a native library is loaded that handles reading of the encoder and provides the decoded angle.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>MCCONF_M_SENSOR_PORT_MODE</cDefine>
             <valInt>0</valInt>
             <enumNames>Hall Sensors</enumNames>
@@ -3504,6 +3543,11 @@ p, li { white-space: pre-wrap; }
             <enumNames>TS5700N8501 Encoder</enumNames>
             <enumNames>TS5700N8501 Encoder (Multiturn)</enumNames>
             <enumNames>MT6816 Encoder (SPI)</enumNames>
+            <enumNames>AS5X47U Encoder (SPI)</enumNames>
+            <enumNames>BISSC Encoder (SPI)</enumNames>
+            <enumNames>TLE5012 Encoder (SSC SW)</enumNames>
+            <enumNames>TLE5012 Encoder (SSC HW)</enumNames>
+            <enumNames>Custom Encoder</enumNames>
         </m_sensor_port_mode>
         <m_invert_direction>
             <longName>Invert Motor Direction</longName>
@@ -3690,6 +3734,8 @@ p, li { white-space: pre-wrap; }
             <enumNames>KTY84/130</enumNames>
             <enumNames>NTC Custom</enumNames>
             <enumNames>PTC Custom</enumNames>
+            <enumNames>PT1000</enumNames>
+            <enumNames>Disabled</enumNames>
         </m_motor_temp_sens_type>
         <m_ptc_motor_coeff>
             <longName>Coefficient for PTC Motor Thermistor</longName>
@@ -3777,6 +3823,26 @@ p, li { white-space: pre-wrap; }
             <suffix></suffix>
             <vTx>1</vTx>
         </m_hall_extra_samples>
+        <m_batt_filter_const>
+            <longName>Battery Filter Constant</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Battery Level Filtering. The higher this number is the more the battery level is filtered. Too little filtering will make the battery level affected by the power draw and too much filtering will prevent the battery level to keep up with changes.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>MCCONF_M_BATT_FILTER_CONST</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>99</maxInt>
+            <minInt>0</minInt>
+            <showDisplay>1</showDisplay>
+            <stepInt>1</stepInt>
+            <valInt>1</valInt>
+            <suffix></suffix>
+            <vTx>1</vTx>
+        </m_batt_filter_const>
         <si_motor_poles>
             <longName>Motor Poles</longName>
             <type>2</type>
@@ -3947,6 +4013,7 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The motor brand, e.g. Turnigy.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine></cDefine>
             <valString>Unnamed</valString>
+            <maxLen>0</maxLen>
         </motor_brand>
         <motor_model>
             <longName>Motor Model</longName>
@@ -3959,6 +4026,7 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The motor model, e.g. 6374 168KV.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine></cDefine>
             <valString>Not Specified</valString>
+            <maxLen>0</maxLen>
         </motor_model>
         <motor_weight>
             <longName>Motor Weight</longName>
@@ -3997,6 +4065,7 @@ p, li { white-space: pre-wrap; }
             <enumNames>Hall Sensors</enumNames>
             <enumNames>ABI Encoder</enumNames>
             <enumNames>AS5047 Encoder</enumNames>
+            <enumNames>AS5X47U Encoder</enumNames>
             <enumNames>Other Sensor</enumNames>
         </motor_sensor_type>
         <motor_description>
@@ -4010,6 +4079,7 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Roboto';&quot;&gt;This is an editor where a description can be stored for your motor configuration. Images can also be inserted. Notice that this information is not written to the VESC, so it has to be stored in an XML file.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine></cDefine>
             <valString>A motor description can be edited here.</valString>
+            <maxLen>0</maxLen>
         </motor_description>
         <motor_quality_bearings>
             <longName>Bearing Quality</longName>
@@ -4082,6 +4152,7 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;A text summary of the motor quality.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine></cDefine>
             <valString>Some comments about the motor quality. Images can be added as well.</valString>
+            <maxLen>0</maxLen>
         </motor_quality_description>
         <bms.type>
             <longName>BMS Type</longName>
@@ -4103,6 +4174,33 @@ p, li { white-space: pre-wrap; }
             <enumNames>None</enumNames>
             <enumNames>VESC BMS</enumNames>
         </bms.type>
+        <bms.limit_mode>
+            <longName>BMS Limit Mode</longName>
+            <type>6</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Choose how to limit the motor current based on data from the BMS.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Overtemp&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Decrease the input and regen current as the battery gets to hot.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;SOC&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Decrease the input current as the state of charge (SOC) gets too low.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>MCCONF_BMS_LIMIT_MODE</cDefine>
+            <valInt>3</valInt>
+            <enumNames>Overtemp</enumNames>
+            <enumNames>SOC</enumNames>
+            <enumNames>Unused</enumNames>
+            <enumNames>Unused</enumNames>
+            <enumNames>Unused</enumNames>
+            <enumNames>Unused</enumNames>
+            <enumNames>Unused</enumNames>
+            <enumNames>Unused</enumNames>
+        </bms.limit_mode>
         <bms.t_limit_start>
             <longName>Temperature Limit Start</longName>
             <type>1</type>
@@ -4283,11 +4381,6 @@ p, li { white-space: pre-wrap; }
         <ser>foc_encoder_inverted</ser>
         <ser>foc_encoder_offset</ser>
         <ser>foc_encoder_ratio</ser>
-        <ser>foc_encoder_sin_gain</ser>
-        <ser>foc_encoder_cos_gain</ser>
-        <ser>foc_encoder_sin_offset</ser>
-        <ser>foc_encoder_cos_offset</ser>
-        <ser>foc_encoder_sincos_filter_constant</ser>
         <ser>foc_sensor_mode</ser>
         <ser>foc_pll_kp</ser>
         <ser>foc_pll_ki</ser>
@@ -4388,6 +4481,12 @@ p, li { white-space: pre-wrap; }
         <ser>m_duty_ramp_step</ser>
         <ser>m_current_backoff_gain</ser>
         <ser>m_encoder_counts</ser>
+        <ser>m_encoder_sin_amp</ser>
+        <ser>m_encoder_cos_amp</ser>
+        <ser>m_encoder_sin_offset</ser>
+        <ser>m_encoder_cos_offset</ser>
+        <ser>m_encoder_sincos_filter_constant</ser>
+        <ser>m_encoder_sincos_phase_correction</ser>
         <ser>m_sensor_port_mode</ser>
         <ser>m_invert_direction</ser>
         <ser>m_drv8301_oc_mode</ser>
@@ -4402,6 +4501,7 @@ p, li { white-space: pre-wrap; }
         <ser>m_ntcx_ptcx_res</ser>
         <ser>m_ntcx_ptcx_temp_base</ser>
         <ser>m_hall_extra_samples</ser>
+        <ser>m_batt_filter_const</ser>
         <ser>si_motor_poles</ser>
         <ser>si_gear_ratio</ser>
         <ser>si_wheel_diameter</ser>
@@ -4410,6 +4510,7 @@ p, li { white-space: pre-wrap; }
         <ser>si_battery_ah</ser>
         <ser>si_motor_nl_current</ser>
         <ser>bms.type</ser>
+        <ser>bms.limit_mode</ser>
         <ser>bms.t_limit_start</ser>
         <ser>bms.t_limit_end</ser>
         <ser>bms.soc_limit_start</ser>
@@ -4424,8 +4525,21 @@ p, li { white-space: pre-wrap; }
                 <subgroupParams>
                     <param>motor_type</param>
                     <param>m_invert_direction</param>
+                </subgroupParams>
+            </subgroup>
+            <subgroup>
+                <subgroupName>Sensors</subgroupName>
+                <subgroupParams>
                     <param>m_sensor_port_mode</param>
+                    <param>::sep::ABI Encoder</param>
                     <param>m_encoder_counts</param>
+                    <param>::sep::Sin/Cos Encoder</param>
+                    <param>m_encoder_sin_amp</param>
+                    <param>m_encoder_cos_amp</param>
+                    <param>m_encoder_sin_offset</param>
+                    <param>m_encoder_cos_offset</param>
+                    <param>m_encoder_sincos_filter_constant</param>
+                    <param>m_encoder_sincos_phase_correction</param>
                 </subgroupParams>
             </subgroup>
             <subgroup>
@@ -4451,6 +4565,7 @@ p, li { white-space: pre-wrap; }
                 <subgroupParams>
                     <param>l_battery_cut_start</param>
                     <param>l_battery_cut_end</param>
+                    <param>m_batt_filter_const</param>
                 </subgroupParams>
             </subgroup>
             <subgroup>
@@ -4471,6 +4586,12 @@ p, li { white-space: pre-wrap; }
             <subgroup>
                 <subgroupName>Temperature</subgroupName>
                 <subgroupParams>
+                    <param>::sep::Motor Temperature Sensor Type</param>
+                    <param>m_motor_temp_sens_type</param>
+                    <param>m_ntc_motor_beta</param>
+                    <param>m_ptc_motor_coeff</param>
+                    <param>m_ntcx_ptcx_res</param>
+                    <param>m_ntcx_ptcx_temp_base</param>
                     <param>::sep::General</param>
                     <param>l_temp_accel_dec</param>
                     <param>::sep::MOSFET</param>
@@ -4485,6 +4606,7 @@ p, li { white-space: pre-wrap; }
                 <subgroupName>BMS</subgroupName>
                 <subgroupParams>
                     <param>bms.type</param>
+                    <param>bms.limit_mode</param>
                     <param>bms.t_limit_start</param>
                     <param>bms.t_limit_end</param>
                     <param>bms.soc_limit_start</param>
@@ -4502,13 +4624,7 @@ p, li { white-space: pre-wrap; }
                     <param>cc_min_current</param>
                     <param>m_fault_stop_time_ms</param>
                     <param>m_out_aux_mode</param>
-                    <param>m_motor_temp_sens_type</param>
-                    <param>m_ntc_motor_beta</param>
-                    <param>m_ptc_motor_coeff</param>
-                    <param>m_ntcx_ptcx_res</param>
-                    <param>m_ntcx_ptcx_temp_base</param>
                     <param>l_duty_start</param>
-                    <param>m_hall_extra_samples</param>
                 </subgroupParams>
             </subgroup>
         </group>
@@ -4631,11 +4747,6 @@ p, li { white-space: pre-wrap; }
                     <param>foc_encoder_offset</param>
                     <param>foc_encoder_ratio</param>
                     <param>foc_encoder_inverted</param>
-                    <param>foc_encoder_sin_gain</param>
-                    <param>foc_encoder_sin_offset</param>
-                    <param>foc_encoder_cos_gain</param>
-                    <param>foc_encoder_cos_offset</param>
-                    <param>foc_encoder_sincos_filter_constant</param>
                 </subgroupParams>
             </subgroup>
             <subgroup>

@@ -1,0 +1,22 @@
+<RCC>
+    <qresource prefix="/res/firmwares_esp">
+        <file>ESP32-C3/VESC Express/bootloader.bin</file>
+        <file>ESP32-C3/VESC Express/partition-table.bin</file>
+        <file>ESP32-C3/VESC Express/vesc_express.bin</file>
+        <file>ESP32-C3/DevKitM-1/vesc_express.bin</file>
+        <file>ESP32-C3/DevKitM-1/bootloader.bin</file>
+        <file>ESP32-C3/DevKitM-1/partition-table.bin</file>
+        <file>ESP32-C3/STR365/bootloader.bin</file>
+        <file>ESP32-C3/STR365/partition-table.bin</file>
+        <file>ESP32-C3/STR365/vesc_express.bin</file>
+        <file>ESP32-C3/VBMS32/bootloader.bin</file>
+        <file>ESP32-C3/VBMS32/partition-table.bin</file>
+        <file>ESP32-C3/VBMS32/vesc_express.bin</file>
+        <file>ESP32-C3/VDisp/bootloader.bin</file>
+        <file>ESP32-C3/VDisp/partition-table.bin</file>
+        <file>ESP32-C3/VDisp/vesc_express.bin</file>
+        <file>ESP32-C3/VDisp Dual/bootloader.bin</file>
+        <file>ESP32-C3/VDisp Dual/partition-table.bin</file>
+        <file>ESP32-C3/VDisp Dual/vesc_express.bin</file>
+    </qresource>
+</RCC>

@@ -20,16 +20,17 @@
 import QtQuick 2.7
 import QtQuick.Controls 2.10
 import QtQuick.Layouts 1.3
+import QtQuick.Dialogs 1.3 as Dl
 
 import Vedder.vesc.vescinterface 1.0
 import Vedder.vesc.commands 1.0
 import Vedder.vesc.configparams 1.0
+import Vedder.vesc.utility 1.0
 
 Item {
     id: confPageMotorItem
     property Commands mCommands: VescIf.commands()
     property bool isHorizontal: width > height
-
 
     ParamEditors {
         id: editors
@@ -72,6 +73,52 @@ Item {
         DirectionSetup {
             id: directionSetup
             anchors.fill: parent
+        }
+    }
+
+    Dialog {
+        id: measureOffsetDialog
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        modal: true
+        focus: true
+        width: parent.width - 20
+        closePolicy: Popup.CloseOnEscape
+        title: "Measure Offsets"
+
+        x: 10
+        y: Math.max((parent.height - height) / 2, 10)
+        parent: ApplicationWindow.overlay
+
+        Overlay.modal: Rectangle {
+            color: "#AA000000"
+        }
+
+        Text {
+            anchors.fill: parent
+            id: detectLambdaLabel
+            color: Utility.getAppHexColor("lightText")
+            verticalAlignment: Text.AlignVCenter
+            wrapMode: Text.WordWrap
+            text:
+                "This is going to measure and store all offsets. Make sure " +
+                "that the motor is not moving or disconnected. Motor rotation " +
+                "during the measurement will cause an invalid result. Do you " +
+                "want to continue?"
+        }
+
+        Timer {
+            id: offsetReadConfTimer
+            interval: 5000
+            repeat: false
+            running: false
+            onTriggered: {
+                mCommands.getMcconf()
+            }
+        }
+
+        onAccepted: {
+            mCommands.sendTerminalCmd("foc_dc_cal")
+            offsetReadConfTimer.restart()
         }
     }
 
@@ -153,11 +200,12 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             contentWidth: column.width
+            contentHeight: scrollCol.preferredHeight
             clip: true
 
             GridLayout {
                 id: scrollCol
-                anchors.fill: parent
+                width: column.width
                 columns: isHorizontal ? 2 : 1
             }
         }
@@ -200,8 +248,6 @@ Item {
                     y: parent.height - implicitHeight
                     width: parent.width
 
-
-
                     MenuItem {
                         text: "Read Default Settings"
                         onTriggered: {
@@ -233,10 +279,94 @@ Item {
                         }
                     }
                     MenuItem {
+                        text: "Measure FOC Offsets"
+                        onTriggered: {
+                            if (VescIf.isPortConnected()) {
+                                measureOffsetDialog.open()
+                            } else {
+                                VescIf.emitMessageDialog("Measure FOC Offsets", "Not Connected", false, false)
+                            }
+                        }
+                    }
+                    MenuItem {
                         text: "Setup Motor Directions..."
                         onTriggered: {
                             directionSetupDialog.open()
                             directionSetup.scanCan()
+                        }
+                    }
+                    MenuItem {
+                        text: "Save XML"
+                        onTriggered: {
+                            if (Utility.requestFilePermission()) {
+                                fileDialogSave.close()
+                                fileDialogSave.open()
+                            } else {
+                                VescIf.emitMessageDialog(
+                                            "File Permissions",
+                                            "Unable to request file system permission.",
+                                            false, false)
+                            }
+                        }
+
+                        Dl.FileDialog {
+                            id: fileDialogSave
+                            title: "Please choose a file"
+                            nameFilters: ["*"]
+                            selectExisting: false
+                            selectMultiple: false
+                            onAccepted: {
+                                var path = fileUrl.toString()
+                                if (VescIf.mcConfig().saveXml(path, "MCConfiguration")) {
+                                    VescIf.emitStatusMessage("Mcconf Saved", true)
+                                } else {
+                                    VescIf.emitStatusMessage("Mcconf Save Failed", false)
+                                }
+
+                                close()
+                                parent.forceActiveFocus()
+                            }
+                            onRejected: {
+                                close()
+                                parent.forceActiveFocus()
+                            }
+                        }
+                    }
+                    MenuItem {
+                        text: "Load XML"
+                        onTriggered: {
+                            if (Utility.requestFilePermission()) {
+                                fileDialogLoad.close()
+                                fileDialogLoad.open()
+                            } else {
+                                VescIf.emitMessageDialog(
+                                            "File Permissions",
+                                            "Unable to request file system permission.",
+                                            false, false)
+                            }
+                        }
+
+                        Dl.FileDialog {
+                            id: fileDialogLoad
+                            title: "Please choose a file"
+                            nameFilters: ["*"]
+                            selectExisting: true
+                            selectMultiple: false
+                            onAccepted: {
+                                var path = fileUrl.toString()
+                                if (VescIf.mcConfig().loadXml(path, "MCConfiguration")) {
+                                    VescIf.emitStatusMessage("Mcconf Loaded", true)
+                                } else {
+                                    VescIf.emitStatusMessage("Mcconf Load Failed", false)
+                                }
+
+                                close()
+                                parent.forceActiveFocus()
+                            }
+                            onRejected: {
+                                close()
+                                parent.forceActiveFocus()
+                            }
                         }
                     }
                 }
@@ -248,7 +378,7 @@ Item {
         target: mCommands
 
         // TODO: For some reason this does not work
-        onMcConfigCheckResult: {
+        function onMcConfigCheckResult(paramsNotSet) {
             if (paramsNotSet.length > 0) {
                 var notUpdated = "The following parameters were truncated because " +
                         "they were beyond the hardware limits:\n"
@@ -264,7 +394,7 @@ Item {
 
     Connections {
         target: VescIf
-        onConfigurationChanged: {
+        function onConfigurationChanged() {
             pageBox.model = VescIf.mcConfig().getParamGroups()
 
             var tabTextOld = tabBox.currentText

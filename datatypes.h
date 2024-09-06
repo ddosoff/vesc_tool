@@ -26,13 +26,31 @@
 #include <QVector>
 #include <QDateTime>
 #include <QTime>
-#include <stdint.h>
+#include <QMap>
+#include <cstdint>
+#include "tcphub.h"
 
-typedef struct {
+struct VSerialInfo_t {
+    Q_GADGET
+
+    Q_PROPERTY(QString name MEMBER name)
+    Q_PROPERTY(QString systemPath MEMBER systemPath)
+    Q_PROPERTY(bool isVesc MEMBER isVesc)
+    Q_PROPERTY(bool isEsp MEMBER isEsp)
+
+public:
+    VSerialInfo_t() {
+        isVesc = false;
+        isEsp = false;
+    }
+
     QString name;
     QString systemPath;
     bool isVesc;
-} VSerialInfo_t;
+    bool isEsp;
+};
+
+Q_DECLARE_METATYPE(VSerialInfo_t)
 
 typedef enum {
     CFG_T_UNDEFINED = 0,
@@ -99,7 +117,8 @@ typedef enum {
     FAULT_CODE_FLASH_CORRUPTION_MC_CFG,
     FAULT_CODE_ENCODER_NO_MAGNET,
     FAULT_CODE_ENCODER_MAGNET_TOO_STRONG,
-    FAULT_CODE_PHASE_FILTER
+    FAULT_CODE_PHASE_FILTER,
+    FAULT_CODE_ENCODER_FAULT
 } mc_fault_code;
 
 typedef enum {
@@ -109,7 +128,8 @@ typedef enum {
     DISP_POS_MODE_ENCODER,
     DISP_POS_MODE_PID_POS,
     DISP_POS_MODE_PID_POS_ERROR,
-    DISP_POS_MODE_ENCODER_OBSERVER_ERROR
+    DISP_POS_MODE_ENCODER_OBSERVER_ERROR,
+    DISP_POS_MODE_HALL_OBSERVER_ERROR
 } disp_pos_mode;
 
 Q_DECLARE_METATYPE(disp_pos_mode)
@@ -519,6 +539,58 @@ public:
 
 Q_DECLARE_METATYPE(LOG_DATA)
 
+struct LOG_HEADER {
+    Q_GADGET
+
+    Q_PROPERTY(QString key MEMBER key)
+    Q_PROPERTY(QString name MEMBER name)
+    Q_PROPERTY(QString unit MEMBER unit)
+    Q_PROPERTY(int precision MEMBER precision)
+    Q_PROPERTY(bool isTimeStamp MEMBER isTimeStamp)
+    Q_PROPERTY(bool isRelativeToFirst MEMBER isRelativeToFirst)
+    Q_PROPERTY(double scaleStep MEMBER scaleStep)
+    Q_PROPERTY(double scaleMax MEMBER scaleMax)
+
+public:
+    LOG_HEADER() {
+        precision = 2;
+        isRelativeToFirst = false;
+        isTimeStamp = false;
+        scaleStep = 0.1;
+        scaleMax = 99.99;
+    }
+
+    LOG_HEADER(QString key,
+              QString name,
+              QString unit,
+              int precision = 2,
+              bool isRelativeToFirst = false,
+              bool isTimeStamp = false,
+              double scaleStep = 0.1,
+              double scaleMax = 99.99) {
+        this->key = key;
+        this->name = name;
+        this->unit = unit;
+        this->precision = precision;
+        this->isRelativeToFirst = isRelativeToFirst;
+        this->isTimeStamp = isTimeStamp;
+        this->scaleStep = scaleStep;
+        this->scaleMax = scaleMax;
+    }
+
+    QString key;
+    QString name;
+    QString unit;
+    int precision;
+    bool isRelativeToFirst;
+    bool isTimeStamp;
+    double scaleStep;
+    double scaleMax;
+
+};
+
+Q_DECLARE_METATYPE(LOG_HEADER)
+
 struct MCCONF_TEMP {
     Q_GADGET
 
@@ -553,12 +625,14 @@ struct CONFIG_BACKUP {
     Q_PROPERTY(QString vesc_uuid MEMBER vesc_uuid)
     Q_PROPERTY(QString mcconf_xml_compressed MEMBER mcconf_xml_compressed)
     Q_PROPERTY(QString appconf_xml_compressed MEMBER appconf_xml_compressed)
+    Q_PROPERTY(QString customconf_xml_compressed MEMBER customconf_xml_compressed)
 
 public:
     QString name;
     QString vesc_uuid;
     QString mcconf_xml_compressed;
     QString appconf_xml_compressed;
+    QString customconf_xml_compressed;
 };
 
 Q_DECLARE_METATYPE(CONFIG_BACKUP)
@@ -581,6 +655,7 @@ struct FW_RX_PARAMS {
     Q_PROPERTY(bool qmlAppFullscreen MEMBER qmlAppFullscreen)
     Q_PROPERTY(bool nrfNameSupported MEMBER nrfNameSupported)
     Q_PROPERTY(bool nrfPinSupported MEMBER nrfPinSupported)
+    Q_PROPERTY(quint32 hwConfCrc MEMBER hwConfCrc)
 
 public:
     FW_RX_PARAMS() {
@@ -597,6 +672,7 @@ public:
         qmlAppFullscreen = false;
         nrfNameSupported = false;
         nrfPinSupported = false;
+        hwConfCrc = 0;
     }
 
     Q_INVOKABLE QString hwTypeStr() {
@@ -634,6 +710,7 @@ public:
     bool qmlAppFullscreen;
     bool nrfNameSupported;
     bool nrfPinSupported;
+    quint32 hwConfCrc;
 
 };
 
@@ -653,6 +730,7 @@ struct BMS_VALUES {
     Q_PROPERTY(QVector<bool> is_balancing MEMBER is_balancing)
     Q_PROPERTY(double temp_ic MEMBER temp_ic)
     Q_PROPERTY(double humidity MEMBER humidity)
+    Q_PROPERTY(double pressure MEMBER pressure)
     Q_PROPERTY(double temp_hum_sensor MEMBER temp_hum_sensor)
     Q_PROPERTY(double temp_cells_highest MEMBER temp_cells_highest)
     Q_PROPERTY(double soc MEMBER soc)
@@ -672,6 +750,7 @@ public:
         ah_cnt = 0.0;
         wh_cnt = 0.0;
         humidity = 0.0;
+        pressure = 0.0;
         temp_hum_sensor = 0.0;
         temp_cells_highest = 0.0;
         soc = 0.0;
@@ -710,6 +789,7 @@ public:
     QVector<bool> is_balancing;
     double temp_ic;
     double humidity;
+    double pressure;
     double temp_hum_sensor;
     double temp_cells_highest;
     double soc;
@@ -802,166 +882,193 @@ typedef enum {
     DEBUG_SAMPLING_TRIGGER_FAULT,
     DEBUG_SAMPLING_TRIGGER_START_NOSEND,
     DEBUG_SAMPLING_TRIGGER_FAULT_NOSEND,
-    DEBUG_SAMPLING_SEND_LAST_SAMPLES
+    DEBUG_SAMPLING_SEND_LAST_SAMPLES,
+    DEBUG_SAMPLING_SEND_SINGLE_SAMPLE
 } debug_sampling_mode;
 
 typedef enum {
-    COMM_FW_VERSION = 0,
-    COMM_JUMP_TO_BOOTLOADER,
-    COMM_ERASE_NEW_APP,
-    COMM_WRITE_NEW_APP_DATA,
-    COMM_GET_VALUES,
-    COMM_SET_DUTY,
-    COMM_SET_CURRENT,
-    COMM_SET_CURRENT_BRAKE,
-    COMM_SET_RPM,
-    COMM_SET_POS,
-    COMM_SET_HANDBRAKE,
-    COMM_SET_DETECT,
-    COMM_SET_SERVO_POS,
-    COMM_SET_MCCONF,
-    COMM_GET_MCCONF,
-    COMM_GET_MCCONF_DEFAULT,
-    COMM_SET_APPCONF,
-    COMM_GET_APPCONF,
-    COMM_GET_APPCONF_DEFAULT,
-    COMM_SAMPLE_PRINT,
-    COMM_TERMINAL_CMD,
-    COMM_PRINT,
-    COMM_ROTOR_POSITION,
-    COMM_EXPERIMENT_SAMPLE,
-    COMM_DETECT_MOTOR_PARAM,
-    COMM_DETECT_MOTOR_R_L,
-    COMM_DETECT_MOTOR_FLUX_LINKAGE,
-    COMM_DETECT_ENCODER,
-    COMM_DETECT_HALL_FOC,
-    COMM_REBOOT,
-    COMM_ALIVE,
-    COMM_GET_DECODED_PPM,
-    COMM_GET_DECODED_ADC,
-    COMM_GET_DECODED_CHUK,
-    COMM_FORWARD_CAN,
-    COMM_SET_CHUCK_DATA,
-    COMM_CUSTOM_APP_DATA,
-    COMM_NRF_START_PAIRING,
-    COMM_GPD_SET_FSW,
-    COMM_GPD_BUFFER_NOTIFY,
-    COMM_GPD_BUFFER_SIZE_LEFT,
-    COMM_GPD_FILL_BUFFER,
-    COMM_GPD_OUTPUT_SAMPLE,
-    COMM_GPD_SET_MODE,
-    COMM_GPD_FILL_BUFFER_INT8,
-    COMM_GPD_FILL_BUFFER_INT16,
-    COMM_GPD_SET_BUFFER_INT_SCALE,
-    COMM_GET_VALUES_SETUP,
-    COMM_SET_MCCONF_TEMP,
-    COMM_SET_MCCONF_TEMP_SETUP,
-    COMM_GET_VALUES_SELECTIVE,
-    COMM_GET_VALUES_SETUP_SELECTIVE,
-    COMM_EXT_NRF_PRESENT,
-    COMM_EXT_NRF_ESB_SET_CH_ADDR,
-    COMM_EXT_NRF_ESB_SEND_DATA,
-    COMM_EXT_NRF_ESB_RX_DATA,
-    COMM_EXT_NRF_SET_ENABLED,
-    COMM_DETECT_MOTOR_FLUX_LINKAGE_OPENLOOP,
-    COMM_DETECT_APPLY_ALL_FOC,
-    COMM_JUMP_TO_BOOTLOADER_ALL_CAN,
-    COMM_ERASE_NEW_APP_ALL_CAN,
-    COMM_WRITE_NEW_APP_DATA_ALL_CAN,
-    COMM_PING_CAN,
-    COMM_APP_DISABLE_OUTPUT,
-    COMM_TERMINAL_CMD_SYNC,
-    COMM_GET_IMU_DATA,
-    COMM_BM_CONNECT,
-    COMM_BM_ERASE_FLASH_ALL,
-    COMM_BM_WRITE_FLASH,
-    COMM_BM_REBOOT,
-    COMM_BM_DISCONNECT,
-    COMM_BM_MAP_PINS_DEFAULT,
-    COMM_BM_MAP_PINS_NRF5X,
-    COMM_ERASE_BOOTLOADER,
-    COMM_ERASE_BOOTLOADER_ALL_CAN,
-    COMM_PLOT_INIT,
-    COMM_PLOT_DATA,
-    COMM_PLOT_ADD_GRAPH,
-    COMM_PLOT_SET_GRAPH,
-    COMM_GET_DECODED_BALANCE,
-    COMM_BM_MEM_READ,
-    COMM_WRITE_NEW_APP_DATA_LZO,
-    COMM_WRITE_NEW_APP_DATA_ALL_CAN_LZO,
-    COMM_BM_WRITE_FLASH_LZO,
-    COMM_SET_CURRENT_REL,
-    COMM_CAN_FWD_FRAME,
-    COMM_SET_BATTERY_CUT,
-    COMM_SET_BLE_NAME,
-    COMM_SET_BLE_PIN,
-    COMM_SET_CAN_MODE,
-    COMM_GET_IMU_CALIBRATION,
-    COMM_GET_MCCONF_TEMP,
+	COMM_FW_VERSION							= 0,
+	COMM_JUMP_TO_BOOTLOADER					= 1,
+	COMM_ERASE_NEW_APP						= 2,
+	COMM_WRITE_NEW_APP_DATA					= 3,
+	COMM_GET_VALUES							= 4,
+	COMM_SET_DUTY							= 5,
+	COMM_SET_CURRENT						= 6,
+	COMM_SET_CURRENT_BRAKE					= 7,
+	COMM_SET_RPM							= 8,
+	COMM_SET_POS							= 9,
+	COMM_SET_HANDBRAKE						= 10,
+	COMM_SET_DETECT							= 11,
+	COMM_SET_SERVO_POS						= 12,
+	COMM_SET_MCCONF							= 13,
+	COMM_GET_MCCONF							= 14,
+	COMM_GET_MCCONF_DEFAULT					= 15,
+	COMM_SET_APPCONF						= 16,
+	COMM_GET_APPCONF						= 17,
+	COMM_GET_APPCONF_DEFAULT				= 18,
+	COMM_SAMPLE_PRINT						= 19,
+	COMM_TERMINAL_CMD						= 20,
+	COMM_PRINT								= 21,
+	COMM_ROTOR_POSITION						= 22,
+	COMM_EXPERIMENT_SAMPLE					= 23,
+	COMM_DETECT_MOTOR_PARAM					= 24,
+	COMM_DETECT_MOTOR_R_L					= 25,
+	COMM_DETECT_MOTOR_FLUX_LINKAGE			= 26,
+	COMM_DETECT_ENCODER						= 27,
+	COMM_DETECT_HALL_FOC					= 28,
+	COMM_REBOOT								= 29,
+	COMM_ALIVE								= 30,
+	COMM_GET_DECODED_PPM					= 31,
+	COMM_GET_DECODED_ADC					= 32,
+	COMM_GET_DECODED_CHUK					= 33,
+	COMM_FORWARD_CAN						= 34,
+	COMM_SET_CHUCK_DATA						= 35,
+	COMM_CUSTOM_APP_DATA					= 36,
+	COMM_NRF_START_PAIRING					= 37,
+	COMM_GPD_SET_FSW						= 38,
+	COMM_GPD_BUFFER_NOTIFY					= 39,
+	COMM_GPD_BUFFER_SIZE_LEFT				= 40,
+	COMM_GPD_FILL_BUFFER					= 41,
+	COMM_GPD_OUTPUT_SAMPLE					= 42,
+	COMM_GPD_SET_MODE						= 43,
+	COMM_GPD_FILL_BUFFER_INT8				= 44,
+	COMM_GPD_FILL_BUFFER_INT16				= 45,
+	COMM_GPD_SET_BUFFER_INT_SCALE			= 46,
+	COMM_GET_VALUES_SETUP					= 47,
+	COMM_SET_MCCONF_TEMP					= 48,
+	COMM_SET_MCCONF_TEMP_SETUP				= 49,
+	COMM_GET_VALUES_SELECTIVE				= 50,
+	COMM_GET_VALUES_SETUP_SELECTIVE			= 51,
+	COMM_EXT_NRF_PRESENT					= 52,
+	COMM_EXT_NRF_ESB_SET_CH_ADDR			= 53,
+	COMM_EXT_NRF_ESB_SEND_DATA				= 54,
+	COMM_EXT_NRF_ESB_RX_DATA				= 55,
+	COMM_EXT_NRF_SET_ENABLED				= 56,
+	COMM_DETECT_MOTOR_FLUX_LINKAGE_OPENLOOP	= 57,
+	COMM_DETECT_APPLY_ALL_FOC				= 58,
+	COMM_JUMP_TO_BOOTLOADER_ALL_CAN			= 59,
+	COMM_ERASE_NEW_APP_ALL_CAN				= 60,
+	COMM_WRITE_NEW_APP_DATA_ALL_CAN			= 61,
+	COMM_PING_CAN							= 62,
+	COMM_APP_DISABLE_OUTPUT					= 63,
+	COMM_TERMINAL_CMD_SYNC					= 64,
+	COMM_GET_IMU_DATA						= 65,
+	COMM_BM_CONNECT							= 66,
+	COMM_BM_ERASE_FLASH_ALL					= 67,
+	COMM_BM_WRITE_FLASH						= 68,
+	COMM_BM_REBOOT							= 69,
+	COMM_BM_DISCONNECT						= 70,
+	COMM_BM_MAP_PINS_DEFAULT				= 71,
+	COMM_BM_MAP_PINS_NRF5X					= 72,
+	COMM_ERASE_BOOTLOADER					= 73,
+	COMM_ERASE_BOOTLOADER_ALL_CAN			= 74,
+	COMM_PLOT_INIT							= 75,
+	COMM_PLOT_DATA							= 76,
+	COMM_PLOT_ADD_GRAPH						= 77,
+	COMM_PLOT_SET_GRAPH						= 78,
+	COMM_GET_DECODED_BALANCE				= 79,
+	COMM_BM_MEM_READ						= 80,
+	COMM_WRITE_NEW_APP_DATA_LZO				= 81,
+	COMM_WRITE_NEW_APP_DATA_ALL_CAN_LZO		= 82,
+	COMM_BM_WRITE_FLASH_LZO					= 83,
+	COMM_SET_CURRENT_REL					= 84,
+	COMM_CAN_FWD_FRAME						= 85,
+	COMM_SET_BATTERY_CUT					= 86,
+	COMM_SET_BLE_NAME						= 87,
+	COMM_SET_BLE_PIN						= 88,
+	COMM_SET_CAN_MODE						= 89,
+	COMM_GET_IMU_CALIBRATION				= 90,
+	COMM_GET_MCCONF_TEMP					= 91,
 
-    // Custom configuration for hardware
-    COMM_GET_CUSTOM_CONFIG_XML,
-    COMM_GET_CUSTOM_CONFIG,
-    COMM_GET_CUSTOM_CONFIG_DEFAULT,
-    COMM_SET_CUSTOM_CONFIG,
+	// Custom configuration for hardware
+	COMM_GET_CUSTOM_CONFIG_XML				= 92,
+	COMM_GET_CUSTOM_CONFIG					= 93,
+	COMM_GET_CUSTOM_CONFIG_DEFAULT			= 94,
+	COMM_SET_CUSTOM_CONFIG					= 95,
 
-    // BMS commands
-    COMM_BMS_GET_VALUES,
-    COMM_BMS_SET_CHARGE_ALLOWED,
-    COMM_BMS_SET_BALANCE_OVERRIDE,
-    COMM_BMS_RESET_COUNTERS,
-    COMM_BMS_FORCE_BALANCE,
-    COMM_BMS_ZERO_CURRENT_OFFSET,
+	// BMS commands
+	COMM_BMS_GET_VALUES						= 96,
+	COMM_BMS_SET_CHARGE_ALLOWED				= 97,
+	COMM_BMS_SET_BALANCE_OVERRIDE			= 98,
+	COMM_BMS_RESET_COUNTERS					= 99,
+	COMM_BMS_FORCE_BALANCE					= 100,
+	COMM_BMS_ZERO_CURRENT_OFFSET			= 101,
 
-    // FW updates commands for different HW types
-    COMM_JUMP_TO_BOOTLOADER_HW,
-    COMM_ERASE_NEW_APP_HW,
-    COMM_WRITE_NEW_APP_DATA_HW,
-    COMM_ERASE_BOOTLOADER_HW,
-    COMM_JUMP_TO_BOOTLOADER_ALL_CAN_HW,
-    COMM_ERASE_NEW_APP_ALL_CAN_HW,
-    COMM_WRITE_NEW_APP_DATA_ALL_CAN_HW,
-    COMM_ERASE_BOOTLOADER_ALL_CAN_HW,
+	// FW updates commands for different HW types
+	COMM_JUMP_TO_BOOTLOADER_HW				= 102,
+	COMM_ERASE_NEW_APP_HW					= 103,
+	COMM_WRITE_NEW_APP_DATA_HW				= 104,
+	COMM_ERASE_BOOTLOADER_HW				= 105,
+	COMM_JUMP_TO_BOOTLOADER_ALL_CAN_HW		= 106,
+	COMM_ERASE_NEW_APP_ALL_CAN_HW			= 107,
+	COMM_WRITE_NEW_APP_DATA_ALL_CAN_HW		= 108,
+	COMM_ERASE_BOOTLOADER_ALL_CAN_HW		= 109,
 
-    COMM_SET_ODOMETER,
+	COMM_SET_ODOMETER						= 110,
 
-    // Power switch commands
-    COMM_PSW_GET_STATUS,
-    COMM_PSW_SWITCH,
+	// Power switch commands
+	COMM_PSW_GET_STATUS						= 111,
+	COMM_PSW_SWITCH							= 112,
 
-    COMM_BMS_FWD_CAN_RX,
-    COMM_BMS_HW_DATA,
-    COMM_GET_BATTERY_CUT,
-    COMM_BM_HALT_REQ,
-    COMM_GET_QML_UI_HW,
-    COMM_GET_QML_UI_APP,
-    COMM_CUSTOM_HW_DATA,
-    COMM_QMLUI_ERASE,
-    COMM_QMLUI_WRITE,
+	COMM_BMS_FWD_CAN_RX						= 113,
+	COMM_BMS_HW_DATA						= 114,
+	COMM_GET_BATTERY_CUT					= 115,
+	COMM_BM_HALT_REQ						= 116,
+	COMM_GET_QML_UI_HW						= 117,
+	COMM_GET_QML_UI_APP						= 118,
+	COMM_CUSTOM_HW_DATA						= 119,
+	COMM_QMLUI_ERASE						= 120,
+	COMM_QMLUI_WRITE						= 121,
 
-    // IO Board
-    COMM_IO_BOARD_GET_ALL,
-    COMM_IO_BOARD_SET_PWM,
-    COMM_IO_BOARD_SET_DIGITAL,
+	// IO Board
+	COMM_IO_BOARD_GET_ALL					= 122,
+	COMM_IO_BOARD_SET_PWM					= 123,
+	COMM_IO_BOARD_SET_DIGITAL				= 124,
 
-    COMM_BM_MEM_WRITE,
-    COMM_BMS_BLNC_SELFTEST,
-    COMM_GET_EXT_HUM_TMP,
-    COMM_GET_STATS,
-    COMM_RESET_STATS,
+	COMM_BM_MEM_WRITE						= 125,
+	COMM_BMS_BLNC_SELFTEST					= 126,
+	COMM_GET_EXT_HUM_TMP					= 127,
+	COMM_GET_STATS							= 128,
+	COMM_RESET_STATS						= 129,
 
-    // Lisp
-    COMM_LISP_READ_CODE,
-    COMM_LISP_WRITE_CODE,
-    COMM_LISP_ERASE_CODE,
-    COMM_LISP_SET_RUNNING,
-    COMM_LISP_GET_STATS,
-    COMM_LISP_PRINT,
+	// Lisp
+	COMM_LISP_READ_CODE						= 130,
+	COMM_LISP_WRITE_CODE					= 131,
+	COMM_LISP_ERASE_CODE					= 132,
+	COMM_LISP_SET_RUNNING					= 133,
+	COMM_LISP_GET_STATS						= 134,
+	COMM_LISP_PRINT							= 135,
 
-    COMM_BMS_SET_BATT_TYPE,
-    COMM_BMS_GET_BATT_TYPE,
+	COMM_BMS_SET_BATT_TYPE					= 136,
+	COMM_BMS_GET_BATT_TYPE					= 137,
 
-    COMM_LISP_REPL_CMD,
+	COMM_LISP_REPL_CMD						= 138,
+	COMM_LISP_STREAM_CODE					= 139,
+
+	COMM_FILE_LIST							= 140,
+	COMM_FILE_READ							= 141,
+	COMM_FILE_WRITE							= 142,
+	COMM_FILE_MKDIR							= 143,
+	COMM_FILE_REMOVE						= 144,
+
+	COMM_LOG_START							= 145,
+	COMM_LOG_STOP							= 146,
+	COMM_LOG_CONFIG_FIELD					= 147,
+	COMM_LOG_DATA_F32						= 148,
+
+	COMM_SET_APPCONF_NO_STORE				= 149,
+	COMM_GET_GNSS							= 150,
+
+	COMM_LOG_DATA_F64						= 151,
+
+	COMM_LISP_RMSG							= 152,
+
+	//Placeholders for pinlock commands
+	//COMM_PINLOCK1							= 153,
+	//COMM_PINLOCK2							= 154,
+	//COMM_PINLOCK3							= 155,
+
+	COMM_SHUTDOWN							= 156,
 } COMM_PACKET_ID;
 
 // CAN commands
@@ -1021,6 +1128,15 @@ typedef enum {
     CAN_PACKET_BMS_HW_DATA_5,
     CAN_PACKET_BMS_AH_WH_CHG_TOTAL,
     CAN_PACKET_BMS_AH_WH_DIS_TOTAL,
+    CAN_PACKET_UPDATE_PID_POS_OFFSET,
+    CAN_PACKET_POLL_ROTOR_POS,
+    CAN_PACKET_NOTIFY_BOOT,
+    CAN_PACKET_STATUS_6,
+    CAN_PACKET_GNSS_TIME,
+    CAN_PACKET_GNSS_LAT,
+    CAN_PACKET_GNSS_LON,
+    CAN_PACKET_GNSS_ALT_SPEED_HDOP,
+    CAN_PACKET_MAKE_ENUM_32_BITS = 0xFFFFFFFF,
 } CAN_PACKET_ID;
 
 typedef struct {
@@ -1056,51 +1172,6 @@ typedef enum {
     NRF_PAIR_FAIL
 } NRF_PAIR_RES;
 
-struct BALANCE_VALUES {
-    Q_GADGET
-
-    Q_PROPERTY(double pid_output MEMBER pid_output)
-    Q_PROPERTY(double pitch_angle MEMBER pitch_angle)
-    Q_PROPERTY(double roll_angle MEMBER roll_angle)
-    Q_PROPERTY(int diff_time MEMBER diff_time)
-    Q_PROPERTY(double motor_current MEMBER motor_current)
-    Q_PROPERTY(int state MEMBER state)
-    Q_PROPERTY(int switch_value MEMBER switch_value)
-    Q_PROPERTY(double adc1 MEMBER adc1)
-    Q_PROPERTY(double adc2 MEMBER adc2)
-    Q_PROPERTY(double debug1 MEMBER debug1)
-    Q_PROPERTY(double debug2 MEMBER debug2)
-
-public:
-    BALANCE_VALUES() {
-        pid_output = 0;
-        pitch_angle = 0;
-        roll_angle = 0;
-        diff_time = 0;
-        motor_current = 0;
-        state = 0;
-        switch_value = 0;
-        adc1 = 0;
-        adc2 = 0;
-        debug1 = 0;
-        debug2 = 0;
-    }
-
-    double pid_output;
-    double pitch_angle;
-    double roll_angle;
-    int diff_time;
-    double motor_current;
-    int state;
-    int switch_value;
-    double adc1;
-    double adc2;
-    double debug1;
-    double debug2;
-};
-
-Q_DECLARE_METATYPE(BALANCE_VALUES)
-
 struct LISP_STATS {
     Q_GADGET
 
@@ -1127,5 +1198,155 @@ public:
 };
 
 Q_DECLARE_METATYPE(LISP_STATS)
+
+struct ENCODER_DETECT_RES {
+    Q_GADGET
+
+public:
+    Q_PROPERTY(double offset MEMBER offset)
+    Q_PROPERTY(double ratio MEMBER ratio)
+    Q_PROPERTY(bool inverted MEMBER inverted)
+    Q_PROPERTY(bool detect_rx MEMBER detect_rx)
+
+    ENCODER_DETECT_RES() {
+        offset = 0.0;
+        ratio = 0.0;
+        inverted = false;
+        detect_rx = false;
+    }
+
+    double offset;
+    double ratio;
+    bool inverted;
+    bool detect_rx;
+};
+
+Q_DECLARE_METATYPE(ENCODER_DETECT_RES)
+
+struct FILE_LIST_ENTRY {
+    Q_GADGET
+
+public:
+    Q_PROPERTY(QString name MEMBER name)
+    Q_PROPERTY(bool isDir MEMBER isDir)
+    Q_PROPERTY(qint32 size MEMBER size)
+
+    FILE_LIST_ENTRY() {
+        isDir = false;
+        size = false;
+    }
+
+    QString name;
+    bool isDir;
+    qint32 size;
+};
+
+Q_DECLARE_METATYPE(FILE_LIST_ENTRY)
+
+struct VescPackage {
+    Q_GADGET
+
+public:
+    Q_PROPERTY(QString name MEMBER name)
+    Q_PROPERTY(QString description MEMBER description)
+    Q_PROPERTY(QString description_md MEMBER description_md)
+    Q_PROPERTY(QByteArray lispData MEMBER lispData)
+    Q_PROPERTY(QString qmlFile MEMBER qmlFile)
+    Q_PROPERTY(bool qmlIsFullscreen MEMBER qmlIsFullscreen)
+    Q_PROPERTY(bool isLibrary MEMBER isLibrary)
+    Q_PROPERTY(bool loadOk MEMBER loadOk)
+    Q_PROPERTY(QByteArray compressedData MEMBER compressedData)
+
+    VescPackage () {
+        name = "VESC Package Name";
+        qmlIsFullscreen = false;
+        isLibrary = false;
+        loadOk = false;
+    }
+
+    QByteArray compressedData;
+    QString name;
+    QString description;
+    QString description_md;
+    QByteArray lispData;
+    QString qmlFile;
+    bool qmlIsFullscreen;
+    bool isLibrary;
+    bool loadOk;
+
+};
+
+Q_DECLARE_METATYPE(VescPackage)
+
+struct TCP_HUB_DEVICE {
+    Q_GADGET
+
+public:
+    Q_PROPERTY(QString server MEMBER server)
+    Q_PROPERTY(int port MEMBER port)
+    Q_PROPERTY(QString id MEMBER id)
+    Q_PROPERTY(QString password MEMBER password)
+
+    TCP_HUB_DEVICE() {
+        port = 65101;
+    }
+
+    Q_INVOKABLE bool ping() {
+        return TcpHub::ping(server, port, id);
+    }
+
+    Q_INVOKABLE QString uuid() {
+        return QString("%1:%2:%3").arg(server).arg(port).arg(id);
+    }
+
+    QString server;
+    int port;
+    QString id;
+    QString password;
+};
+
+Q_DECLARE_METATYPE(TCP_HUB_DEVICE)
+
+struct GNSS_DATA {
+    Q_GADGET
+
+public:
+    Q_PROPERTY(double lat MEMBER lat)
+    Q_PROPERTY(double lon MEMBER lon)
+    Q_PROPERTY(double height MEMBER height)
+    Q_PROPERTY(double speed MEMBER speed)
+    Q_PROPERTY(double hdop MEMBER hdop)
+    Q_PROPERTY(qint32 ms_today MEMBER ms_today)
+    Q_PROPERTY(int yy MEMBER yy)
+    Q_PROPERTY(int mo MEMBER mo)
+    Q_PROPERTY(int dd MEMBER dd)
+    Q_PROPERTY(double age_s MEMBER age_s)
+
+    GNSS_DATA() {
+        lat = 0.0;
+        lon = 0.0;
+        height = 0.0;
+        speed = 0.0;
+        hdop = 0.0;
+        ms_today = 0;
+        yy = 0;
+        mo = 0;
+        dd = 0;
+        age_s = 0.0;
+    }
+
+    double lat;
+    double lon;
+    double height;
+    double speed;
+    double hdop;
+    qint32 ms_today;
+    int yy;
+    int mo;
+    int dd;
+    double age_s;
+};
+
+Q_DECLARE_METATYPE(GNSS_DATA)
 
 #endif // DATATYPES_H

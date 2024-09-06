@@ -89,7 +89,7 @@ Item {
     Connections {
         target: mCommands
 
-        onValuesSetupReceived: {
+        function onValuesSetupReceived(values, mask) {
             statText.text =
                     "Ah Drawn   : " + parseFloat(values.amp_hours * 1000).toFixed(1) + " mAh\n" +
                     "Ah Charged : " + parseFloat(values.amp_hours_charged * 1000).toFixed(1) + " mAh\n" +
@@ -99,7 +99,7 @@ Item {
                     "Dist Abs   : " + parseFloat(values.tachometer_abs).toFixed(2) + " m\n"
         }
 
-        onStatsRx: {
+        function onStatsRx(val, mask) {
             var useImperial = VescIf.useImperialUnits()
             var impFact = useImperial ? 0.621371192 : 1.0
             var speedUnit = useImperial ? "mph" : "km/h"
@@ -108,7 +108,7 @@ Item {
             tripText.text =
                     "Time       : " + new Date(val.count_time * 1000).toISOString().substr(11, 8) + "\n" +
                     "Distance   : " + parseFloat(val.distance()).toFixed(2) + " m\n" +
-                    "Efficiency : " + parseFloat(val.efficiency() * impFact).toFixed(3) + " " + efficiencyUnit + "\n" +
+                    "Efficiency : " + parseFloat(val.efficiency() / impFact).toFixed(3) + " " + efficiencyUnit + "\n" +
                     "Energy     : " + parseFloat(val.energy()).toFixed(3) + " Wh\n" +
                     "Ah         : " + parseFloat(val.ah()).toFixed(3) + " Ah\n" +
                     "Speed Avg  : " + parseFloat(val.speed_avg * 3.6 * impFact).toFixed(1) + " " + speedUnit + "\n" +

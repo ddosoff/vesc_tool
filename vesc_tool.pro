@@ -5,16 +5,19 @@
 #-------------------------------------------------
 
 # Version
-VT_VERSION = 4.00
+VT_VERSION = 6.05
 VT_INTRO_VERSION = 1
 VT_CONFIG_VERSION = 2
 
 # Set to 0 for stable versions and to test version number for development versions.
-VT_IS_TEST_VERSION = 6
+VT_IS_TEST_VERSION = 0
 
-VT_ANDROID_VERSION_ARMV7 = 108
-VT_ANDROID_VERSION_ARM64 = 109
-VT_ANDROID_VERSION_X86 = 110
+# GIT commit
+VT_GIT_COMMIT = $$system(git rev-parse --short=8 HEAD)
+
+VT_ANDROID_VERSION_ARMV7 = 159
+VT_ANDROID_VERSION_ARM64 = 160
+VT_ANDROID_VERSION_X86 = 161
 
 VT_ANDROID_VERSION = $$VT_ANDROID_VERSION_X86
 
@@ -25,6 +28,7 @@ DEFINES += VT_VERSION=$$VT_VERSION
 DEFINES += VT_INTRO_VERSION=$$VT_INTRO_VERSION
 DEFINES += VT_CONFIG_VERSION=$$VT_CONFIG_VERSION
 DEFINES += VT_IS_TEST_VERSION=$$VT_IS_TEST_VERSION
+DEFINES += VT_GIT_COMMIT=$$VT_GIT_COMMIT
 QT_LOGGING_RULES="qt.qml.connections=false"
 #CONFIG += qtquickcompiler
 
@@ -40,6 +44,9 @@ ios: {
 
 # Build mobile GUI
 CONFIG += build_mobile
+
+# Exclude built-in firmwares
+#CONFIG += exclude_fw
 
 ios: {
     CONFIG    += build_mobile
@@ -57,9 +64,7 @@ ios: {
 # sudo service bluetooth restart
 
 # Bluetooth available
-!win32: {
-    DEFINES += HAS_BLUETOOTH
-}
+DEFINES += HAS_BLUETOOTH
 
 # CAN bus available
 # Adding serialbus to Qt seems to break the serial port on static builds. TODO: Figure out why.
@@ -79,6 +84,13 @@ DEFINES += HAS_POS
 
 win32: {
     DEFINES += _USE_MATH_DEFINES
+}
+
+# https://stackoverflow.com/questions/61444320/what-are-the-configure-options-for-qt-that-enable-dead-keys-usage
+unix: {
+!ios: {
+    QTPLUGIN += composeplatforminputcontextplugin
+}
 }
 
 # Options
@@ -194,9 +206,13 @@ build_mobile {
 }
 
 SOURCES += main.cpp\
+    bleuartdummy.cpp \
+    codeloader.cpp \
     mainwindow.cpp \
+    boardsetupwindow.cpp \
     packet.cpp \
     preferences.cpp \
+    tcphub.cpp \
     udpserversimple.cpp \
     vbytearray.cpp \
     commands.cpp \
@@ -213,8 +229,12 @@ SOURCES += main.cpp\
     hexfile.cpp
 
 HEADERS  += mainwindow.h \
+    bleuartdummy.h \
+    codeloader.h \
+    boardsetupwindow.h \
     packet.h \
     preferences.h \
+    tcphub.h \
     udpserversimple.h \
     vbytearray.h \
     commands.h \
@@ -231,7 +251,14 @@ HEADERS  += mainwindow.h \
     tcpserversimple.h \
     hexfile.h
 
+unix: {
+!ios: {
+    HEADERS += systemcommandexecutor.h
+}
+}
+
 FORMS    += mainwindow.ui \
+    boardsetupwindow.ui \
     parametereditor.ui \
     preferences.ui
 
@@ -247,13 +274,23 @@ include(map/map.pri)
 include(lzokay/lzokay.pri)
 include(heatshrink/heatshrink.pri)
 include(QCodeEditor/qcodeeditor.pri)
+include(esp32/esp32.pri)
+include(display_tool/display_tool.pri)
+include(qmarkdowntextedit/qmarkdowntextedit.pri)
+include(maddy/maddy.pri)
+include(minimp3/minimp3.pri)
 
 RESOURCES += res.qrc \
-    res_fw_bms.qrc \
-    res/firmwares/res_fw.qrc \
+    res_custom_module.qrc \
     res_lisp.qrc \
     res_qml.qrc
 RESOURCES += res_config.qrc
+
+!exclude_fw {
+    RESOURCES += res_fw_bms.qrc
+    RESOURCES += res/firmwares/res_fw.qrc
+    RESOURCES += res/firmwares_esp/res_fw_esp.qrc
+}
 
 build_original {
     RESOURCES += res_original.qrc
@@ -298,7 +335,7 @@ macx-clang:contains(QMAKE_HOST.arch, arm.*): {
 macx {
     ICON        =  macos/appIcon.icns
     QMAKE_INFO_PLIST = macos/Info.plist
-    DISTFILES += macos/Info.plist    
+    DISTFILES += macos/Info.plist
     QMAKE_CFLAGS_RELEASE = $$QMAKE_CFLAGS_RELEASE_WITH_DEBUGINFO
     QMAKE_CXXFLAGS_RELEASE = $$QMAKE_CXXFLAGS_RELEASE_WITH_DEBUGINFO
     QMAKE_OBJECTIVE_CFLAGS_RELEASE = $$QMAKE_OBJECTIVE_CFLAGS_RELEASE_WITH_DEBUGINFO
@@ -333,3 +370,8 @@ ios {
     QMAKE_APPLE_TARGETED_DEVICE_FAMILY = 1,2
 }
 CONFIG -= warn_on
+
+contains(ANDROID_TARGET_ARCH,) {
+    ANDROID_ABIS = \
+        armeabi-v7a
+}

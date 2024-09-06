@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1487</width>
-    <height>870</height>
+    <width>1180</width>
+    <height>701</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,9 +30,6 @@
         </property>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout">
-          <property name="spacing">
-           <number>0</number>
-          </property>
           <item>
            <widget class="QPushButton" name="eraseButton">
             <property name="toolTip">
@@ -52,8 +49,28 @@
           </item>
           <item>
            <widget class="QPushButton" name="uploadButton">
+            <property name="toolTip">
+             <string>Upload code to flash. This is persistent and starts the code on every boot.</string>
+            </property>
             <property name="text">
              <string>Upload</string>
+            </property>
+            <property name="icon">
+             <iconset resource="../res.qrc">
+              <normaloff>:/res/icons/Download-96.png</normaloff>:/res/icons/Download-96.png</iconset>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="streamButton">
+            <property name="toolTip">
+             <string>Stream code. This is faster and not persistent, but does not work with imports.</string>
+            </property>
+            <property name="text">
+             <string>Stream</string>
             </property>
             <property name="icon">
              <iconset resource="../res.qrc">
@@ -70,7 +87,7 @@
              <string>Read lisp code from connected VESC</string>
             </property>
             <property name="text">
-             <string>Read Existing</string>
+             <string>Read</string>
             </property>
             <property name="icon">
              <iconset resource="../res.qrc">
@@ -80,32 +97,6 @@
              <bool>true</bool>
             </property>
            </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="autoRunBox">
-            <property name="toolTip">
-             <string>Automatically run program on upload</string>
-            </property>
-            <property name="text">
-             <string>AutoRun</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
           </item>
           <item>
            <widget class="QPushButton" name="helpButton">
@@ -123,6 +114,19 @@
              <bool>true</bool>
             </property>
            </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </item>
@@ -145,45 +149,62 @@
       </widget>
       <widget class="QWidget" name="layoutWidget2">
        <layout class="QVBoxLayout" name="verticalLayout_2">
+        <property name="spacing">
+         <number>3</number>
+        </property>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <layout class="QHBoxLayout" name="horizontalLayout_8">
           <item>
-           <widget class="QPushButton" name="runButton">
+           <widget class="QRadioButton" name="pollOffButton">
+            <property name="toolTip">
+             <string>Data polling disabled</string>
+            </property>
             <property name="text">
-             <string>Run</string>
+             <string>Poll Off</string>
             </property>
-            <property name="icon">
-             <iconset resource="../res.qrc">
-              <normaloff>:/res/icons/Circled Play-96.png</normaloff>:/res/icons/Circled Play-96.png</iconset>
-            </property>
-            <property name="flat">
+            <property name="checked">
              <bool>true</bool>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="stopButton">
+           <widget class="QRadioButton" name="pollVtButton">
+            <property name="toolTip">
+             <string>Poll variables starting with vt only</string>
+            </property>
             <property name="text">
-             <string>Stop</string>
-            </property>
-            <property name="icon">
-             <iconset resource="../res.qrc">
-              <normaloff>:/res/icons/Shutdown-96.png</normaloff>:/res/icons/Shutdown-96.png</iconset>
-            </property>
-            <property name="flat">
-             <bool>true</bool>
+             <string>Poll VT</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="pollBox">
+           <widget class="QRadioButton" name="pollAllButton">
+            <property name="toolTip">
+             <string>Poll all variables</string>
+            </property>
             <property name="text">
-             <string>Poll Status</string>
+             <string>Poll All</string>
             </property>
            </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
           <item>
            <widget class="QSpinBox" name="pollRateBox">
+            <property name="toolTip">
+             <string>Poll Rate</string>
+            </property>
             <property name="suffix">
              <string> Hz</string>
             </property>
@@ -199,10 +220,17 @@
         </item>
         <item>
          <layout class="QGridLayout" name="gridLayout">
-          <item row="3" column="1">
-           <widget class="QProgressBar" name="stackBar">
-            <property name="value">
-             <number>0</number>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>Mem</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Heap</string>
             </property>
            </widget>
           </item>
@@ -213,22 +241,15 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_4">
-            <property name="text">
-             <string>Mem</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="QLabel" name="doneCtxRLabel">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="1">
            <widget class="QProgressBar" name="heapBar">
+            <property name="value">
+             <number>0</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QProgressBar" name="memBar">
             <property name="value">
              <number>0</number>
             </property>
@@ -244,34 +265,6 @@
             </property>
             <property name="format">
              <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_2">
-            <property name="text">
-             <string>Stack</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="label_7">
-            <property name="text">
-             <string>Result</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QProgressBar" name="memBar">
-            <property name="value">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_3">
-            <property name="text">
-             <string>Heap</string>
             </property>
            </widget>
           </item>
@@ -300,12 +293,104 @@
           </column>
          </widget>
         </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_11">
+          <item>
+           <widget class="QPushButton" name="runButton">
+            <property name="toolTip">
+             <string>Run or re-run evaluator</string>
+            </property>
+            <property name="text">
+             <string>Run</string>
+            </property>
+            <property name="icon">
+             <iconset resource="../res.qrc">
+              <normaloff>:/res/icons/Circled Play-96.png</normaloff>:/res/icons/Circled Play-96.png</iconset>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="stopButton">
+            <property name="toolTip">
+             <string>Stop evaluator</string>
+            </property>
+            <property name="text">
+             <string>Stop</string>
+            </property>
+            <property name="icon">
+             <iconset resource="../res.qrc">
+              <normaloff>:/res/icons/Shutdown-96.png</normaloff>:/res/icons/Shutdown-96.png</iconset>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="autoRunBox">
+            <property name="toolTip">
+             <string>Automatically run program on upload</string>
+            </property>
+            <property name="text">
+             <string>AutoRun</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QComboBox" name="streamModeBox">
+          <property name="toolTip">
+           <string>Stream Mode</string>
+          </property>
+          <property name="currentIndex">
+           <number>1</number>
+          </property>
+          <property name="frame">
+           <bool>false</bool>
+          </property>
+          <item>
+           <property name="text">
+            <string>After Stream: Load on top</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>After Stream: Reset &amp; Load</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>After Stream: Reload Flash &amp; Load</string>
+           </property>
+          </item>
+         </widget>
+        </item>
        </layout>
       </widget>
      </widget>
      <widget class="QTabWidget" name="tabWidget">
       <property name="tabPosition">
-       <enum>QTabWidget::West</enum>
+       <enum>QTabWidget::North</enum>
       </property>
       <property name="tabShape">
        <enum>QTabWidget::Triangular</enum>
@@ -315,7 +400,7 @@
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
-        <string>Console</string>
+        <string>Console/REPL</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_7">
         <item>
@@ -351,13 +436,6 @@
               <property name="icon">
                <iconset resource="../res.qrc">
                 <normaloff>:/res/+theme_light/icons/Help-96.png</normaloff>:/res/+theme_light/icons/Help-96.png</iconset>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_5">
-              <property name="text">
-               <string>Repl</string>
               </property>
              </widget>
             </item>
@@ -402,9 +480,47 @@
        <attribute name="title">
         <string>Recent</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <layout class="QHBoxLayout" name="horizontalLayout_9">
         <item>
-         <widget class="QListWidget" name="recentList"/>
+         <layout class="QVBoxLayout" name="verticalLayout_10">
+          <property name="spacing">
+           <number>2</number>
+          </property>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <property name="spacing">
+             <number>2</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>Filter</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="recentFilterEdit"/>
+            </item>
+            <item>
+             <widget class="QPushButton" name="recentFilterClearButton">
+              <property name="toolTip">
+               <string>Clear Filter Text</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="icon">
+               <iconset resource="../res.qrc">
+                <normaloff>:/res/+theme_light/icons/Cancel-96.png</normaloff>:/res/+theme_light/icons/Cancel-96.png</iconset>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QListWidget" name="recentList"/>
+          </item>
+         </layout>
         </item>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -474,9 +590,47 @@
        <attribute name="title">
         <string>Examples</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <layout class="QHBoxLayout" name="horizontalLayout_10">
         <item>
-         <widget class="QListWidget" name="exampleList"/>
+         <layout class="QVBoxLayout" name="verticalLayout_11">
+          <property name="spacing">
+           <number>2</number>
+          </property>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <property name="spacing">
+             <number>2</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_5">
+              <property name="text">
+               <string>Filter</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="exampleFilterEdit"/>
+            </item>
+            <item>
+             <widget class="QPushButton" name="exampleFilterClearButton">
+              <property name="toolTip">
+               <string>Clear Filter Text</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="icon">
+               <iconset resource="../res.qrc">
+                <normaloff>:/res/+theme_light/icons/Cancel-96.png</normaloff>:/res/+theme_light/icons/Cancel-96.png</iconset>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QListWidget" name="exampleList"/>
+          </item>
+         </layout>
         </item>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -510,7 +664,7 @@
       </widget>
       <widget class="QWidget" name="tab_4">
        <attribute name="title">
-        <string>Plot</string>
+        <string>Binding Plot</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_6">
         <item>
@@ -698,12 +852,34 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab_5">
+       <attribute name="title">
+        <string>Experiment Plot</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_9">
+        <item>
+         <widget class="ExperimentPlot" name="experimentPlot" native="true"/>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </widget>
    </item>
   </layout>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>QCustomPlot</class>
+   <extends>QWidget</extends>
+   <header>widgets/qcustomplot.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ExperimentPlot</class>
+   <extends>QWidget</extends>
+   <header>widgets/experimentplot.h</header>
+   <container>1</container>
+  </customwidget>
   <customwidget>
    <class>VTextBrowser</class>
    <extends>QTextEdit</extends>
@@ -713,12 +889,6 @@
    <class>ScriptEditor</class>
    <extends>QWidget</extends>
    <header>widgets/scripteditor.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>QCustomPlot</class>
-   <extends>QWidget</extends>
-   <header>widgets/qcustomplot.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
@@ -738,12 +908,44 @@
    <slot>clear()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1524</x>
-     <y>374</y>
+     <x>1465</x>
+     <y>553</y>
     </hint>
     <hint type="destinationlabel">
-     <x>1456</x>
-     <y>379</y>
+     <x>1429</x>
+     <y>818</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>recentFilterClearButton</sender>
+   <signal>clicked()</signal>
+   <receiver>recentFilterEdit</receiver>
+   <slot>clear()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1357</x>
+     <y>535</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1308</x>
+     <y>532</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>exampleFilterClearButton</sender>
+   <signal>clicked()</signal>
+   <receiver>exampleFilterEdit</receiver>
+   <slot>clear()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1358</x>
+     <y>537</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1291</x>
+     <y>538</y>
     </hint>
    </hints>
   </connection>

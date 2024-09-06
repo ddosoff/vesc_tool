@@ -37,6 +37,30 @@ Item {
         scanButton.enabled = VescIf.isPortConnected()
     }
 
+    function scanIfEmpty() {
+        if (canList.count == 0 &&
+                VescIf.isPortConnected() &&
+                scanButton.enabled) {
+            scanButton.clicked()
+        }
+    }
+
+    function selectDeviceInList() {
+        if (mCommands.getSendCan()) {
+            for (var i = 0; i < canModel.count;i++) {
+                var id = parseInt(canModel.get(i).ID)
+                if (id === mCommands.getCanSendId() && canList.currentIndex != i) {
+                    canList.currentIndex = i
+                    break
+                }
+            }
+        } else {
+            if (canList.currentIndex != 0) {
+                canList.currentIndex = 0
+            }
+        }
+    }
+
     Timer {
         repeat: true
         interval: 1000
@@ -47,7 +71,16 @@ Item {
                 mCommands.setSendCan(false, -1)
                 canList.currentIndex = 0;
                 canModel.clear()
-                scanButton.enabled = VescIf.isPortConnected()
+                scanButton.enabled = false
+            } else {
+                selectDeviceInList()
+            }
+
+            if (VescIf.scanCanOnConnect() &&
+                    scanButton.enabled && canList.count == 0 &&
+                    VescIf.isPortConnected() &&
+                    VescIf.fwRx() && VescIf.customConfigRxDone()) {
+                scanButton.clicked()
             }
         }
     }
@@ -110,13 +143,13 @@ Item {
                     }
                     width: canList.width
                     height: 40
-                    color: canList.currentIndex == index ? Utility.getAppHexColor("darkAccent") : Utility.getAppHexColor("normalBackground")
+                    color: canList.currentIndex === index ? Utility.getAppHexColor("darkAccent") : Utility.getAppHexColor("normalBackground")
                     radius: 10
-                    MouseArea{
+                    MouseArea {
                         anchors.fill: parent
                         onClicked: {
                             canList.currentIndex = index
-                            if(index == 0){
+                            if(index === 0){
                                 mCommands.setSendCan(false,0)
                             }else{
                                 mCommands.setSendCan(true,ID)
@@ -187,8 +220,10 @@ Item {
             onClicked: {
                 scanButton.enabled = false
                 canModel.clear()
-                scanDialog.open()
+
+                VescIf.canTmpOverride(false, -1)
                 mCommands.pingCan()
+                VescIf.canTmpOverrideEnd()
             }
         }
     }
@@ -196,7 +231,7 @@ Item {
     Connections {
         target: mBle
 
-        onBleError: {
+        function onBleError(info) {
             VescIf.emitMessageDialog("BLE Error", info, false, false)
             enableDialog()
         }
@@ -234,32 +269,10 @@ Item {
         }
     }
 
-    Dialog {
-        id: scanDialog
-        title: "Scanning CAN Bus..."
-        closePolicy: Popup.NoAutoClose
-        modal: true
-        focus: true
-
-        Overlay.modal: Rectangle {
-            color: "#AA000000"
-        }
-
-        width: parent.width - 20
-        x: 10
-        y: parent.height / 2 - height / 2
-        parent: ApplicationWindow.overlay
-
-        ProgressBar {
-            anchors.fill: parent
-            indeterminate: visible
-        }
-    }
-
     Connections {
         target: VescIf
 
-        onPortConnectedChanged: {
+        function onPortConnectedChanged() {
             scanButton.enabled = VescIf.isPortConnected()
         }
     }
@@ -267,17 +280,17 @@ Item {
     Connections {
         target: mCommands
 
-        onPingCanRx: {
+        function onPingCanRx(devs, isTimeout) {
             if (scanButton.enabled) {
                 return
             }
 
             scanButton.enabled = true
             scanButton.text = qsTr("Scan")
+
             if (VescIf.isPortConnected()) {
                 canModel.clear()
-                mCommands.setSendCan(0,0);
-                var params = Utility.getFwVersionBlocking(VescIf)
+                var params = Utility.getFwVersionBlockingCan(VescIf, -1)
                 var name = params.hw
                 var theme ="qrc"  + Utility.getThemePath()
                 var devicePath
@@ -293,7 +306,7 @@ Item {
                     name = "BMS (" + params.hw + ")"
                 } else {
                     devicePath = theme + "icons/Electronics-96.png"
-                    name = "BMS (" + params.hw + ")"
+                    name = "Device (" + params.hw + ")"
                 }
                 name = name.replace("_", " ")
 
@@ -312,7 +325,7 @@ Item {
                         name = "BMS (" + params.hw + ")";
                     } else {
                         devicePath = theme + "icons/Electronics-96.png"
-                        name = params.hw;
+                        name = "Device (" + params.hw + ")"
                     }
                     name = name.replace("_", " ")
                     canModel.append({"name": name,
@@ -320,19 +333,17 @@ Item {
                                         "deviceIconPath": devicePath,
                                         "logoIconPath": logoPath})
                 }
+
                 canList.currentIndex = 0
-                if (!isTimeout){
-                    scanDialog.close()
-                    scanButton.enabled = true
+
+                if (!isTimeout) {
                     VescIf.emitStatusMessage("CAN Scan Finished", true)
                 } else {
-                    scanDialog.close()
-                    scanButton.enabled = true
                     VescIf.emitStatusMessage("CAN Scan Timed Out", false)
                 }
+
+                selectDeviceInList()
             } else {
-                scanDialog.close()
-                scanButton.enabled = true
                 VescIf.emitStatusMessage("Device not connected", false)
             }
         }
