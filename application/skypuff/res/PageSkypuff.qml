@@ -501,6 +501,7 @@ Page {
                 pullForce.enabled = true
                 break
             case "SLOW":
+            case "SLOWING":
                 bPrePull.enabled = true
                 break
             case "FAST_PULL":
