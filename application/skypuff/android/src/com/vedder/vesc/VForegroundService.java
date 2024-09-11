@@ -74,14 +74,14 @@ public class VForegroundService extends Service {
     {
         // Create notification default intent.
         Intent intent = new Intent();
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
         Notification.Builder builder;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            String channelId = "SKYPUFF_CHANNEL";
-            NotificationChannel channel = new NotificationChannel(channelId, "SKYPUFF", NotificationManager.IMPORTANCE_DEFAULT);
-            channel.setDescription("SKYPUFF ALIVE");
+            String channelId = "VESC_CHANNEL";
+            NotificationChannel channel = new NotificationChannel(channelId, "VESC", NotificationManager.IMPORTANCE_DEFAULT);
+            channel.setDescription("VESC GNSS");
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
             builder = new Notification.Builder(this, channelId);
@@ -89,8 +89,8 @@ public class VForegroundService extends Service {
             builder = new Notification.Builder(this);
         }
 
-        builder.setContentTitle("SkyPuff controll");
-        builder.setContentText("Keeping Skypuff alive.");
+        builder.setContentTitle("VESC Tool");
+        builder.setContentText("VESC Tool is logging position and motor data.");
 
         builder.setWhen(System.currentTimeMillis());
         builder.setSmallIcon(R.drawable.icon);
@@ -99,7 +99,7 @@ public class VForegroundService extends Service {
 
         Intent stopIntent = new Intent(this, VForegroundService.class);
         stopIntent.setAction(ACTION_STOP);
-        PendingIntent pendingPrevIntent = PendingIntent.getService(this, 0, stopIntent, 0);
+        PendingIntent pendingPrevIntent = PendingIntent.getService(this, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE);
         Notification.Action prevAction = new Notification.Action(android.R.drawable.ic_media_pause, "Stop", pendingPrevIntent);
         builder.addAction(prevAction);
 

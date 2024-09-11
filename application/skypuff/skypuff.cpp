@@ -21,6 +21,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include "skypuff.h"
+#include "utility.h"
 
 Skypuff::Skypuff(VescInterface *v) : QObject(),
     vesc(v),
@@ -28,6 +29,9 @@ Skypuff::Skypuff(VescInterface *v) : QObject(),
     aliveTimeoutTimerId(0),
     getConfTimeoutTimerId(0)
 {
+    vesc->setReconnectLastCan(true);
+    vesc->setScanCanOnConnect(true);
+
     player = new QMediaPlayer(this);
     playlist = new QMediaPlaylist(player);
     player->setPlaylist(playlist);
@@ -118,8 +122,38 @@ void Skypuff::setState(const skypuff_state newState)
 
 void Skypuff::firmwareVersionReceived(bool rx, bool /*limited*/)
 {
-    if(rx)
+    if(rx && vesc->getLastFwRxParams().hwType == HW_TYPE_VESC)
         sendGetConf();
+    else if(rx) { // If we connected to VESC_EXPRESS BLE?
+        qDebug("Firmware hwType is not VESC");
+
+        // Try to find real VESC on the CAN bus
+        QVector<int> canDevs = vesc->scanCan();
+
+        QVectorIterator<int> canDev(canDevs);
+            while (canDev.hasNext()) {
+                int canId = canDev.next();
+                qDebug() << "Requesting firmware from CAN device: " << canId;
+
+                FW_RX_PARAMS pRx;
+                bool ok = Utility::getFwVersionBlockingCan(vesc, &pRx, canId, 1500);
+
+                if(ok && pRx.hwType == HW_TYPE_VESC) {
+                    QString uuid = Utility::uuid2Str(pRx.uuid, false);
+//                    vesc->emitMessageDialog(tr("VESC %1 found on the CAN bus id %2").arg(pRx.hw).arg(canId),
+//                                            tr("Will set CAN forwarding to this VESC. Try to reconnect."),
+//                                            true);
+                    qDebug() << "Real VESC found on the CAN bus: " << canId << ", uuid: " << uuid;
+                    vesc->commands()->setSendCan(true, canId);
+                    return;
+                }
+            }
+
+            vesc->emitMessageDialog(tr("No VESCs found nn the CAN bus"),
+                                    tr("Connected device have no VESC interface."),
+                                    false);
+            return;
+    }
 }
 
 void Skypuff::portConnectedChanged()
@@ -214,6 +248,7 @@ void Skypuff::sendGetConf()
     }
 
     vesc->commands()->sendTerminalCmd("get_conf");
+    //requestStats();
     getConfTimeoutTimerId = startTimer(commandTimeout, Qt::PreciseTimer);
 }
 
@@ -931,12 +966,14 @@ QVariantList Skypuff::serialPortsToQml()
 
     auto ports = vesc->listSerialPorts();
     for(auto it = ports.constBegin(); it != ports.constEnd(); it++) {
-        if((*it).name.isEmpty())
-            v["name"] = (*it).systemPath;
+        auto port = (*it).value<VSerialInfo_t>();
+        //ser.value<VSerialInfo_t>()
+        if(port.name.isEmpty())
+            v["name"] = port.systemPath;
         else
-            v["name"] = (*it).name + " [ " + (*it).systemPath + " ]";
-        v["addr"] = (*it).systemPath;
-        v["isVesc"] = (*it).isVesc;
+            v["name"] = port.name + " [ " + port.systemPath + " ]";
+        v["addr"] = port.systemPath;
+        v["isVesc"] = port.isVesc;
         res.append(v);
     }
 

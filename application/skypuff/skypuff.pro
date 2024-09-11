@@ -1,14 +1,23 @@
+#-------------------------------------------------
+#
+# Project created by QtCreator 2016-08-12T21:55:19
+#
+#-------------------------------------------------
+
 # Version
-VT_VERSION = 4.00
+VT_VERSION = 6.05
 VT_INTRO_VERSION = 1
 VT_CONFIG_VERSION = 2
 
 # Set to 0 for stable versions and to test version number for development versions.
-VT_IS_TEST_VERSION = 0 # disable warning, but actual test version is 5
+VT_IS_TEST_VERSION = 0
 
-VT_ANDROID_VERSION_ARMV7 = 108
-VT_ANDROID_VERSION_ARM64 = 109
-VT_ANDROID_VERSION_X86 = 110
+# GIT commit
+VT_GIT_COMMIT = $$system(git rev-parse --short=8 HEAD)
+
+VT_ANDROID_VERSION_ARMV7 = 153
+VT_ANDROID_VERSION_ARM64 = 154
+VT_ANDROID_VERSION_X86 = 155
 
 VT_ANDROID_VERSION = $$VT_ANDROID_VERSION_X86
 
@@ -19,48 +28,183 @@ DEFINES += VT_VERSION=$$VT_VERSION
 DEFINES += VT_INTRO_VERSION=$$VT_INTRO_VERSION
 DEFINES += VT_CONFIG_VERSION=$$VT_CONFIG_VERSION
 DEFINES += VT_IS_TEST_VERSION=$$VT_IS_TEST_VERSION
+DEFINES += VT_GIT_COMMIT=$$VT_GIT_COMMIT
 QT_LOGGING_RULES="qt.qml.connections=false"
 #CONFIG += qtquickcompiler
 
-CONFIG += build_mobile
 CONFIG += c++11
+CONFIG += resources_big
+ios: {
+    QMAKE_CXXFLAGS_DEBUG += -Wall
+}
+
+!win32-msvc*: { !android: {
+    QMAKE_CXXFLAGS += -Wno-deprecated-copy
+}}
+
+# Build mobile GUI
+CONFIG += build_mobile
+
+# Exclude built-in firmwares
+CONFIG += exclude_fw
+
+ios: {
+    CONFIG    += build_mobile
+    DEFINES   += QT_NO_PRINTER
+}
+
+# Debug build (e.g. F5 to reload QML files)
+#DEFINES += DEBUG_BUILD
+
+# If BLE disconnects on ubuntu after about 90 seconds the reason is most likely that the connection interval is incompatible. This can be fixed with:
+# sudo bash -c 'echo 6 > /sys/kernel/debug/bluetooth/hci0/conn_min_interval'
+
+# Clear old bluetooth devices
+# sudo rm -rf /var/lib/bluetooth/*
+# sudo service bluetooth restart
+
+# Bluetooth available
+DEFINES += HAS_BLUETOOTH
+
+# CAN bus available
+# Adding serialbus to Qt seems to break the serial port on static builds. TODO: Figure out why.
+#DEFINES += HAS_CANBUS
+
+# Positioning
+DEFINES += HAS_POS
+
+!ios: {
+    QT       += printsupport
+!android: {
+    # Serial port available
+    DEFINES += HAS_SERIALPORT
+    DEFINES += HAS_GAMEPAD
+}
+}
+
+win32: {
+    DEFINES += _USE_MATH_DEFINES
+}
+
+# https://stackoverflow.com/questions/61444320/what-are-the-configure-options-for-qt-that-enable-dead-keys-usage
+unix: {
+!ios: {
+    QTPLUGIN += composeplatforminputcontextplugin
+}
+}
+
+# Options
+#CONFIG += build_original
+#CONFIG += build_platinum
+#CONFIG += build_gold
+#CONFIG += build_silver
+#CONFIG += build_bronze
+#CONFIG += build_free
 
 QT       += core gui
 QT       += widgets
-QT       += serialport
 QT       += network
 QT       += quick
 QT       += quickcontrols2
 QT       += quickwidgets
 QT       += svg
 QT       += gui-private
-QT       += printsupport
 QT       += multimedia
 
-TARGET = skypuff
-TEMPLATE = app
-
-# Serial port available
-DEFINES += HAS_SERIALPORT
-
-# Bluetooth available
-DEFINES += HAS_BLUETOOTH
-
 contains(DEFINES, HAS_SERIALPORT) {
-    QT += serialport
+    QT       += serialport
+}
+
+contains(DEFINES, HAS_CANBUS) {
+    QT       += serialbus
 }
 
 contains(DEFINES, HAS_BLUETOOTH) {
-    QT += bluetooth
+    QT       += bluetooth
+}
+
+contains(DEFINES, HAS_POS) {
+    QT       += positioning
+}
+
+contains(DEFINES, HAS_GAMEPAD) {
+    QT       += gamepad
+}
+
+android: QT += androidextras
+
+ios | macx: {
+    TARGET = "VESC Tool"
+}else: {
+    android:{
+        TARGET = "skypuff"
+    }else:{
+
+        TARGET = skypuff_$$VT_VERSION
+    }
+}
+
+ANDROID_VERSION = 1
+
+android:contains(QT_ARCH, i386) {
+    VT_ANDROID_VERSION = $$VT_ANDROID_VERSION_X86
+}
+
+contains(ANDROID_TARGET_ARCH, arm64-v8a) {
+    VT_ANDROID_VERSION = $$VT_ANDROID_VERSION_ARM64
+}
+
+contains(ANDROID_TARGET_ARCH, armeabi-v7a) {
+    VT_ANDROID_VERSION = $$VT_ANDROID_VERSION_ARMV7
 }
 
 android: {
-    QT += androidextras
     manifest.input = $$PWD/android/AndroidManifest.xml.in
     manifest.output = $$PWD/android/AndroidManifest.xml
     QMAKE_SUBSTITUTES += manifest
 }
 
+TEMPLATE = app
+
+release_win {
+    DESTDIR = build/win
+    OBJECTS_DIR = build/win/obj
+    MOC_DIR = build/win/obj
+    RCC_DIR = build/win/obj
+    UI_DIR = build/win/obj
+}
+
+release_lin {
+    # http://micro.nicholaswilson.me.uk/post/31855915892/rules-of-static-linking-libstdc-libc-libgcc
+    # http://insanecoding.blogspot.se/2012/07/creating-portable-linux-binaries.html
+    QMAKE_LFLAGS += -static-libstdc++ -static-libgcc
+    DESTDIR = build/lin
+    OBJECTS_DIR = build/lin/obj
+    MOC_DIR = build/lin/obj
+    RCC_DIR = build/lin/obj
+    UI_DIR = build/lin/obj
+}
+
+release_macos {
+    # brew install qt
+    DESTDIR = build/macos
+    OBJECTS_DIR = build/macos/obj
+    MOC_DIR = build/macos/obj
+    RCC_DIR = build/macos/obj
+    UI_DIR = build/macos/obj
+}
+
+release_android {
+    DESTDIR = build/android
+    OBJECTS_DIR = build/android/obj
+    MOC_DIR = build/android/obj
+    RCC_DIR = build/android/obj
+    UI_DIR = build/android/obj
+}
+
+build_mobile {
+    DEFINES += USE_MOBILE
+}
 
 INCLUDEPATH += ../..
 
@@ -89,11 +233,23 @@ RESOURCES += \
     qml.qrc \
     ../../res_config.qrc \
 
+unix: {
+!ios: {
+    HEADERS += ../../systemcommandexecutor.h
+}
+}
+
+!exclude_fw {
+    RESOURCES += res_fw_bms.qrc
+    RESOURCES += res/firmwares/res_fw.qrc
+    RESOURCES += res/firmwares_esp/res_fw_esp.qrc
+}
+
 DISTFILES += \
     android/AndroidManifest.xml \
-    android/AndroidManifest.xml.in \
     android/gradle/wrapper/gradle-wrapper.jar \
     android/gradlew \
+    android/gradlew.bat \
     android/res/values/libs.xml \
     android/build.gradle \
     android/gradle/wrapper/gradle-wrapper.properties \
@@ -101,3 +257,51 @@ DISTFILES += \
     android/src/com/vedder/vesc/Utils.java
 
 ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
+
+macx-clang:contains(QMAKE_HOST.arch, arm.*): {
+   QMAKE_APPLE_DEVICE_ARCHS=arm64
+}
+
+macx {
+    ICON        =  macos/appIcon.icns
+    QMAKE_INFO_PLIST = macos/Info.plist
+    DISTFILES += macos/Info.plist
+    QMAKE_CFLAGS_RELEASE = $$QMAKE_CFLAGS_RELEASE_WITH_DEBUGINFO
+    QMAKE_CXXFLAGS_RELEASE = $$QMAKE_CXXFLAGS_RELEASE_WITH_DEBUGINFO
+    QMAKE_OBJECTIVE_CFLAGS_RELEASE = $$QMAKE_OBJECTIVE_CFLAGS_RELEASE_WITH_DEBUGINFO
+    QMAKE_LFLAGS_RELEASE = $$QMAKE_LFLAGS_RELEASE_WITH_DEBUGINFO
+}
+
+ios {
+    QMAKE_INFO_PLIST = ios/Info.plist
+    HEADERS += ios/src/setIosParameters.h
+    SOURCES += ios/src/setIosParameters.mm
+    DISTFILES += ios/Info.plist \
+                 ios/*.storyboard
+    QMAKE_ASSET_CATALOGS = $$PWD/ios/Images.xcassets
+    QMAKE_ASSET_CATALOGS_APP_ICON = "AppIcon"
+
+    ios_artwork.files = $$files($$PWD/ios/iTunesArtwork*.png)
+    QMAKE_BUNDLE_DATA += ios_artwork
+    app_launch_images.files = $$files($$PWD/ios/LaunchImage*.png)
+    QMAKE_BUNDLE_DATA += app_launch_images
+    app_launch_screen.files = $$files($$PWD/ios/MyLaunchScreen.storyboard)
+    QMAKE_BUNDLE_DATA += app_launch_screen
+
+    #QMAKE_IOS_DEPLOYMENT_TARGET = 11.0
+
+    disable_warning.name = GCC_WARN_64_TO_32_BIT_CONVERSION
+    disable_warning.value = NO
+
+    QMAKE_MAC_XCODE_SETTINGS += disable_warning
+
+    # Note for devices: 1=iPhone, 2=iPad, 1,2=Universal.
+    CONFIG -= warn_on
+    QMAKE_APPLE_TARGETED_DEVICE_FAMILY = 1,2
+}
+CONFIG -= warn_on
+
+contains(ANDROID_TARGET_ARCH,) {
+    ANDROID_ABIS = \
+        armeabi-v7a
+}

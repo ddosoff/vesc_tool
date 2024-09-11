@@ -3,6 +3,7 @@ SOURCES += \
     $$PWD/configparam.cpp \
     $$PWD/configparams.cpp \
     $$PWD/packet.cpp \
+    $$PWD/tcphub.cpp \
     $$PWD/vescinterface.cpp \
     $$PWD/tcpserversimple.cpp \
     $$PWD/udpserversimple.cpp \
@@ -15,6 +16,7 @@ HEADERS += \
     $$PWD/configparams.h \
     $$PWD/datatypes.h \
     $$PWD/packet.h \
+    $$PWD/tcphub.h \
     $$PWD/vescinterface.h \
     $$PWD/tcpserversimple.h \
     $$PWD/udpserversimple.h \
