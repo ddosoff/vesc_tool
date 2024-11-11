@@ -87,7 +87,7 @@ Page {
                 background.anchors.fill: bCut
                 Material.background: page.bgRedColor
 
-                onClicked: {Skypuff.sendTerminal("adc2_tick")}
+                onClicked: {Skypuff.sendTerminal("guillotine")}
             }
 
             BigRoundButton {
